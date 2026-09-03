@@ -249,6 +249,6 @@ class CategoryPlayerAdmin(admin.ModelAdmin):
 
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'tournament', 'category', 'status', 'winner')
-    list_filter = ('tournament__club', 'status')
+    list_display = ('__str__', 'round_number', 'tournament', 'category', 'status', 'winner')
+    list_filter = ('tournament__club', 'tournament', 'category', 'round_number', 'status')
     search_fields = ('player_a__name', 'player_b__name')

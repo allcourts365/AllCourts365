@@ -160,4 +160,4 @@ class Match(models.Model):
     def __str__(self):
         pa = self.player_a.name if self.player_a else "TBD"
         pb = self.player_b.name if self.player_b else "TBD"
-        return f"{pa} vs {pb} (Rodada {self.round_number})"
+        return f"{pa} vs {pb}"
