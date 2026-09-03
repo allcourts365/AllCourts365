@@ -66,21 +66,44 @@
 </div>
 
 <div class="tournaments-section">
-    <h2 style="font-size: 2rem; margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px;">Torneios e Rankings em Andamento</h2>
+    <h2 style="font-size: 2rem; margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px; text-align: center;">Torneios e Rankings em Andamento</h2>
     
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
-        {% for t in tournaments %}
-        <div class="glass-card">
-            <h3 style="margin-bottom: 10px; color: var(--highlight-color);">{{ t.name }}</h3>
-            <p style="margin-bottom: 5px;"><strong>Tipo:</strong> {{ t.get_tournament_type_display }}</p>
-            <p style="margin-bottom: 5px;"><strong>Competição:</strong> {{ t.get_competition_type_display }}</p>
-            <p style="margin-bottom: 20px;"><strong>Rodada Atual:</strong> {{ t.current_round }}</p>
-            
-            <a href="#" class="btn-highlight" style="text-decoration: none; display: inline-block; padding: 8px 15px; font-size: 0.9rem;">Ver Classificação/Chaves</a>
+    <!-- Menu Horizontal de Abas -->
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="openTab('rankings', this)">Rankings</button>
+        <button class="tab-btn" onclick="openTab('knockouts', this)">Torneios Eliminatórios</button>
+    </div>
+
+    <!-- Aba: Rankings -->
+    <div id="rankings" class="tab-content active">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
+            {% for t in rankings %}
+            <div class="glass-card">
+                <h3 style="margin-bottom: 10px; color: var(--highlight-color);">{{ t.name }}</h3>
+                <p style="margin-bottom: 5px;"><strong>Competição:</strong> {{ t.get_competition_type_display }}</p>
+                <p style="margin-bottom: 20px;"><strong>Rodada Atual:</strong> {{ t.current_round }}</p>
+                <a href="#" class="btn-highlight" style="text-decoration: none; display: inline-block; padding: 8px 15px; font-size: 0.9rem;">Ver Classificação</a>
+            </div>
+            {% empty %}
+            <p style="text-align: center; grid-column: 1 / -1;">Nenhum ranking ativo no momento.</p>
+            {% endfor %}
         </div>
-        {% empty %}
-        <p>Nenhum torneio ativo no momento.</p>
-        {% endfor %}
+    </div>
+    
+    <!-- Aba: Torneios Eliminatórios -->
+    <div id="knockouts" class="tab-content">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
+            {% for t in knockouts %}
+            <div class="glass-card">
+                <h3 style="margin-bottom: 10px; color: var(--highlight-color);">{{ t.name }}</h3>
+                <p style="margin-bottom: 5px;"><strong>Competição:</strong> {{ t.get_competition_type_display }}</p>
+                <p style="margin-bottom: 20px;"><strong>Fase Atual:</strong> Rodada {{ t.current_round }}</p>
+                <a href="#" class="btn-highlight" style="text-decoration: none; display: inline-block; padding: 8px 15px; font-size: 0.9rem;">Ver Chaves</a>
+            </div>
+            {% empty %}
+            <p style="text-align: center; grid-column: 1 / -1;">Nenhum torneio eliminatório ativo no momento.</p>
+            {% endfor %}
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -97,4 +120,23 @@ document.addEventListener("DOMContentLoaded", function() {
     
     document.querySelector('.bg-overlay').style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
 });
+
+// Funções para controle das Abas
+function openTab(tabId, element) {
+    // Esconde todos os conteúdos
+    var contents = document.getElementsByClassName("tab-content");
+    for (var i = 0; i < contents.length; i++) {
+        contents[i].classList.remove("active");
+    }
+    
+    // Remove a classe active de todos os botões
+    var buttons = document.getElementsByClassName("tab-btn");
+    for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove("active");
+    }
+    
+    // Mostra a aba selecionada e adiciona active no botão
+    document.getElementById(tabId).classList.add("active");
+    element.classList.add("active");
+}
 {% endblock %}

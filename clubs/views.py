@@ -7,5 +7,6 @@ def club_list(request):
 
 def club_detail(request, club_id):
     club = get_object_or_404(Club, id=club_id)
-    tournaments = club.tournaments.filter(is_active=True)
-    return render(request, 'club_detail.html', {'club': club, 'tournaments': tournaments})
+    rankings = club.tournaments.filter(is_active=True, tournament_type='ranking')
+    knockouts = club.tournaments.filter(is_active=True, tournament_type='knockout')
+    return render(request, 'club_detail.html', {'club': club, 'rankings': rankings, 'knockouts': knockouts})
