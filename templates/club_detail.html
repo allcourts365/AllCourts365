@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}{{ club.name }} - AllCourts365{% endblock %}
 
@@ -75,12 +76,14 @@
     .ball-spinning {
         display: inline-block;
         animation: spin-ball 2s linear infinite;
-        font-size: 0.9rem;
+        width: 14px;
+        height: 14px;
     }
     
     .ball-static {
         display: inline-block;
-        font-size: 0.9rem;
+        width: 14px;
+        height: 14px;
     }
 </style>
 {% endblock %}
@@ -100,8 +103,8 @@
             <img src="{{ club.logo.url }}" alt="{{ club.name }}" style="max-width: 150px; max-height: 150px; border-radius: 10px; object-fit: contain;">
         {% else %}
             <div style="width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                <span style="font-size: 3rem; color: var(--highlight-color);">🎾</span>
-            </div>
+            <img src="{% static 'bolinha.png' %}" style="width: 80px; height: 80px; object-fit: contain; opacity: 0.8;" alt="Bola">
+        </div>
         {% endif %}
         <div>
             <h1 style="font-size: 2.5rem; margin-bottom: 10px;">
@@ -138,11 +141,11 @@
             <div class="glass-card" style="position: relative;">
                 {% if t.is_finished %}
                     <div class="status-badge status-finished">
-                        <span class="ball-static">🎾</span> Encerrado
+                        <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Encerrado"> Encerrado
                     </div>
                 {% else %}
                     <div class="status-badge status-active">
-                        <span class="ball-spinning">🎾</span> Em andamento
+                        <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Em andamento"> Em andamento
                     </div>
                 {% endif %}
                 <h3 style="margin-bottom: 10px; color: var(--highlight-color); padding-right: 120px;">{{ t.name }}</h3>
@@ -163,11 +166,11 @@
             <div class="glass-card" style="position: relative;">
                 {% if t.is_finished %}
                     <div class="status-badge status-finished">
-                        <span class="ball-static">🎾</span> Encerrado
+                        <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Encerrado"> Encerrado
                     </div>
                 {% else %}
                     <div class="status-badge status-active">
-                        <span class="ball-spinning">🎾</span> Em andamento
+                        <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Em andamento"> Em andamento
                     </div>
                 {% endif %}
                 <h3 style="margin-bottom: 10px; color: var(--highlight-color); padding-right: 120px;">{{ t.name }}</h3>
