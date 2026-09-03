@@ -3,6 +3,7 @@ from .models import Club, Player, Tournament, RankingTournament, KnockoutTournam
 import openpyxl
 
 from django import forms
+from django.utils.safestring import mark_safe
 
 class ClubForm(forms.ModelForm):
     class Meta:
@@ -43,7 +44,7 @@ class RankingTournamentForm(forms.ModelForm):
     excel_file = forms.FileField(
         required=False, 
         label="Upload Planilha de Atletas (Opcional)", 
-        help_text="Formato xlsx. Coluna A: Nome do Atleta, Coluna B: Categoria"
+        help_text=mark_safe('Formato xlsx. Coluna A: Nome do Atleta, Coluna B: Categoria. <br><a href="/static/planilha_exemplo.xlsx" download>📥 Baixar planilha de exemplo</a>')
     )
     
     class Meta:
