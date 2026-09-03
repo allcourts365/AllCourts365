@@ -115,6 +115,44 @@ class Category(models.Model):
     def __str__(self):
         return f"{self.tournament.name} - {self.name}"
 
+    def recalculate_points(self):
+        # Zera tudo
+        for cp in self.players.all():
+            cp.points = 0
+            cp.matches_played = 0
+            cp.wins = 0
+            cp.losses = 0
+            cp.save()
+            
+        # Recalcula baseado nas partidas finalizadas
+        for match in self.matches.filter(status='completed'):
+            cpa = self.players.filter(player=match.player_a).first()
+            cpb = self.players.filter(player=match.player_b).first()
+            if cpa and cpb and match.winner:
+                cpa.matches_played += 1
+                cpb.matches_played += 1
+                
+                if match.winner == match.player_a:
+                    cpa.wins += 1
+                    cpb.losses += 1
+                    if match.sets_b == 0:
+                        cpa.points += self.tournament.points_winner_2x0
+                        cpb.points += self.tournament.points_loser_2x0
+                    else:
+                        cpa.points += self.tournament.points_winner_2x1
+                        cpb.points += self.tournament.points_loser_2x1
+                elif match.winner == match.player_b:
+                    cpb.wins += 1
+                    cpa.losses += 1
+                    if match.sets_a == 0:
+                        cpb.points += self.tournament.points_winner_2x0
+                        cpa.points += self.tournament.points_loser_2x0
+                    else:
+                        cpb.points += self.tournament.points_winner_2x1
+                        cpa.points += self.tournament.points_loser_2x1
+                cpa.save()
+                cpb.save()
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         # Sincroniza o status do Torneio se todas as categorias estiverem encerradas
@@ -166,6 +204,17 @@ class Match(models.Model):
     sets_a = models.IntegerField(null=True, blank=True, verbose_name="Sets Ganhos (A)")
     sets_b = models.IntegerField(null=True, blank=True, verbose_name="Sets Ganhos (B)")
     
+    set1_a = models.IntegerField(null=True, blank=True, verbose_name="Set 1 (A)")
+    set1_b = models.IntegerField(null=True, blank=True, verbose_name="Set 1 (B)")
+    set2_a = models.IntegerField(null=True, blank=True, verbose_name="Set 2 (A)")
+    set2_b = models.IntegerField(null=True, blank=True, verbose_name="Set 2 (B)")
+    set3_a = models.IntegerField(null=True, blank=True, verbose_name="Set 3 (A)")
+    set3_b = models.IntegerField(null=True, blank=True, verbose_name="Set 3 (B)")
+    set4_a = models.IntegerField(null=True, blank=True, verbose_name="Set 4 (A)")
+    set4_b = models.IntegerField(null=True, blank=True, verbose_name="Set 4 (B)")
+    set5_a = models.IntegerField(null=True, blank=True, verbose_name="Set 5 (A)")
+    set5_b = models.IntegerField(null=True, blank=True, verbose_name="Set 5 (B)")
+    
     next_match = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='previous_matches')
     phase = models.CharField(max_length=50, blank=True, verbose_name="Fase")
     position_in_bracket = models.IntegerField(null=True, blank=True)
@@ -176,3 +225,52 @@ class Match(models.Model):
         pa = self.player_a.name if self.player_a else "TBD"
         pb = self.player_b.name if self.player_b else "TBD"
         return f"{pa} vs {pb}"
+
+    def save(self, *args, **kwargs):
+        # Auto-calcula sets_a e sets_b com base nos games, se preenchidos
+        has_games = any(v is not None for v in [
+            self.set1_a, self.set1_b, self.set2_a, self.set2_b,
+            self.set3_a, self.set3_b, self.set4_a, self.set4_b,
+            self.set5_a, self.set5_b
+        ])
+        
+        if has_games:
+            sa = 0
+            sb = 0
+            sets = [
+                (self.set1_a, self.set1_b),
+                (self.set2_a, self.set2_b),
+                (self.set3_a, self.set3_b),
+                (self.set4_a, self.set4_b),
+                (self.set5_a, self.set5_b),
+            ]
+            for ga, gb in sets:
+                if ga is not None and gb is not None:
+                    if ga > gb: sa += 1
+                    elif gb > ga: sb += 1
+            
+            self.sets_a = sa
+            self.sets_b = sb
+            
+            if self.status == 'completed':
+                if sa > sb:
+                    self.winner = self.player_a
+                elif sb > sa:
+                    self.winner = self.player_b
+        else:
+            # Retrocompatibilidade de preenchimento manual
+            if self.status == 'completed' and self.sets_a is not None and self.sets_b is not None:
+                if self.sets_a > self.sets_b:
+                    self.winner = self.player_a
+                elif self.sets_b > self.sets_a:
+                    self.winner = self.player_b
+                    
+        super().save(*args, **kwargs)
+
+from django.db.models.signals import post_delete
+
+@receiver(post_save, sender=Match)
+@receiver(post_delete, sender=Match)
+def update_category_points(sender, instance, **kwargs):
+    if getattr(instance, 'category', None):
+        instance.category.recalculate_points()

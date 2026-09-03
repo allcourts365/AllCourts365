@@ -250,34 +250,10 @@ class RankingTournamentAdmin(TournamentAdmin):
                 )
                 
                 matches_imported += 1
-                
                 # Atualiza pontos apenas se o jogo foi finalizado
-                if match_status == 'completed':
-                    if winner == pa:
-                        if sets_b == 0:
-                            cpa.points += obj.points_winner_2x0
-                            cpb.points += obj.points_loser_2x0
-                        else:
-                            cpa.points += obj.points_winner_2x1
-                            cpb.points += obj.points_loser_2x1
-                        cpa.wins += 1
-                        cpb.losses += 1
-                    elif winner == pb:
-                        if sets_a == 0:
-                            cpb.points += obj.points_winner_2x0
-                            cpa.points += obj.points_loser_2x0
-                        else:
-                            cpb.points += obj.points_winner_2x1
-                            cpa.points += obj.points_loser_2x1
-                        cpb.wins += 1
-                        cpa.losses += 1
-                        
-                    cpa.matches_played += 1
-                    cpb.matches_played += 1
-                    cpa.save()
-                    cpb.save()
+                # (Removido cálculo manual aqui, agora os Signals disparam o Category.recalculate_points() automaticamente)
                 
-            messages.success(request, f"Histórico importado: {matches_imported} partidas processadas com sucesso.")
+            messages.success(request, f"Histórico importado: {matches_imported} partidas processadas com sucesso. A classificação foi atualizada.")
             
         except Exception as e:
             messages.error(request, f"Erro ao processar planilha de histórico: {str(e)}")
@@ -298,3 +274,26 @@ class MatchAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     list_display = ('__str__', 'round_number', 'tournament', 'category', 'status', 'winner')
     list_filter = ('tournament__club', 'tournament', 'category', 'round_number', 'status')
     search_fields = ('player_a__name', 'player_b__name')
+    
+    fieldsets = (
+        ('Informações da Partida', {
+            'fields': ('category', 'tournament', 'round_number', 'status', 'phase', 'position_in_bracket', 'next_match')
+        }),
+        ('Jogadores e Resultado Final', {
+            'fields': ('player_a', 'player_b', 'winner')
+        }),
+        ('Resultado por Sets (Preenchimento Rápido)', {
+            'fields': ('sets_a', 'sets_b'),
+            'description': 'Preencha apenas a quantidade de sets (ex: 2 a 0) caso não queira informar os games. Se os games abaixo forem preenchidos, este campo será substituído automaticamente.',
+        }),
+        ('Parciais por Games (Opcional)', {
+            'fields': (
+                ('set1_a', 'set1_b'),
+                ('set2_a', 'set2_b'),
+                ('set3_a', 'set3_b'),
+                ('set4_a', 'set4_b'),
+                ('set5_a', 'set5_b')
+            ),
+            'description': 'Preencha a quantidade de games que cada jogador fez em cada set.',
+        })
+    )

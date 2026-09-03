@@ -254,7 +254,18 @@
                     
                     <div class="match-score">
                         {% if m.status == 'completed' %}
-                            {{ m.sets_a }} <span style="color: var(--subtitle-color); font-size: 1rem; font-weight: 400;">x</span> {{ m.sets_b }}
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <div>{{ m.sets_a }} <span style="color: var(--subtitle-color); font-size: 1rem; font-weight: 400;">x</span> {{ m.sets_b }}</div>
+                                {% if m.set1_a is not None %}
+                                <div style="font-size: 0.8rem; color: var(--subtitle-color); margin-top: 5px; display: flex; gap: 8px;">
+                                    <span>{{ m.set1_a }}-{{ m.set1_b }}</span>
+                                    {% if m.set2_a is not None %}<span>| {{ m.set2_a }}-{{ m.set2_b }}</span>{% endif %}
+                                    {% if m.set3_a is not None %}<span>| {{ m.set3_a }}-{{ m.set3_b }}</span>{% endif %}
+                                    {% if m.set4_a is not None %}<span>| {{ m.set4_a }}-{{ m.set4_b }}</span>{% endif %}
+                                    {% if m.set5_a is not None %}<span>| {{ m.set5_a }}-{{ m.set5_b }}</span>{% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
                         {% else %}
                             <span style="font-size: 1rem; color: var(--subtitle-color);">VS</span>
                         {% endif %}
