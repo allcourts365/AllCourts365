@@ -115,6 +115,19 @@ class Category(models.Model):
     def __str__(self):
         return f"{self.tournament.name} - {self.name}"
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Sincroniza o status do Torneio se todas as categorias estiverem encerradas
+        tournament = self.tournament
+        if tournament.categories.exists() and not tournament.categories.filter(is_finished=False).exists():
+            if not tournament.is_finished:
+                tournament.is_finished = True
+                tournament.save(update_fields=['is_finished'])
+        elif tournament.categories.filter(is_finished=False).exists():
+            if tournament.is_finished:
+                tournament.is_finished = False
+                tournament.save(update_fields=['is_finished'])
+
     class Meta:
         unique_together = ('tournament', 'name')
         verbose_name = "Categoria"
