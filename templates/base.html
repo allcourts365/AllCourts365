@@ -22,13 +22,21 @@
     
     <style>
         :root {
-            /* Variáveis Dinâmicas do Admin */
-            --bg-color: {{ site_config.background_color|default:"#0f172a" }};
-            --overlay-color: {{ site_config.overlay_color|default:"#000000" }};
-            --overlay-opacity: {{ site_config.overlay_opacity|default:"0.5"|stringformat:"s" }};
-            --highlight-color: {{ site_config.highlight_color|default:"#3b82f6" }};
-            --title-color: {{ site_config.title_color|default:"#ffffff" }};
-            --subtitle-color: {{ site_config.subtitle_color|default:"#94a3b8" }};
+            /* Variáveis Dinâmicas Globais */
+            --global-bg-color: {{ site_config.background_color|default:"#0f172a" }};
+            --global-overlay-color: {{ site_config.overlay_color|default:"#000000" }};
+            --global-overlay-opacity: {{ site_config.overlay_opacity|default:"0.5"|stringformat:"s" }};
+            --global-highlight-color: {{ site_config.highlight_color|default:"#3b82f6" }};
+            --global-title-color: {{ site_config.title_color|default:"#ffffff" }};
+            --global-subtitle-color: {{ site_config.subtitle_color|default:"#94a3b8" }};
+
+            /* Variáveis de Tema (Podem ser sobrescritas pelas páginas dos clubes) */
+            --bg-color: var(--global-bg-color);
+            --overlay-color: var(--global-overlay-color);
+            --overlay-opacity: var(--global-overlay-opacity);
+            --highlight-color: var(--global-highlight-color);
+            --title-color: var(--global-title-color);
+            --subtitle-color: var(--global-subtitle-color);
         }
         
         body {
@@ -61,6 +69,19 @@
             {% elif site_config.watermark_position == 'bottom-right' %} bottom: 20px; right: 20px;
             {% elif site_config.watermark_position == 'center' %} top: 50%; left: 50%; transform: translate(-50%, -50%);
             {% else %} bottom: 20px; left: 20px; {% endif %}
+        }
+
+        /* Isolamento da Barra de Navegação (Para não ser afetada pelas cores dos clubes) */
+        .glass-nav .brand { color: var(--global-title-color) !important; }
+        .glass-nav .brand span { color: var(--global-highlight-color) !important; }
+        .glass-nav .nav-links a:not(.btn-highlight) { color: var(--global-subtitle-color) !important; }
+        .glass-nav .nav-links a:not(.btn-highlight):hover { color: var(--global-title-color) !important; }
+        .glass-nav .btn-highlight {
+            background: var(--global-highlight-color) !important;
+            color: #ffffff !important;
+        }
+        .glass-nav .btn-highlight:hover {
+            box-shadow: 0 4px 15px var(--global-highlight-color) !important;
         }
     </style>
     {% block extra_head %}{% endblock %}
