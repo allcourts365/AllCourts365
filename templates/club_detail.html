@@ -50,24 +50,31 @@
 {% endblock %}
 
 {% block content %}
-<div class="club-header glass-card" style="display: flex; align-items: center; gap: 30px; margin-top: 40px; margin-bottom: 40px;">
-    {% if club.logo %}
-        <img src="{{ club.logo.url }}" alt="{{ club.name }}" style="max-width: 150px; max-height: 150px; border-radius: 10px; object-fit: contain;">
-    {% else %}
-        <div style="width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-            <span style="font-size: 3rem; color: var(--highlight-color);">🎾</span>
+<div class="club-header glass-card" style="display: flex; align-items: center; justify-content: space-between; margin-top: 40px; margin-bottom: 40px; flex-wrap: wrap; gap: 20px;">
+    <div style="display: flex; align-items: center; gap: 30px; flex-wrap: wrap;">
+        {% if club.logo %}
+            <img src="{{ club.logo.url }}" alt="{{ club.name }}" style="max-width: 150px; max-height: 150px; border-radius: 10px; object-fit: contain;">
+        {% else %}
+            <div style="width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                <span style="font-size: 3rem; color: var(--highlight-color);">🎾</span>
+            </div>
+        {% endif %}
+        <div>
+            <h1 style="font-size: 2.5rem; margin-bottom: 10px;">
+                {% if club.website %}
+                    <a href="{{ club.website }}" target="_blank" style="color: var(--title-color); text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">{{ club.name }}</a>
+                {% else %}
+                    {{ club.name }}
+                {% endif %}
+            </h1>
+            <p style="margin-bottom: 10px;">{{ club.description|default:"Sem descrição." }}</p>
+            <p style="font-size: 0.9rem; color: var(--highlight-color);">📍 {{ club.address|default:"Endereço não informado" }}</p>
         </div>
-    {% endif %}
-    <div>
-        <h1 style="font-size: 2.5rem; margin-bottom: 10px;">
-            {% if club.website %}
-                <a href="{{ club.website }}" target="_blank" style="color: var(--title-color); text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">{{ club.name }}</a>
-            {% else %}
-                {{ club.name }}
-            {% endif %}
-        </h1>
-        <p style="margin-bottom: 10px;">{{ club.description|default:"Sem descrição." }}</p>
-        <p style="font-size: 0.9rem; color: var(--highlight-color);">📍 {{ club.address|default:"Endereço não informado" }}</p>
+    </div>
+    <div style="text-align: right;">
+        <a href="{% url 'admin:index' %}" class="btn-highlight" style="text-decoration: none; display: inline-block; padding: 12px 25px; font-weight: bold; border-radius: 30px;">
+            <i class="fas fa-cog"></i> Painel Admin
+        </a>
     </div>
 </div>
 

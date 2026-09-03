@@ -5,6 +5,36 @@ import openpyxl
 from django import forms
 from django.utils.safestring import mark_safe
 
+class ClubScopedAdminMixin:
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        
+        model_name = self.model.__name__
+        if model_name == 'Club':
+            return qs.filter(administrators=request.user).distinct()
+        elif model_name in ['Player', 'Tournament', 'RankingTournament', 'KnockoutTournament']:
+            return qs.filter(club__administrators=request.user).distinct()
+        elif model_name in ['Category', 'Match']:
+            return qs.filter(tournament__club__administrators=request.user).distinct()
+        elif model_name == 'CategoryPlayer':
+            return qs.filter(category__tournament__club__administrators=request.user).distinct()
+        return qs
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if not request.user.is_superuser:
+            if db_field.name == "club":
+                kwargs["queryset"] = Club.objects.filter(administrators=request.user)
+            elif db_field.name == "tournament":
+                kwargs["queryset"] = Tournament.objects.filter(club__administrators=request.user)
+            elif db_field.name == "category":
+                kwargs["queryset"] = Category.objects.filter(tournament__club__administrators=request.user)
+            elif db_field.name in ["player", "player_a", "player_b", "winner"]:
+                kwargs["queryset"] = Player.objects.filter(club__administrators=request.user)
+                
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 class ClubForm(forms.ModelForm):
     class Meta:
         model = Club
@@ -18,13 +48,13 @@ class ClubForm(forms.ModelForm):
         }
 
 @admin.register(Club)
-class ClubAdmin(admin.ModelAdmin):
+class ClubAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     form = ClubForm
     list_display = ('name', 'created_at')
     search_fields = ('name',)
 
 @admin.register(Player)
-class PlayerAdmin(admin.ModelAdmin):
+class PlayerAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     list_display = ('name', 'club')
     search_fields = ('name',)
     list_filter = ('club',)
@@ -34,7 +64,7 @@ class CategoryInline(admin.TabularInline):
     extra = 1
 
 @admin.register(Tournament)
-class TournamentAdmin(admin.ModelAdmin):
+class TournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     list_display = ('name', 'club', 'tournament_type', 'is_active', 'is_finished')
     list_filter = ('club', 'tournament_type', 'is_active')
     search_fields = ('name',)
@@ -242,13 +272,13 @@ class KnockoutTournamentAdmin(TournamentAdmin):
         return super().get_queryset(request).filter(tournament_type='knockout')
 
 @admin.register(CategoryPlayer)
-class CategoryPlayerAdmin(admin.ModelAdmin):
+class CategoryPlayerAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     list_display = ('player', 'category', 'points', 'matches_played', 'wins', 'losses')
     list_filter = ('category__tournament__club', 'category')
     search_fields = ('player__name',)
 
 @admin.register(Match)
-class MatchAdmin(admin.ModelAdmin):
+class MatchAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     list_display = ('__str__', 'round_number', 'tournament', 'category', 'status', 'winner')
     list_filter = ('tournament__club', 'tournament', 'category', 'round_number', 'status')
     search_fields = ('player_a__name', 'player_b__name')

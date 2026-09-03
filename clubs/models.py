@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -16,6 +17,7 @@ class Club(models.Model):
     logo = models.ImageField(upload_to='clubs/logos/', null=True, blank=True, verbose_name="Logotipo")
     description = models.TextField(blank=True, verbose_name="Descrição")
     address = models.CharField(max_length=300, blank=True, verbose_name="Endereço")
+    administrators = models.ManyToManyField(User, related_name='managed_clubs', blank=True, verbose_name="Administradores")
     
     # Configurações Visuais Específicas do Clube (Sobrescrevem o Global se preenchidas)
     background_image = models.ImageField(upload_to='clubs/backgrounds/', null=True, blank=True, verbose_name="Imagem de Fundo")
