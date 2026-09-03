@@ -19,7 +19,7 @@
             /* Variáveis Dinâmicas do Admin */
             --bg-color: {{ site_config.background_color|default:"#0f172a" }};
             --overlay-color: {{ site_config.overlay_color|default:"#000000" }};
-            --overlay-opacity: {{ site_config.overlay_opacity|default:"0.5" }};
+            --overlay-opacity: {{ site_config.overlay_opacity|default:"0.5"|stringformat:"s" }};
             --highlight-color: {{ site_config.highlight_color|default:"#3b82f6" }};
             --title-color: {{ site_config.title_color|default:"#ffffff" }};
             --subtitle-color: {{ site_config.subtitle_color|default:"#94a3b8" }};
@@ -44,8 +44,8 @@
         .watermark {
             position: fixed;
             z-index: 1000;
-            opacity: {{ site_config.watermark_opacity|default:"0.8" }};
-            width: {{ site_config.watermark_size_percent|default:"15" }}%;
+            opacity: {{ site_config.watermark_opacity|default:"0.8"|stringformat:"s" }};
+            width: {{ site_config.watermark_size_percent|default:"15"|stringformat:"s" }}%;
             pointer-events: none; /* Para não bloquear cliques */
             
             /* Posições */

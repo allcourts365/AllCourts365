@@ -7,7 +7,7 @@
     :root {
         {% if club.background_color %}--bg-color: {{ club.background_color }};{% endif %}
         {% if club.overlay_color %}--overlay-color: {{ club.overlay_color }};{% endif %}
-        {% if club.overlay_opacity %}--overlay-opacity: {{ club.overlay_opacity }};{% endif %}
+        {% if club.overlay_opacity %}--overlay-opacity: {{ club.overlay_opacity|stringformat:"s" }};{% endif %}
         {% if club.highlight_color %}--highlight-color: {{ club.highlight_color }};{% endif %}
         {% if club.title_color %}--title-color: {{ club.title_color }};{% endif %}
         {% if club.subtitle_color %}--subtitle-color: {{ club.subtitle_color }};{% endif %}
@@ -26,8 +26,8 @@
     .club-watermark {
         position: fixed;
         z-index: 1000;
-        opacity: {{ club.watermark_opacity|default:"0.8" }};
-        width: {{ club.watermark_size_percent|default:"15" }}%;
+        opacity: {{ club.watermark_opacity|default:"0.8"|stringformat:"s" }};
+        width: {{ club.watermark_size_percent|default:"15"|stringformat:"s" }}%;
         pointer-events: none;
         
         {% if club.watermark_position == 'top-left' %} top: 20px; left: 20px;
