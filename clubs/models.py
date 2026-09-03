@@ -12,6 +12,7 @@ class Club(models.Model):
     ]
 
     name = models.CharField(max_length=200, verbose_name="Nome do Clube")
+    website = models.URLField(max_length=200, blank=True, null=True, verbose_name="Site do Clube")
     logo = models.ImageField(upload_to='clubs/logos/', null=True, blank=True, verbose_name="Logotipo")
     description = models.TextField(blank=True, verbose_name="Descrição")
     address = models.CharField(max_length=300, blank=True, verbose_name="Endereço")

@@ -59,7 +59,13 @@
         </div>
     {% endif %}
     <div>
-        <h1 style="font-size: 2.5rem; margin-bottom: 10px;">{{ club.name }}</h1>
+        <h1 style="font-size: 2.5rem; margin-bottom: 10px;">
+            {% if club.website %}
+                <a href="{{ club.website }}" target="_blank" style="color: var(--title-color); text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">{{ club.name }}</a>
+            {% else %}
+                {{ club.name }}
+            {% endif %}
+        </h1>
         <p style="margin-bottom: 10px;">{{ club.description|default:"Sem descrição." }}</p>
         <p style="font-size: 0.9rem; color: var(--highlight-color);">📍 {{ club.address|default:"Endereço não informado" }}</p>
     </div>
