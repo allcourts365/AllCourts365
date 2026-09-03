@@ -280,6 +280,36 @@
     {% endfor %}
 </div>
 
+{% if ranking.is_finished %}
+<!-- Modal Global de Fim de Torneio -->
+<div id="global-podium-modal" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+    <div class="glass-card" style="position: relative; width: 90%; max-width: 800px; text-align: center; padding: 40px 20px; animation: scaleIn 0.3s ease-out; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <span onclick="closeGlobalPodiumModal()" style="position: absolute; top: 10px; right: 20px; font-size: 2rem; cursor: pointer; color: #fff; line-height: 1;">&times;</span>
+        <h2 style="color: #fff; margin-bottom: 10px; font-size: 2rem;">🏆 Ranking Encerrado 🏆</h2>
+        <h3 style="margin-bottom: 30px; font-size: 1.2rem; color: var(--subtitle-color);">Resultados Finais</h3>
+        
+        <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 20px;">
+            {% for cat, info in data.items %}
+            <div style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 20px; min-width: 220px; text-align: left; box-shadow: inset 0 0 10px rgba(0,0,0,0.2);">
+                <h4 style="color: var(--highlight-color); text-align: center; margin-bottom: 15px; text-transform: uppercase;">{{ cat.name }}</h4>
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px;">
+                    {% for cp in info.players|slice:":3" %}
+                    <li style="display: flex; align-items: center; gap: 10px; color: #fff;">
+                        <span style="font-size: 1.2rem;">{% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% else %}🥉{% endif %}</span>
+                        <span style="font-weight: bold; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ cp.player.name }}</span>
+                        <span style="color: var(--subtitle-color); font-size: 0.85rem;">({{ cp.points }} pts)</span>
+                    </li>
+                    {% empty %}
+                    <li style="color: var(--subtitle-color); text-align: center;">Nenhum atleta</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Modal de Pódio -->
 <div id="podium-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
     <div class="glass-card" style="position: relative; width: 90%; max-width: 500px; text-align: center; padding: 40px 20px; animation: scaleIn 0.3s ease-out; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
@@ -376,17 +406,45 @@ function closePodiumModal() {
     document.getElementById('podium-modal').style.display = 'none';
 }
 
+function closeGlobalPodiumModal() {
+    const el = document.getElementById('global-podium-modal');
+    if (el) el.style.display = 'none';
+}
+
 document.getElementById('podium-modal').addEventListener('click', function(e) {
     if (e.target === this) {
         closePodiumModal();
     }
 });
 
+const globalModal = document.getElementById('global-podium-modal');
+if (globalModal) {
+    globalModal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeGlobalPodiumModal();
+        }
+    });
+}
+
 window.addEventListener('load', function() {
-    const activeTab = document.querySelector('.category-content[style*="display: block"]');
-    if (activeTab) {
-        showPodium(activeTab.id);
-    }
+    {% if ranking.is_finished %}
+        var duration = 4 * 1000;
+        var end = Date.now() + duration;
+
+        (function frame() {
+            confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#3b82f6', '#FFD700', '#ffffff'], zIndex: 10000 });
+            confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#3b82f6', '#FFD700', '#ffffff'], zIndex: 10000 });
+
+            if (Date.now() < end && document.getElementById('global-podium-modal').style.display === 'flex') {
+                requestAnimationFrame(frame);
+            }
+        }());
+    {% else %}
+        const activeTab = document.querySelector('.category-content[style*="display: block"]');
+        if (activeTab) {
+            showPodium(activeTab.id);
+        }
+    {% endif %}
 });
 
 function openSubTab(catId, subName, btn) {
