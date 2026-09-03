@@ -38,7 +38,7 @@ class ClubScopedAdminMixin:
 class ClubForm(forms.ModelForm):
     class Meta:
         model = Club
-        fields = '__all__'
+        exclude = ('administrators',)
         widgets = {
             'background_color': forms.TextInput(attrs={'type': 'color'}),
             'overlay_color': forms.TextInput(attrs={'type': 'color'}),
@@ -47,29 +47,27 @@ class ClubForm(forms.ModelForm):
             'subtitle_color': forms.TextInput(attrs={'type': 'color'}),
         }
 
+class ClubAdministratorsInline(admin.TabularInline):
+    model = Club.administrators.through
+    extra = 1
+    verbose_name = "Administrador"
+    verbose_name_plural = "Lista de Administradores Cadastrados"
+    
+    readonly_fields = ('editar_usuario',)
+    
+    def editar_usuario(self, instance):
+        from django.utils.html import format_html
+        if instance and instance.user_id:
+            return format_html(f'<a href="/admin/auth/user/{instance.user_id}/change/" target="_blank">Abrir cadastro de {instance.user.username}</a>')
+        return "Salve para ver opções"
+    editar_usuario.short_description = "Ajustar Senha"
+
 @admin.register(Club)
 class ClubAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     form = ClubForm
     list_display = ('name', 'created_at')
     search_fields = ('name',)
-    filter_horizontal = ('administrators',)
-    readonly_fields = ('manage_admins_links',)
-    
-    def manage_admins_links(self, obj):
-        from django.utils.html import format_html
-        if not obj or not obj.pk:
-            return "Salve o clube primeiro para gerenciar seus administradores."
-        
-        links = []
-        for admin_user in obj.administrators.all():
-            url = f"/admin/auth/user/{admin_user.pk}/change/"
-            links.append(f'<a href="{url}" target="_blank" class="button" style="margin-bottom:5px;">✏️ Editar / Mudar Senha de <strong>{admin_user.username}</strong></a>')
-        
-        if not links:
-            return "Nenhum administrador vinculado ainda."
-            
-        return format_html("<br><br>".join(links))
-    manage_admins_links.short_description = "Ajustar Senhas / Usuários"
+    inlines = [ClubAdministratorsInline]
 
 @admin.register(Player)
 class PlayerAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
