@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}{{ ranking.name }} - {{ club.name }}{% endblock %}
 
@@ -21,6 +22,26 @@
         background-attachment: fixed !important;
     }
     {% endif %}
+
+    @keyframes spin-ball {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .ball-spinning {
+        display: inline-block;
+        animation: spin-ball 2s linear infinite;
+        width: 14px;
+        height: 14px;
+        vertical-align: middle;
+        margin-right: 6px;
+    }
+    .ball-static {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        vertical-align: middle;
+        margin-right: 6px;
+    }
 
     .ranking-table {
         width: 100%;
@@ -140,7 +161,12 @@
     <!-- Menu de Categorias -->
     <div class="tabs-container" style="justify-content: flex-start; overflow-x: auto; padding: 15px 15px 20px 15px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
         {% for cat, info in data.items %}
-            <button class="tab-btn {% if forloop.first %}active{% endif %}" onclick="openCategoryTab('cat-{{ cat.id }}', this)">
+            <button class="tab-btn {% if forloop.first %}active{% endif %}" onclick="openCategoryTab('cat-{{ cat.id }}', this)" style="display: flex; align-items: center;">
+                {% if cat.is_finished %}
+                    <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Encerrada">
+                {% else %}
+                    <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Em andamento">
+                {% endif %}
                 {{ cat.name }}
             </button>
         {% endfor %}
