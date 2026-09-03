@@ -52,6 +52,7 @@ class ClubAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     form = ClubForm
     list_display = ('name', 'created_at')
     search_fields = ('name',)
+    filter_horizontal = ('administrators',)
 
 @admin.register(Player)
 class PlayerAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
