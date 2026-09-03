@@ -6,7 +6,11 @@
 <h1 id="site-name">
     <a href="{% url 'admin:index' %}">
         {% if not request.user.is_authenticated %}
-            Acesso Restrito - Administração
+            {% if request.GET.club_name %}
+                Login - {{ request.GET.club_name }}
+            {% else %}
+                Login - Painel AllCourts365
+            {% endif %}
         {% elif request.user.is_superuser %}
             Painel Geral - AllCourts365
         {% else %}
