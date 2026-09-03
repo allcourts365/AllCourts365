@@ -3,10 +3,34 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 class Club(models.Model):
+    POSITION_CHOICES = [
+        ('top-left', 'Superior Esquerdo'),
+        ('top-right', 'Superior Direito'),
+        ('bottom-left', 'Inferior Esquerdo'),
+        ('bottom-right', 'Inferior Direito'),
+        ('center', 'Centro'),
+    ]
+
     name = models.CharField(max_length=200, verbose_name="Nome do Clube")
     logo = models.ImageField(upload_to='clubs/logos/', null=True, blank=True, verbose_name="Logotipo")
     description = models.TextField(blank=True, verbose_name="Descrição")
     address = models.CharField(max_length=300, blank=True, verbose_name="Endereço")
+    
+    # Configurações Visuais Específicas do Clube (Sobrescrevem o Global se preenchidas)
+    background_image = models.ImageField(upload_to='clubs/backgrounds/', null=True, blank=True, verbose_name="Imagem de Fundo")
+    background_color = models.CharField(max_length=7, null=True, blank=True, verbose_name="Cor de Fundo Fixa (Hex)")
+    overlay_color = models.CharField(max_length=7, null=True, blank=True, verbose_name="Cor do Fumê (Overlay)")
+    overlay_opacity = models.FloatField(null=True, blank=True, verbose_name="Opacidade do Fumê (0.0 a 1.0)")
+    
+    highlight_color = models.CharField(max_length=7, null=True, blank=True, verbose_name="Cor de Destaque")
+    title_color = models.CharField(max_length=7, null=True, blank=True, verbose_name="Cor do Título Principal")
+    subtitle_color = models.CharField(max_length=7, null=True, blank=True, verbose_name="Cor do Subtítulo")
+    
+    watermark_image = models.ImageField(upload_to='clubs/watermarks/', null=True, blank=True, verbose_name="Marca d'Água do Clube")
+    watermark_position = models.CharField(max_length=20, choices=POSITION_CHOICES, null=True, blank=True, verbose_name="Posição da Marca d'Água")
+    watermark_opacity = models.FloatField(null=True, blank=True, verbose_name="Opacidade da Marca d'Água")
+    watermark_size_percent = models.IntegerField(null=True, blank=True, verbose_name="Tamanho da Marca d'Água (%)")
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

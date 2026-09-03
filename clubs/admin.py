@@ -1,8 +1,23 @@
 from django.contrib import admin
 from .models import Club, Player, Tournament, RankingTournament, KnockoutTournament, Category, CategoryPlayer, Match
 
+from django import forms
+
+class ClubForm(forms.ModelForm):
+    class Meta:
+        model = Club
+        fields = '__all__'
+        widgets = {
+            'background_color': forms.TextInput(attrs={'type': 'color'}),
+            'overlay_color': forms.TextInput(attrs={'type': 'color'}),
+            'highlight_color': forms.TextInput(attrs={'type': 'color'}),
+            'title_color': forms.TextInput(attrs={'type': 'color'}),
+            'subtitle_color': forms.TextInput(attrs={'type': 'color'}),
+        }
+
 @admin.register(Club)
 class ClubAdmin(admin.ModelAdmin):
+    form = ClubForm
     list_display = ('name', 'created_at')
     search_fields = ('name',)
 

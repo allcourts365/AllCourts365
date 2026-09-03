@@ -64,9 +64,11 @@
     <div class="bg-overlay"></div>
 
     <!-- Marca d'Água -->
+    {% block watermark %}
     {% if site_config.watermark_image %}
     <img src="{{ site_config.watermark_image.url }}" alt="Watermark" class="watermark">
     {% endif %}
+    {% endblock %}
 
     <!-- Navegação -->
     <nav class="glass-nav">
@@ -89,6 +91,7 @@
     </main>
 
     <script>
+        {% block extra_scripts %}
         // Função para hex to rgba - Ajuste do overlay color para aceitar o HEX com opacidade
         document.addEventListener("DOMContentLoaded", function() {
             const hex = '{{ site_config.overlay_color|default:"#000000" }}';
@@ -99,6 +102,7 @@
             
             document.querySelector('.bg-overlay').style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${opacity})`;
         });
+        {% endblock %}
     </script>
 </body>
 </html>
