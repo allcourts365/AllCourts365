@@ -83,9 +83,7 @@
             <div class="nav-links">
                 <a href="/">Home</a>
                 <a href="{% url 'clubs:list' %}">Clubes</a>
-                {% if request.user.is_authenticated %}
-                    <a href="/admin/" class="btn-highlight"><i class="fas fa-lock"></i> Admin AllCourts365</a>
-                {% endif %}
+                <a href="/admin/" class="btn-highlight"><i class="fas fa-lock"></i> Admin AllCourts365</a>
             </div>
         </div>
     </nav>
