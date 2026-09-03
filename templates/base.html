@@ -14,6 +14,9 @@
     <!-- CSS Customizado -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}?v=1.1">
     
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{% static 'bolinha.png' %}">
     
@@ -81,7 +84,7 @@
                 <a href="/">Home</a>
                 <a href="{% url 'clubs:list' %}">Clubes</a>
                 {% if request.user.is_authenticated %}
-                    <a href="/admin/" class="btn-highlight">Painel Admin</a>
+                    <a href="/admin/" class="btn-highlight"><i class="fas fa-lock"></i> Admin AllCourts365</a>
                 {% endif %}
             </div>
         </div>
