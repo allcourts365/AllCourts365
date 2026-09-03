@@ -4,7 +4,12 @@
 {% block title %}{{ ranking.name }} - {{ club.name }}{% endblock %}
 
 {% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <style>
+    @keyframes scaleIn {
+        from { transform: scale(0.8); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
     :root {
         {% if club.background_color %}--bg-color: {{ club.background_color }};{% endif %}
         {% if club.overlay_color %}--overlay-color: {{ club.overlay_color }};{% endif %}
@@ -274,6 +279,33 @@
     </div>
     {% endfor %}
 </div>
+
+<!-- Modal de Pódio -->
+<div id="podium-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+    <div class="glass-card" style="position: relative; width: 90%; max-width: 500px; text-align: center; padding: 40px 20px; animation: scaleIn 0.3s ease-out; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <span onclick="closePodiumModal()" style="position: absolute; top: 10px; right: 20px; font-size: 2rem; cursor: pointer; color: #fff; line-height: 1;">&times;</span>
+        <h2 style="color: #FFD700; margin-bottom: 10px; font-size: 2rem;">🏆 Pódio Final 🏆</h2>
+        <h3 id="podium-category-name" style="margin-bottom: 30px; font-size: 1.2rem; color: var(--title-color);"></h3>
+        
+        <div style="display: flex; justify-content: center; align-items: flex-end; gap: 15px; height: 160px; margin-bottom: 20px;">
+            <!-- 2º Lugar -->
+            <div id="podium-2" style="display: none; flex-direction: column; align-items: center; width: 30%;">
+                <div id="podium-2-name" style="font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;"></div>
+                <div style="background: linear-gradient(to top, #A9A9A9, #E0E0E0); width: 100%; height: 80px; border-radius: 5px 5px 0 0; display: flex; align-items: center; justify-content: center; color: #000; font-weight: 900; font-size: 1.5rem; box-shadow: inset 0 0 10px rgba(0,0,0,0.2);">2º</div>
+            </div>
+            <!-- 1º Lugar -->
+            <div id="podium-1" style="display: none; flex-direction: column; align-items: center; width: 35%;">
+                <div id="podium-1-name" style="font-weight: bold; margin-bottom: 5px; font-size: 1.1rem; color: #FFD700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;"></div>
+                <div style="background: linear-gradient(to top, #B8860B, #FFD700); width: 100%; height: 120px; border-radius: 5px 5px 0 0; display: flex; align-items: center; justify-content: center; color: #000; font-weight: 900; font-size: 2rem; box-shadow: inset 0 0 10px rgba(0,0,0,0.2);">1º</div>
+            </div>
+            <!-- 3º Lugar -->
+            <div id="podium-3" style="display: none; flex-direction: column; align-items: center; width: 30%;">
+                <div id="podium-3-name" style="font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;"></div>
+                <div style="background: linear-gradient(to top, #8B4513, #CD7F32); width: 100%; height: 60px; border-radius: 5px 5px 0 0; display: flex; align-items: center; justify-content: center; color: #000; font-weight: 900; font-size: 1.5rem; box-shadow: inset 0 0 10px rgba(0,0,0,0.2);">3º</div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -286,7 +318,76 @@ function openCategoryTab(catId, btn) {
     // Mostra a categoria atual
     document.getElementById(catId).style.display = 'block';
     btn.classList.add('active');
+    
+    // Dispara pódio se aplicável
+    showPodium(catId);
 }
+
+const categoryPodiums = {
+    {% for cat, info in data.items %}
+        {% if cat.is_finished %}
+            "cat-{{ cat.id }}": {
+                "name": "{{ cat.name|escapejs }}",
+                "top3": [
+                    {% for row in info.ranking|slice:":3" %}
+                        "{{ row.player.user.get_full_name|default:row.player.user.username|escapejs }}"{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ]
+            }{% if not forloop.last %},{% endif %}
+        {% endif %}
+    {% endfor %}
+};
+
+function showPodium(catId) {
+    if (categoryPodiums[catId]) {
+        const data = categoryPodiums[catId];
+        document.getElementById('podium-category-name').innerText = data.name;
+        
+        const p1 = document.getElementById('podium-1');
+        const p1Name = document.getElementById('podium-1-name');
+        const p2 = document.getElementById('podium-2');
+        const p2Name = document.getElementById('podium-2-name');
+        const p3 = document.getElementById('podium-3');
+        const p3Name = document.getElementById('podium-3-name');
+        
+        p1.style.display = 'none'; p2.style.display = 'none'; p3.style.display = 'none';
+        
+        if (data.top3.length > 0) { p1Name.innerText = data.top3[0]; p1.style.display = 'flex'; }
+        if (data.top3.length > 1) { p2Name.innerText = data.top3[1]; p2.style.display = 'flex'; }
+        if (data.top3.length > 2) { p3Name.innerText = data.top3[2]; p3.style.display = 'flex'; }
+
+        document.getElementById('podium-modal').style.display = 'flex';
+        
+        var duration = 4 * 1000;
+        var end = Date.now() + duration;
+
+        (function frame() {
+            confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#3b82f6', '#FFD700', '#ffffff'], zIndex: 10000 });
+            confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#3b82f6', '#FFD700', '#ffffff'], zIndex: 10000 });
+
+            if (Date.now() < end && document.getElementById('podium-modal').style.display === 'flex') {
+                requestAnimationFrame(frame);
+            }
+        }());
+    }
+}
+
+function closePodiumModal() {
+    document.getElementById('podium-modal').style.display = 'none';
+}
+
+document.getElementById('podium-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closePodiumModal();
+    }
+});
+
+window.addEventListener('load', function() {
+    const activeTab = document.querySelector('.category-content[style*="display: block"]');
+    if (activeTab) {
+        showPodium(activeTab.id);
+    }
+});
 
 function openSubTab(catId, subName, btn) {
     // Esconde ambas as sub-abas daquela categoria
