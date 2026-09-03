@@ -329,8 +329,8 @@ const categoryPodiums = {
             "cat-{{ cat.id }}": {
                 "name": "{{ cat.name|escapejs }}",
                 "top3": [
-                    {% for row in info.ranking|slice:":3" %}
-                        "{{ row.player.user.get_full_name|default:row.player.user.username|escapejs }}"{% if not forloop.last %},{% endif %}
+                    {% for cp in info.players|slice:":3" %}
+                        "{{ cp.player.name|escapejs }}"{% if not forloop.last %},{% endif %}
                     {% endfor %}
                 ]
             }{% if not forloop.last %},{% endif %}
