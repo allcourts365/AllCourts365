@@ -66,27 +66,60 @@
         color: #fff;
     }
     
-    .round-selector {
+    .round-filter-container {
         display: flex;
-        gap: 10px;
-        overflow-x: auto;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
-    }
-    .round-btn {
-        background: rgba(255,255,255,0.1);
-        border: 1px solid rgba(255,255,255,0.2);
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 40px;
         color: var(--subtitle-color);
-        padding: 8px 15px;
-        border-radius: 20px;
-        cursor: pointer;
-        white-space: nowrap;
-        transition: all 0.2s;
+        font-size: 1.05rem;
+        flex-wrap: wrap;
     }
-    .round-btn.active {
-        background: var(--highlight-color);
+    .round-select {
+        background: rgba(15, 23, 42, 0.8);
         color: #fff;
+        border: 1px solid rgba(255,255,255,0.2);
+        padding: 10px 40px 10px 15px;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        outline: none;
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+        background-repeat: no-repeat;
+        background-position: right 15px top 50%;
+        background-size: 10px auto;
+    }
+    .round-select:focus {
         border-color: var(--highlight-color);
+    }
+    .round-title-area {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    .round-title-bar {
+        width: 6px;
+        height: 28px;
+        background: var(--highlight-color);
+        border-radius: 4px;
+    }
+    .round-title-area h2 {
+        font-size: 1.8rem;
+        margin: 0;
+        color: #fff;
+        font-weight: 700;
+    }
+    .badge-current-round {
+        border: 1px solid var(--highlight-color);
+        color: var(--highlight-color);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        background: rgba(0,0,0,0.2);
     }
 </style>
 {% endblock %}
@@ -159,16 +192,29 @@
         <div id="cat-{{ cat.id }}-rodadas" class="sub-content" style="display: none;">
             
             {% if info.rounds %}
-            <div class="round-selector">
-                {% for round_num, matches in info.rounds.items %}
-                <button class="round-btn cat-{{ cat.id }}-round-btn {% if round_num == ranking.current_round %}active{% endif %}" onclick="openRound('cat-{{ cat.id }}', '{{ round_num }}', this)">
-                    Rodada {{ round_num }}
-                </button>
-                {% endfor %}
+            <div class="round-filter-container">
+                <span style="font-weight: 500;">Escolha a rodada que deseja visualizar:</span>
+                <select class="round-select cat-{{ cat.id }}-round-select" onchange="onRoundSelect('cat-{{ cat.id }}', this)">
+                    {% for round_num, matches in info.rounds.items %}
+                    <option value="{{ round_num }}" {% if round_num == ranking.current_round %}selected{% endif %}>
+                        Rodada {{ round_num }}{% if round_num == ranking.current_round %} (Rodada Atual){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
             </div>
 
             {% for round_num, matches in info.rounds.items %}
             <div id="cat-{{ cat.id }}-round-{{ round_num }}" class="round-content" style="display: {% if round_num == ranking.current_round %}block{% else %}none{% endif %};">
+                
+                <div class="round-title-area">
+                    <div class="round-title-bar"></div>
+                    <h2>Rodada {{ round_num }}</h2>
+                    {% if round_num == ranking.current_round %}
+                    <span class="badge-current-round">Rodada Atual</span>
+                    {% endif %}
+                </div>
+                
+                <div style="border-top: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;"></div>
                 {% for m in matches %}
                 <div class="match-card">
                     <div class="match-player {% if m.winner == m.player_a %}winner{% endif %}" style="text-align: right;">
@@ -233,25 +279,30 @@ function openSubTab(catId, subName, btn) {
     btn.style.borderBottomColor = 'var(--highlight-color)';
 }
 
-function openRound(catId, roundNum, btn) {
+function onRoundSelect(catId, selectEl) {
+    const roundNum = selectEl.value;
     // Esconde todas as rodadas daquela categoria
     document.querySelectorAll('#' + catId + '-rodadas .round-content').forEach(el => el.style.display = 'none');
-    // Remove active dos botões de rodada
-    document.querySelectorAll('.' + catId + '-round-btn').forEach(el => el.classList.remove('active'));
     
-    // Mostra a rodada atual
-    document.getElementById(catId + '-round-' + roundNum).style.display = 'block';
-    btn.classList.add('active');
+    // Mostra a rodada selecionada
+    const targetRound = document.getElementById(catId + '-round-' + roundNum);
+    if(targetRound) {
+        targetRound.style.display = 'block';
+    }
 }
 
-// Fallback: Se nenhuma rodada estiver ativa (ex: current_round configurada errada), ativa a primeira disponível
+// Fallback: Se nenhuma rodada estiver ativa (ex: current_round configurada errada), ativa a primeira disponível do select
 document.addEventListener("DOMContentLoaded", function() {
     document.querySelectorAll('.category-content').forEach(cat => {
-        const activeBtn = cat.querySelector('.round-btn.active');
-        if (!activeBtn) {
-            const firstBtn = cat.querySelector('.round-btn');
-            if (firstBtn) {
-                firstBtn.click();
+        const selectEl = cat.querySelector('.round-select');
+        if (selectEl) {
+            // Verifica se a opção atualmente selecionada tem um display correspondente block
+            // Na verdade, se o current_round não bate com nenhuma option, o HTML seleciona a primeira por padrão
+            // Então só precisamos forçar o onchange para garantir que a rodada correta seja exibida se o current_round era inválido.
+            const selectedVal = selectEl.value;
+            const targetDisplay = document.getElementById(cat.id + '-round-' + selectedVal);
+            if (targetDisplay && targetDisplay.style.display === 'none') {
+                targetDisplay.style.display = 'block';
             }
         }
     });
