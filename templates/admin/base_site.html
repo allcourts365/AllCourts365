@@ -1,0 +1,17 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }} | AllCourts365{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        {% if request.user.is_superuser %}
+            Painel Geral - AllCourts365
+        {% else %}
+            Painel do Clube - {{ request.user.managed_clubs.first.name|default:"AllCourts365" }}
+        {% endif %}
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
