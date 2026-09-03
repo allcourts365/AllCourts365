@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="home-container" style="text-align: center; margin-top: 10vh;">
+    <h1 style="font-size: 4rem; font-weight: 800; margin-bottom: 20px;">Bem-vindo ao AllCourts<span style="color: var(--highlight-color);">365</span></h1>
+    <p style="font-size: 1.5rem; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
+        A central definitiva para gestão de Clubes de Tênis, Rankings e Torneios.
+    </p>
+    
+    <div style="display: flex; justify-content: center; gap: 20px;">
+        <a href="{% url 'clubs:list' %}" class="btn-highlight" style="font-size: 1.2rem; padding: 15px 40px; text-decoration: none; display: inline-block;">Encontrar meu Clube</a>
+    </div>
+
+    <!-- Seção de demonstração de design premium com cards glassmorphism -->
+    <div style="margin-top: 80px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+        <div class="glass-card">
+            <h3 style="font-size: 1.5rem; margin-bottom: 15px;">Clubes Exclusivos</h3>
+            <p>Acesse o ranking e acompanhe o desempenho dos jogadores do seu clube.</p>
+        </div>
+        <div class="glass-card">
+            <h3 style="font-size: 1.5rem; margin-bottom: 15px;">Torneios Online</h3>
+            <p>Chaves de torneio atualizadas em tempo real. Veja os resultados na hora.</p>
+        </div>
+        <div class="glass-card">
+            <h3 style="font-size: 1.5rem; margin-bottom: 15px;">Gestão Simples</h3>
+            <p>Painel administrativo poderoso para gerenciar tudo de forma eficiente e bonita.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

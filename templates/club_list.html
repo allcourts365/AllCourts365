@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Clubes - AllCourts365{% endblock %}
+
+{% block content %}
+<div class="header-section" style="text-align: center; margin-bottom: 40px;">
+    <h1 style="font-size: 3rem; margin-bottom: 10px;">Clubes Associados</h1>
+    <p style="font-size: 1.2rem;">Encontre o seu clube e acesse rankings e torneios.</p>
+</div>
+
+<div class="clubs-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px;">
+    {% for club in clubs %}
+    <a href="{% url 'clubs:detail' club.id %}" style="text-decoration: none;">
+        <div class="glass-card" style="text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center;">
+            {% if club.logo %}
+                <img src="{{ club.logo.url }}" alt="{{ club.name }}" style="max-width: 150px; max-height: 150px; margin: 0 auto 20px auto; border-radius: 10px; object-fit: contain;">
+            {% else %}
+                <div style="width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 10px; margin: 0 auto 20px auto; display: flex; align-items: center; justify-content: center;">
+                    <span style="font-size: 3rem; color: var(--highlight-color);">🎾</span>
+                </div>
+            {% endif %}
+            <h2 style="font-size: 1.5rem; margin-bottom: 10px;">{{ club.name }}</h2>
+            <p style="font-size: 0.9rem;">{{ club.address|default:"Endereço não informado" }}</p>
+        </div>
+    </a>
+    {% empty %}
+    <div style="grid-column: 1 / -1; text-align: center; padding: 50px;">
+        <p style="font-size: 1.2rem;">Nenhum clube cadastrado ainda.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
