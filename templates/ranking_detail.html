@@ -105,7 +105,7 @@
 
 <div class="glass-card" style="padding: 20px;">
     <!-- Menu de Categorias -->
-    <div class="tabs-container" style="justify-content: flex-start; overflow-x: auto; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
+    <div class="tabs-container" style="justify-content: flex-start; overflow-x: auto; padding: 15px 15px 20px 15px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
         {% for cat, info in data.items %}
             <button class="tab-btn {% if forloop.first %}active{% endif %}" onclick="openCategoryTab('cat-{{ cat.id }}', this)">
                 {{ cat.name }}
