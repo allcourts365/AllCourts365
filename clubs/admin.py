@@ -53,6 +53,23 @@ class ClubAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     list_display = ('name', 'created_at')
     search_fields = ('name',)
     filter_horizontal = ('administrators',)
+    readonly_fields = ('manage_admins_links',)
+    
+    def manage_admins_links(self, obj):
+        from django.utils.html import format_html
+        if not obj or not obj.pk:
+            return "Salve o clube primeiro para gerenciar seus administradores."
+        
+        links = []
+        for admin_user in obj.administrators.all():
+            url = f"/admin/auth/user/{admin_user.pk}/change/"
+            links.append(f'<a href="{url}" target="_blank" class="button" style="margin-bottom:5px;">✏️ Editar / Mudar Senha de <strong>{admin_user.username}</strong></a>')
+        
+        if not links:
+            return "Nenhum administrador vinculado ainda."
+            
+        return format_html("<br><br>".join(links))
+    manage_admins_links.short_description = "Ajustar Senhas / Usuários"
 
 @admin.register(Player)
 class PlayerAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
