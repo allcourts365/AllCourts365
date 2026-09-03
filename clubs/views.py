@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404
+from django.db.models import Q
 from .models import Club
 
 def club_list(request):
@@ -19,7 +20,7 @@ def ranking_detail(request, club_id, ranking_id):
     
     data = {}
     for cat in categories:
-        players = cat.players.all()
+        players = cat.players.exclude(Q(player__name__icontains='bye') | Q(player__name__icontains='folga'))
         matches = cat.matches.all().order_by('round_number')
         
         rounds_dict = {}
