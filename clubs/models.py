@@ -234,6 +234,9 @@ class Match(models.Model):
             self.set5_a, self.set5_b
         ])
         
+        sa = self.sets_a or 0
+        sb = self.sets_b or 0
+        
         if has_games:
             sa = 0
             sb = 0
@@ -252,18 +255,16 @@ class Match(models.Model):
             self.sets_a = sa
             self.sets_b = sb
             
-            if self.status == 'completed':
-                if sa > sb:
-                    self.winner = self.player_a
-                elif sb > sa:
-                    self.winner = self.player_b
-        else:
-            # Retrocompatibilidade de preenchimento manual
-            if self.status == 'completed' and self.sets_a is not None and self.sets_b is not None:
-                if self.sets_a > self.sets_b:
-                    self.winner = self.player_a
-                elif self.sets_b > self.sets_a:
-                    self.winner = self.player_b
+        # Lógica Automática de Status e Vencedor baseada no Formato do Torneio
+        if self.tournament:
+            sets_to_win = 3 if self.tournament.set_format == '5_normal' else 2
+            
+            if sa >= sets_to_win or sb >= sets_to_win:
+                self.status = 'completed'
+                self.winner = self.player_a if sa > sb else self.player_b
+            elif self.status != 'cancelled':
+                self.status = 'pending'
+                self.winner = None
                     
         super().save(*args, **kwargs)
 
