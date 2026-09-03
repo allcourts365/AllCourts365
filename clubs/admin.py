@@ -50,7 +50,7 @@ class RankingTournamentForm(forms.ModelForm):
     history_file = forms.FileField(
         required=False,
         label="Upload Planilha de Histórico (Jogos já realizados)",
-        help_text=mark_safe('Formato xlsx. Colunas: A(Atleta A), B(Atleta B), C(Sets A), D(Sets B), E(Categoria), F(Rodada). <br><a href="/static/planilha_historico.xlsx" download>📥 Baixar planilha de histórico</a>')
+        help_text=mark_safe('Formato xlsx. Colunas: A(Atleta A), B(Atleta B), C(Sets A), D(Sets B), E(Categoria), F(Rodada), G(Status). <br><a href="/static/planilha_historico.xlsx" download>📥 Baixar planilha de histórico</a>')
     )
     
     class Meta:
@@ -170,9 +170,12 @@ class RankingTournamentAdmin(TournamentAdmin):
                     sets_b = int(row[3]) if row[3] is not None else 0
                     category_name = str(row[4]).strip() if row[4] else "Única"
                     round_number = int(row[5]) if row[5] is not None else 1
+                    status_raw = str(row[6]).strip().lower() if len(row) > 6 and row[6] is not None else "finalizado"
                 except ValueError:
                     continue
                     
+                match_status = 'pending' if status_raw in ['pendente', 'pending', 'aguardando'] else 'completed'
+                
                 category, _ = Category.objects.get_or_create(tournament=obj, name=category_name)
                 
                 pa, _ = Player.objects.get_or_create(club=obj.club, name=player_a_name)
@@ -181,12 +184,12 @@ class RankingTournamentAdmin(TournamentAdmin):
                 cpa, _ = CategoryPlayer.objects.get_or_create(category=category, player=pa)
                 cpb, _ = CategoryPlayer.objects.get_or_create(category=category, player=pb)
                 
-                if sets_a > sets_b:
-                    winner = pa
-                elif sets_b > sets_a:
-                    winner = pb
-                else:
-                    winner = None
+                winner = None
+                if match_status == 'completed':
+                    if sets_a > sets_b:
+                        winner = pa
+                    elif sets_b > sets_a:
+                        winner = pb
                     
                 Match.objects.create(
                     category=category,
@@ -194,40 +197,41 @@ class RankingTournamentAdmin(TournamentAdmin):
                     round_number=round_number,
                     player_a=pa,
                     player_b=pb,
-                    sets_a=sets_a,
-                    sets_b=sets_b,
+                    sets_a=sets_a if match_status == 'completed' else None,
+                    sets_b=sets_b if match_status == 'completed' else None,
                     winner=winner,
-                    status='completed'
+                    status=match_status
                 )
                 
                 matches_imported += 1
                 
-                # Atualiza pontos (lógica simplificada baseada no obj)
-                if winner == pa:
-                    if sets_b == 0:
-                        cpa.points += obj.points_winner_2x0
-                        cpb.points += obj.points_loser_2x0
-                    else:
-                        cpa.points += obj.points_winner_2x1
-                        cpb.points += obj.points_loser_2x1
-                    cpa.wins += 1
-                    cpb.losses += 1
-                elif winner == pb:
-                    if sets_a == 0:
-                        cpb.points += obj.points_winner_2x0
-                        cpa.points += obj.points_loser_2x0
-                    else:
-                        cpb.points += obj.points_winner_2x1
-                        cpa.points += obj.points_loser_2x1
-                    cpb.wins += 1
-                    cpa.losses += 1
-                    
-                cpa.matches_played += 1
-                cpb.matches_played += 1
-                cpa.save()
-                cpb.save()
+                # Atualiza pontos apenas se o jogo foi finalizado
+                if match_status == 'completed':
+                    if winner == pa:
+                        if sets_b == 0:
+                            cpa.points += obj.points_winner_2x0
+                            cpb.points += obj.points_loser_2x0
+                        else:
+                            cpa.points += obj.points_winner_2x1
+                            cpb.points += obj.points_loser_2x1
+                        cpa.wins += 1
+                        cpb.losses += 1
+                    elif winner == pb:
+                        if sets_a == 0:
+                            cpb.points += obj.points_winner_2x0
+                            cpa.points += obj.points_loser_2x0
+                        else:
+                            cpb.points += obj.points_winner_2x1
+                            cpa.points += obj.points_loser_2x1
+                        cpb.wins += 1
+                        cpa.losses += 1
+                        
+                    cpa.matches_played += 1
+                    cpb.matches_played += 1
+                    cpa.save()
+                    cpb.save()
                 
-            messages.success(request, f"Histórico importado: {matches_imported} partidas registradas com sucesso.")
+            messages.success(request, f"Histórico importado: {matches_imported} partidas processadas com sucesso.")
             
         except Exception as e:
             messages.error(request, f"Erro ao processar planilha de histórico: {str(e)}")
