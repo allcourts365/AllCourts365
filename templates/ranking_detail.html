@@ -161,14 +161,14 @@
             {% if info.rounds %}
             <div class="round-selector">
                 {% for round_num, matches in info.rounds.items %}
-                <button class="round-btn cat-{{ cat.id }}-round-btn {% if forloop.first %}active{% endif %}" onclick="openRound('cat-{{ cat.id }}', '{{ round_num }}', this)">
+                <button class="round-btn cat-{{ cat.id }}-round-btn {% if round_num == ranking.current_round %}active{% endif %}" onclick="openRound('cat-{{ cat.id }}', '{{ round_num }}', this)">
                     Rodada {{ round_num }}
                 </button>
                 {% endfor %}
             </div>
 
             {% for round_num, matches in info.rounds.items %}
-            <div id="cat-{{ cat.id }}-round-{{ round_num }}" class="round-content" style="display: {% if forloop.first %}block{% else %}none{% endif %};">
+            <div id="cat-{{ cat.id }}-round-{{ round_num }}" class="round-content" style="display: {% if round_num == ranking.current_round %}block{% else %}none{% endif %};">
                 {% for m in matches %}
                 <div class="match-card">
                     <div class="match-player {% if m.winner == m.player_a %}winner{% endif %}" style="text-align: right;">
@@ -243,4 +243,17 @@ function openRound(catId, roundNum, btn) {
     document.getElementById(catId + '-round-' + roundNum).style.display = 'block';
     btn.classList.add('active');
 }
+
+// Fallback: Se nenhuma rodada estiver ativa (ex: current_round configurada errada), ativa a primeira disponível
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('.category-content').forEach(cat => {
+        const activeBtn = cat.querySelector('.round-btn.active');
+        if (!activeBtn) {
+            const firstBtn = cat.querySelector('.round-btn');
+            if (firstBtn) {
+                firstBtn.click();
+            }
+        }
+    });
+});
 {% endblock %}
