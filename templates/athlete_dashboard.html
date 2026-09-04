@@ -201,6 +201,51 @@
         box-shadow: 0 8px 20px rgba(0,0,0,0.4);
         color: #fff;
     }
+
+    .tournament-card .status-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        letter-spacing: 0.5px;
+    }
+    
+    .tournament-card .status-finished {
+        background-color: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+    
+    .tournament-card .status-active {
+        background-color: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.4);
+    }
+
+    @keyframes spin-ball {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    .ball-spinning {
+        display: inline-block;
+        animation: spin-ball 2s linear infinite;
+        width: 14px;
+        height: 14px;
+    }
+    
+    .ball-static {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+    }
 </style>
 {% endblock %}
 
@@ -259,7 +304,7 @@
 
     <!-- Aba: Meu Clube -->
     <div id="meu-clube" class="tab-content {% if not linked_club %}active{% endif %}">
-        <div class="glass-card" style="padding: 50px; border-radius: 16px; text-align: center; min-height: 450px; display: flex; flex-direction: column; justify-content: center; max-width: 800px; margin: 0 auto;">
+        <div class="glass-card" style="padding: 50px; border-radius: 16px; text-align: center; min-height: 450px; display: flex; flex-direction: column; justify-content: center;">
             <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 30px; font-weight: 900;">
                 Vínculo com Clube
             </h2>
@@ -350,7 +395,7 @@
     
     <!-- Aba: Meu Perfil -->
     <div id="meu-perfil" class="tab-content {% if linked_club %}active{% endif %}">
-        <div class="glass-card" style="padding: 50px; border-radius: 16px; max-width: 800px; margin: 0 auto;">
+        <div class="glass-card" style="padding: 50px; border-radius: 16px;">
             <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 40px; font-weight: 900; text-align: center;">
                 Meu Perfil
             </h2>
@@ -423,17 +468,65 @@
 
     <!-- Aba: Meus Jogos -->
     <div id="meus-jogos" class="tab-content">
-        <div class="glass-card" style="padding: 40px; border-radius: 16px; max-width: 800px; margin: 0 auto;">
-            <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 30px; font-weight: 900; text-align: center;">
-                Meus Jogos
-            </h2>
+        <div class="glass-card" style="padding: 30px; border-radius: 16px; min-height: 450px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 25px; padding-bottom: 10px;">
+                <h2 style="font-size: 2rem; color: #fff; margin: 0; font-weight: 800;">
+                    Meus Jogos
+                </h2>
+                <button id="btn-back-tournaments" onclick="showTournamentsList()" style="display: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 15px; border-radius: 20px; cursor: pointer; font-size: 0.9rem;">
+                    <i class="fas fa-arrow-left"></i> Voltar aos Torneios
+                </button>
+            </div>
             
-            {% if not my_matches %}
+            {% if not my_tournaments %}
                 <p style="color: var(--subtitle-color); text-align: center; font-size: 1.1rem;">Você ainda não possui jogos gerados em nenhum torneio ou ranking.</p>
             {% else %}
-                <div style="display: flex; flex-direction: column; gap: 20px;">
+                <!-- VIEW 1: Lista de Torneios -->
+                <div id="view-tournaments" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                    {% for t in my_tournaments %}
+                    <div onclick="showTournamentMatches({{ t.id }}, {{ t.current_round|default:1 }})" class="glass-card tournament-card" style="position: relative; padding: 25px; cursor: pointer; transition: transform 0.2s, background 0.2s;">
+                        {% if t.status == 'completed' %}
+                            <div class="status-badge status-finished">
+                                <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Encerrado"> Encerrado
+                            </div>
+                        {% elif t.status == 'in_progress' %}
+                            <div class="status-badge status-active">
+                                <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Em andamento"> Em andamento
+                            </div>
+                        {% else %}
+                            <div class="status-badge" style="background-color: rgba(255, 165, 0, 0.2); color: orange; border: 1px solid rgba(255, 165, 0, 0.4);">
+                                <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Pendente"> Pendente
+                            </div>
+                        {% endif %}
+                        <h3 style="margin-bottom: 10px; color: var(--highlight-color); font-size: 1.4rem; font-weight: 900; text-transform: uppercase; letter-spacing: -0.5px; padding-right: 120px;">
+                            {{ t.name }}
+                        </h3>
+                        <p style="margin-bottom: 5px; color: #ccc;"><strong>Competição:</strong> Simples</p>
+                        <p style="margin-bottom: 20px; color: #ccc;"><strong>Rodada Atual:</strong> {{ t.current_round|default:1 }}</p>
+                        <div style="color: var(--subtitle-color); font-size: 1.1rem; font-weight: 500; margin-top: 10px;">
+                            Ver jogos e ranking &rarr;
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- VIEW 2: Jogos do Torneio Selecionado -->
+                <div id="view-matches" style="display: none; flex-direction: column; gap: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 10px; background: rgba(0,0,0,0.3); padding: 15px 20px; border-radius: 12px; border-left: 4px solid var(--highlight-color);">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="width: 4px; height: 30px; background: var(--highlight-color); border-radius: 2px;"></div>
+                            <h3 id="matches-round-title" style="color: #fff; font-size: 1.6rem; font-weight: 900; margin: 0; letter-spacing: -0.5px;">Rodada X</h3>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="color: var(--subtitle-color); font-size: 0.95rem;">Escolha a rodada que deseja visualizar:</span>
+                            <select id="round-filter" onchange="applyMatchesFilter()" style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 8px; outline: none; font-weight: bold; min-width: 200px;">
+                                <!-- preenchido via JS -->
+                            </select>
+                        </div>
+                    </div>
+
                     {% for match in my_matches %}
-                    <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
+                    <div class="match-card-item" data-tournament-id="{{ match.tournament.id }}" data-round="{{ match.round_number }}" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; display: none;">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
                             <div>
                                 <span style="background: var(--highlight-color); color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">{{ match.tournament.name }}</span>
@@ -534,7 +627,7 @@
     </div>
     <!-- Aba: Mensagens -->
     <div id="mensagens" class="tab-content">
-        <div class="glass-card" style="padding: 40px; border-radius: 16px; max-width: 800px; margin: 0 auto;">
+        <div class="glass-card" style="padding: 40px; border-radius: 16px;">
             <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 30px; font-weight: 900; text-align: center;">Mensagens</h2>
             {% if not athlete_messages %}
                 <p style="color: var(--subtitle-color); text-align: center; font-size: 1.1rem;">Nenhuma mensagem recebida.</p>
@@ -1182,4 +1275,73 @@
             {% endfor %}
         }
     });
+
+    let globalTournaments = {};
+    {% for t in my_tournaments %}
+    globalTournaments[{{ t.id }}] = { current_round: {{ t.current_round|default:1 }} };
+    {% endfor %}
+
+    let currentTournamentId = null;
+
+    function showTournamentsList() {
+        document.getElementById('view-tournaments').style.display = 'grid';
+        document.getElementById('view-matches').style.display = 'none';
+        document.getElementById('btn-back-tournaments').style.display = 'none';
+    }
+
+    function showTournamentMatches(tournamentId, currentRound) {
+        currentTournamentId = tournamentId;
+        document.getElementById('view-tournaments').style.display = 'none';
+        document.getElementById('view-matches').style.display = 'flex';
+        document.getElementById('btn-back-tournaments').style.display = 'inline-block';
+        
+        let select = document.getElementById('round-filter');
+        select.innerHTML = '<option value="all">Todas as Rodadas</option>';
+        
+        let rounds = new Set();
+        document.querySelectorAll('.match-card-item').forEach(card => {
+            if(card.getAttribute('data-tournament-id') == tournamentId) {
+                rounds.add(parseInt(card.getAttribute('data-round')));
+            }
+        });
+        
+        let roundsArr = Array.from(rounds).sort((a,b)=>a-b);
+        roundsArr.forEach(r => {
+            let text = `Rodada ${r}`;
+            if(r == currentRound) text += ' (Rodada Atual)';
+            select.innerHTML += `<option value="${r}">${text}</option>`;
+        });
+        
+        if(rounds.has(currentRound)) {
+            select.value = currentRound;
+        } else {
+            select.value = 'all';
+        }
+        
+        applyMatchesFilter();
+    }
+
+    function applyMatchesFilter() {
+        let select = document.getElementById('round-filter');
+        let roundFilter = select.value;
+        
+        if(roundFilter === 'all') {
+            document.getElementById('matches-round-title').innerHTML = 'Todas as Rodadas';
+        } else {
+            let isCurrent = (roundFilter == globalTournaments[currentTournamentId].current_round);
+            document.getElementById('matches-round-title').innerHTML = `Rodada ${roundFilter} ${isCurrent ? '<span style="font-size: 0.9rem; border: 1px solid var(--highlight-color); color: var(--highlight-color); padding: 2px 8px; border-radius: 20px; margin-left: 10px; vertical-align: middle;">Rodada Atual</span>' : ''}`;
+        }
+        
+        document.querySelectorAll('.match-card-item').forEach(card => {
+            if(card.getAttribute('data-tournament-id') == currentTournamentId) {
+                if(roundFilter === 'all' || card.getAttribute('data-round') === roundFilter) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
 {% endblock %}

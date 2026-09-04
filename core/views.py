@@ -394,10 +394,18 @@ def athlete_dashboard(request):
 
     # Prepara os Jogos do Atleta
     my_matches = []
+    my_tournaments = []
     courts = []
     if hasattr(user, 'player_profile'):
         p = user.player_profile
         my_matches = Match.objects.filter(Q(player_a=p) | Q(player_b=p)).select_related('tournament', 'player_a', 'player_b', 'court').order_by('-tournament__current_round', 'round_number')
+        
+        seen_t = set()
+        for m in my_matches:
+            if m.tournament and m.tournament.id not in seen_t:
+                seen_t.add(m.tournament.id)
+                my_tournaments.append(m.tournament)
+                
         courts = Court.objects.filter(club=linked_club, is_ranking_court=True)
 
     # Busca Mensagens
@@ -414,6 +422,7 @@ def athlete_dashboard(request):
         'clubs': clubs,
         'players_json': json.dumps(players_data),
         'my_matches': my_matches,
+        'my_tournaments': my_tournaments,
         'courts': courts,
         'user_messages': user_messages,
         'athlete_messages': user_messages,

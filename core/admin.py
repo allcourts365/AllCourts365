@@ -1,6 +1,36 @@
 from django.contrib import admin
 from django import forms
+from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin
 from .models import SiteConfiguration, UserProfile, PlayerLinkRequest
+
+admin.site.unregister(User)
+
+@admin.register(User)
+class CustomUserAdmin(UserAdmin):
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if not request.user.is_superuser:
+            return qs.filter(is_superuser=False)
+        return qs
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if not request.user.is_superuser:
+            new_fieldsets = []
+            for name, opts in fieldsets:
+                # Copiamos o dicionário para não alterar o original da classe
+                new_opts = opts.copy()
+                fields = new_opts.get('fields', ())
+                
+                # Se for a seção de permissões que contém is_superuser
+                if 'is_superuser' in fields:
+                    # Remove campos sensíveis, mantendo apenas is_active
+                    new_opts['fields'] = tuple(f for f in fields if f in ['is_active'])
+                
+                new_fieldsets.append((name, new_opts))
+            return new_fieldsets
+        return fieldsets
 
 class SiteConfigurationForm(forms.ModelForm):
     class Meta:
