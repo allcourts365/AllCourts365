@@ -229,6 +229,15 @@ class Match(models.Model):
     player_a = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='matches_as_a', null=True, blank=True)
     player_b = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='matches_as_b', null=True, blank=True)
     
+    SCHEDULE_STATUS_CHOICES = [
+        ('unagendado', 'Não Agendado'),
+        ('aguardando_adversario', 'Aguardando Adversário'),
+        ('agendado', 'Agendado'),
+    ]
+    schedule_status = models.CharField(max_length=30, choices=SCHEDULE_STATUS_CHOICES, default='unagendado')
+    proposed_datetime = models.DateTimeField(null=True, blank=True)
+    proposed_court = models.ForeignKey('clubs.Court', on_delete=models.SET_NULL, null=True, blank=True, related_name='proposed_matches')
+    proposed_by = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True, blank=True, related_name='proposed_schedules')
     # Workflow de lançamento de resultados
     result_status = models.CharField(max_length=20, choices=RESULT_STATUS_CHOICES, default='unreported')
     reported_by = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True, blank=True, related_name='reported_results')

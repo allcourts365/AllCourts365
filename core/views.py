@@ -115,15 +115,165 @@ def athlete_dashboard(request):
                 if conflicts.exists():
                     messages.error(request, 'A quadra selecionada já possui um jogo marcado próximo a este horário (conflito de 1h30m).')
                 else:
-                    match.court = court
-                    match.scheduled_datetime = scheduled_dt
+                    # Se já havia um agendamento/proposta anterior, registra que é um reagendamento
+                    is_reschedule = match.schedule_status in ['agendado', 'aguardando_adversario']
+                    old_datetime = match.scheduled_datetime
+                    
+                    # Limpa o agendamento anterior
+                    match.scheduled_datetime = None
+                    match.court = None
+                    
+                    # Salva nova proposta
+                    match.proposed_court = court
+                    match.proposed_datetime = scheduled_dt
+                    match.schedule_status = 'aguardando_adversario'
+                    match.proposed_by = user.player_profile
                     match.save()
-                    messages.success(request, 'Jogo marcado com sucesso!')
+                    
+                    # Notify opponent
+                    opponent = match.player_b if match.player_a == user.player_profile else match.player_a
+                    if opponent and opponent.user:
+                        from core.models import Message
+                        if is_reschedule:
+                            subject = "Reagendamento Proposto"
+                            body = f"{user.player_profile.name} está propondo um REAGENDAMENTO do jogo {match.tournament.name} (Rodada {match.round_number}). Nova proposta: {scheduled_dt.strftime('%d/%m/%Y às %H:%M')} na quadra {court.name}. O agendamento anterior foi cancelado. Acesse a aba Mensagens para aceitar ou recusar."
+                        else:
+                            subject = "Proposta de Agendamento"
+                            body = f"{user.player_profile.name} propôs agendar o jogo {match.tournament.name} (Rodada {match.round_number}) para o dia {scheduled_dt.strftime('%d/%m/%Y às %H:%M')} na quadra {court.name}. Acesse a aba Mensagens para aceitar ou recusar."
+                        Message.objects.create(
+                            sender=user,
+                            recipient=opponent.user,
+                            subject=subject,
+                            body=body,
+                            related_match=match
+                        )
+                    
+                    if is_reschedule:
+                        messages.success(request, 'Reagendamento proposto! O adversário foi notificado para confirmar.')
+                    else:
+                        messages.success(request, 'Proposta de agendamento enviada com sucesso ao seu adversário!')
                     
             except Exception as e:
                 messages.error(request, f'Erro ao agendar o jogo: {str(e)}')
+            return redirect(reverse('athlete_dashboard') + '?tab=mensagens')
             
-    # --- Lógica de Lançamento de Resultados e Mensagens ---
+        elif 'accept_schedule' in request.POST:
+            match_id = request.POST.get('match_id')
+            try:
+                match = Match.objects.get(id=match_id)
+                # Verifica se a pessoa logada é realmente do jogo
+                if user.player_profile not in [match.player_a, match.player_b]:
+                    messages.error(request, 'Permissão negada.')
+                    return redirect('athlete_dashboard')
+                    
+                if match.schedule_status != 'aguardando_adversario':
+                    messages.error(request, 'Não há proposta pendente para este jogo.')
+                    return redirect('athlete_dashboard')
+                    
+                # Checa conflitos de novo antes de cravar
+                conflict_start = match.proposed_datetime - timedelta(minutes=89)
+                conflict_end = match.proposed_datetime + timedelta(minutes=89)
+                
+                conflicts = Match.objects.filter(
+                    court=match.proposed_court,
+                    scheduled_datetime__range=(conflict_start, conflict_end)
+                ).exclude(id=match.id)
+                
+                if conflicts.exists():
+                    messages.error(request, 'A quadra não está mais disponível neste horário. Por favor, recuse e proponha um novo horário.')
+                else:
+                    match.scheduled_datetime = match.proposed_datetime
+                    match.court = match.proposed_court
+                    match.schedule_status = 'agendado'
+                    match.save()
+                    
+                    if match.proposed_by and match.proposed_by.user:
+                        from core.models import Message
+                        local_dt = timezone.localtime(match.scheduled_datetime)
+                        Message.objects.create(
+                            sender=user,
+                            recipient=match.proposed_by.user,
+                            subject="Agendamento Aceito!",
+                            body=f"{user.player_profile.name} aceitou sua proposta! O jogo foi marcado para {local_dt.strftime('%d/%m/%Y às %H:%M')} na quadra {match.court.name}.",
+                            related_match=match
+                        )
+                    messages.success(request, 'Agendamento confirmado com sucesso!')
+            except Exception as e:
+                messages.error(request, f'Erro: {str(e)}')
+            return redirect(reverse('athlete_dashboard') + '?tab=mensagens')
+                
+        elif 'decline_schedule' in request.POST:
+            match_id = request.POST.get('match_id')
+            try:
+                match = Match.objects.get(id=match_id)
+                # Marcar mensagens relacionadas como lidas
+                from core.models import Message
+                Message.objects.filter(related_match=match, recipient=user, is_read=False).update(is_read=True)
+                
+                if user.player_profile not in [match.player_a, match.player_b]:
+                    messages.error(request, 'Permissão negada.')
+                    return redirect('athlete_dashboard')
+                    
+                proposer = match.proposed_by
+                
+                match.schedule_status = 'unagendado'
+                match.proposed_datetime = None
+                match.proposed_court = None
+                match.proposed_by = None
+                match.save()
+                
+                if proposer and proposer.user:
+                    from core.models import Message
+                    Message.objects.create(
+                        sender=user,
+                        recipient=proposer.user,
+                        subject="Proposta Recusada - Aguardando Contraproposta",
+                        body=f"{user.player_profile.name} recusou sua proposta de agendamento e vai sugerir um novo horário.",
+                        related_match=match
+                    )
+                messages.success(request, 'Proposta recusada. A agenda está aberta para você sugerir um novo horário!')
+            except Exception as e:
+                messages.error(request, f'Erro: {str(e)}')
+                return redirect('athlete_dashboard')
+            # Redireciona de volta abrindo automaticamente a agenda para contraproposta
+            club_id = user.player_profile.club.id if hasattr(user, 'player_profile') and user.player_profile.club else ''
+            base_url = reverse('athlete_dashboard')
+            return redirect(f'{base_url}?open_schedule={match_id}&club={club_id}')
+                
+        elif 'delete_schedule' in request.POST:
+            match_id = request.POST.get('match_id')
+            try:
+                match = Match.objects.get(id=match_id)
+                if user.player_profile not in [match.player_a, match.player_b]:
+                    messages.error(request, 'Permissão negada.')
+                    return redirect('athlete_dashboard')
+                
+                # Avisar o outro jogador que o agendamento foi apagado
+                opponent = match.player_b if match.player_a == user.player_profile else match.player_a
+                if opponent and opponent.user and (match.schedule_status == 'agendado' or match.schedule_status == 'aguardando_adversario'):
+                    from core.models import Message
+                    Message.objects.create(
+                        sender=user,
+                        recipient=opponent.user,
+                        subject="Agendamento Cancelado",
+                        body=f"{user.player_profile.name} excluiu o agendamento atual do jogo. Vocês precisam combinar e marcar um novo horário.",
+                        related_match=match
+                    )
+                    
+                match.schedule_status = 'unagendado'
+                match.scheduled_datetime = None
+                match.court = None
+                match.proposed_datetime = None
+                match.proposed_court = None
+                match.proposed_by = None
+                match.save()
+                
+                messages.success(request, 'Agendamento excluído com sucesso. Você já pode remarcar o jogo.')
+            except Exception as e:
+                messages.error(request, f'Erro: {str(e)}')
+            return redirect(reverse('athlete_dashboard') + '?tab=mensagens')
+
+        # --- Lógica de Lançamento de Resultados e Mensagens ---
         elif 'submit_result' in request.POST:
             match_id = request.POST.get('match_id')
             try:
@@ -160,19 +310,22 @@ def athlete_dashboard(request):
                         sender=user,
                         recipient=opponent.user,
                         subject="Novo Resultado Lançado",
-                        body=f"{user.player_profile.name} lançou o resultado do jogo {match.tournament.name} (Rodada {match.round_number}). Por favor, acesse seus jogos para aceitar ou rejeitar o placar.",
+                        body=f"{user.player_profile.name} propôs o resultado do jogo {match.tournament.name} (Rodada {match.round_number}). Por favor, avalie esta proposta abaixo (Aceitar ou Recusar e Propor Novo).",
                         related_match=match
                     )
                 
                 messages.success(request, 'Resultado lançado! Aguardando aprovação do adversário.')
             except Exception as e:
                 messages.error(request, f'Erro ao lançar resultado: {str(e)}')
-            return redirect('athlete_dashboard')
+            return redirect(reverse('athlete_dashboard') + '?tab=mensagens')
             
         elif 'accept_result' in request.POST:
             match_id = request.POST.get('match_id')
             try:
                 match = Match.objects.get(id=match_id)
+                # Marcar mensagens relacionadas como lidas
+                from core.models import Message
+                Message.objects.filter(related_match=match, recipient=user, is_read=False).update(is_read=True)
                 
                 if user.player_profile not in [match.player_a, match.player_b] or match.result_status != 'pending_approval' or match.reported_by == user.player_profile:
                     messages.error(request, 'Você não pode aceitar este resultado.')
@@ -211,41 +364,7 @@ def athlete_dashboard(request):
                 messages.success(request, 'Resultado aceito e jogo finalizado!')
             except Exception as e:
                 messages.error(request, f'Erro ao aceitar resultado: {str(e)}')
-            return redirect('athlete_dashboard')
-            
-        elif 'reject_result' in request.POST:
-            match_id = request.POST.get('match_id')
-            rejection_reason = request.POST.get('rejection_reason', '')[:200]
-            try:
-                match = Match.objects.get(id=match_id)
-                
-                if user.player_profile not in [match.player_a, match.player_b] or match.result_status != 'pending_approval' or match.reported_by == user.player_profile:
-                    messages.error(request, 'Você não pode rejeitar este resultado.')
-                    return redirect('athlete_dashboard')
-                
-                reported_by_user = match.reported_by.user if match.reported_by else None
-                
-                match.proposed_result_json = None
-                match.result_status = 'unreported'
-                match.reported_by = None
-                match.save()
-                
-                # Mensagem de rejeição pro lançador original
-                if reported_by_user:
-                    from core.models import Message
-                    reason_text = f" Motivo: {rejection_reason}" if rejection_reason.strip() else " Nenhum motivo informado."
-                    Message.objects.create(
-                        sender=user,
-                        recipient=reported_by_user,
-                        subject="Resultado Rejeitado",
-                        body=f"{user.player_profile.name} não aceitou o resultado que você lançou no jogo {match.tournament.name} (Rodada {match.round_number}).{reason_text} Por favor, entre em contato para alinhar o placar correto e lance novamente.",
-                        related_match=match
-                    )
-                    
-                messages.success(request, 'Resultado rejeitado. O adversário foi notificado.')
-            except Exception as e:
-                messages.error(request, f'Erro ao rejeitar resultado: {str(e)}')
-            return redirect('athlete_dashboard')
+            return redirect(reverse('athlete_dashboard') + '?tab=mensagens')
             
         elif 'mark_message_read' in request.POST:
             msg_id = request.POST.get('message_id')
@@ -256,7 +375,7 @@ def athlete_dashboard(request):
                 msg.save()
             except:
                 pass
-            return redirect('athlete_dashboard')
+            return redirect(reverse('athlete_dashboard') + '?tab=mensagens')
     
     else:
         user_form = UserForm(instance=user)
@@ -297,7 +416,9 @@ def athlete_dashboard(request):
         'my_matches': my_matches,
         'courts': courts,
         'user_messages': user_messages,
+        'athlete_messages': user_messages,
         'unread_messages_count': unread_messages_count,
+        'my_player_profile': user.player_profile if hasattr(user, 'player_profile') else None,
     }
     
     return render(request, 'athlete_dashboard.html', context)
@@ -406,7 +527,8 @@ def api_monthly_agenda(request):
         for m in matches:
             if not m.scheduled_datetime: continue
             
-            day = m.scheduled_datetime.day
+            local_dt = timezone.localtime(m.scheduled_datetime)
+            day = local_dt.day
             if day not in days_data:
                 days_data[day] = []
                 
@@ -416,7 +538,7 @@ def api_monthly_agenda(request):
             days_data[day].append({
                 'id': m.id,
                 'title': f"{p1_name} vs {p2_name}",
-                'time': m.scheduled_datetime.strftime('%H:%M')
+                'time': local_dt.strftime('%H:%M')
             })
             
         return JsonResponse({'days': days_data})

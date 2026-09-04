@@ -399,31 +399,13 @@
                     </div>
                     
                     <div class="custom-form-group">
-                        <label>Mão Dominante (Empunhadura)</label>
-                        <div class="radio-group">
-                            {% for radio in profile_form.handedness %}
-                                {% if radio.choice_label != "---------" and radio.choice_value != "" %}
-                                <div class="radio-option">
-                                    {{ radio.tag }}
-                                    <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
-                                </div>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
+                        <label for="{{ profile_form.handedness.id_for_label }}">Mão Dominante (Empunhadura)</label>
+                        {{ profile_form.handedness }}
                     </div>
                     
                     <div class="custom-form-group">
-                        <label>Tipo de Backhand</label>
-                        <div class="radio-group">
-                            {% for radio in profile_form.backhand %}
-                                {% if radio.choice_label != "---------" and radio.choice_value != "" %}
-                                <div class="radio-option">
-                                    {{ radio.tag }}
-                                    <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
-                                </div>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
+                        <label for="{{ profile_form.backhand.id_for_label }}">Tipo de Backhand</label>
+                        {{ profile_form.backhand }}
                     </div>
                 </div>
                 
@@ -470,11 +452,39 @@
                         
                         <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px;">
                             <div style="text-align: right; flex: 1;">
-                                <h4 style="color: #fff; font-size: 1.2rem; margin: 0;">{{ match.player_a.name|default:"A Definir" }}</h4>
+                                <h4 style="color: {% if match.status == 'completed' and match.winner == match.player_a %}#34d399{% else %}#fff{% endif %}; font-size: 1.2rem; margin: 0;">
+                                    {% if match.status == 'completed' and match.winner == match.player_a %}<i class="fas fa-trophy" style="font-size: 0.9rem; margin-right: 5px;"></i>{% endif %}
+                                    {{ match.player_a.name|default:"A Definir" }}
+                                </h4>
                             </div>
-                            <div style="color: var(--subtitle-color); font-weight: bold; font-size: 1.2rem;">X</div>
+                            
+                            {% if match.status == 'completed' %}
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <div style="display: flex; gap: 12px; align-items: center; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);">
+                                        <div style="font-size: 1.4rem; font-weight: 900; color: {% if match.winner == match.player_a %}#34d399{% else %}#fff{% endif %};">{{ match.sets_a|default:"0" }}</div>
+                                        <div style="font-size: 0.9rem; font-weight: 700; color: var(--subtitle-color);">SETS</div>
+                                        <div style="font-size: 1.4rem; font-weight: 900; color: {% if match.winner == match.player_b %}#34d399{% else %}#fff{% endif %};">{{ match.sets_b|default:"0" }}</div>
+                                    </div>
+                                    
+                                    {% if match.set1_a is not None or match.set2_a is not None %}
+                                    <div style="display: flex; gap: 10px; margin-top: 8px; font-size: 0.8rem; color: #aaa; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 12px;">
+                                        {% if match.set1_a is not None %}<span>1º: {{ match.set1_a }}-{{ match.set1_b }}</span>{% endif %}
+                                        {% if match.set2_a is not None %}<span>2º: {{ match.set2_a }}-{{ match.set2_b }}</span>{% endif %}
+                                        {% if match.set3_a is not None %}<span>3º: {{ match.set3_a }}-{{ match.set3_b }}</span>{% endif %}
+                                        {% if match.set4_a is not None %}<span>4º: {{ match.set4_a }}-{{ match.set4_b }}</span>{% endif %}
+                                        {% if match.set5_a is not None %}<span>5º: {{ match.set5_a }}-{{ match.set5_b }}</span>{% endif %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <div style="color: var(--subtitle-color); font-weight: bold; font-size: 1.2rem;">X</div>
+                            {% endif %}
+                            
                             <div style="text-align: left; flex: 1;">
-                                <h4 style="color: #fff; font-size: 1.2rem; margin: 0;">{{ match.player_b.name|default:"A Definir" }}</h4>
+                                <h4 style="color: {% if match.status == 'completed' and match.winner == match.player_b %}#34d399{% else %}#fff{% endif %}; font-size: 1.2rem; margin: 0;">
+                                    {{ match.player_b.name|default:"A Definir" }}
+                                    {% if match.status == 'completed' and match.winner == match.player_b %}<i class="fas fa-trophy" style="font-size: 0.9rem; margin-left: 5px;"></i>{% endif %}
+                                </h4>
                             </div>
                         </div>
 
@@ -484,6 +494,8 @@
                                     <i class="fas fa-calendar-day"></i> 
                                     {% if match.scheduled_datetime %}
                                         {{ match.scheduled_datetime|date:"d/m/Y \à\s H:i" }} na quadra <strong>{{ match.court.name }}</strong>
+                                    {% elif match.schedule_status == 'aguardando_adversario' %}
+                                        Aguardando confirmação: {{ match.proposed_datetime|date:"d/m/Y \à\s H:i" }} na quadra <strong>{{ match.proposed_court.name }}</strong>
                                     {% else %}
                                         Ainda não agendado
                                     {% endif %}
@@ -492,24 +504,24 @@
                             
                             {% if match.status == 'pending' and match.round_number == match.tournament.current_round and match.player_a and match.player_b %}
                                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                    {% if match.schedule_status == 'unagendado' %}
                                     <button onclick="openScheduleModal('{{ match.id }}', '{{ match.player_a.name }} vs {{ match.player_b.name }}')" style="padding: 8px 16px; background: #fff; color: #000; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
                                         <i class="fas fa-calendar-plus"></i> Agendar
                                     </button>
+                                    {% else %}
+                                    <button onclick="openScheduleModal('{{ match.id }}', '{{ match.player_a.name }} vs {{ match.player_b.name }}')" style="padding: 8px 16px; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.5); border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
+                                        <i class="fas fa-calendar-alt"></i> Reagendar
+                                    </button>
+                                    {% endif %}
                                     
-                                    {% if match.result_status == 'unreported' %}
+                                    {% if match.result_status != 'pending_approval' %}
                                         <button onclick="openSubmitResultModal('{{ match.id }}', '{{ match.player_a.name }} vs {{ match.player_b.name }}')" style="padding: 8px 16px; background: var(--highlight-color); color: #fff; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
                                             <i class="fas fa-trophy"></i> Lançar Resultado
                                         </button>
                                     {% elif match.result_status == 'pending_approval' %}
-                                        {% if match.proposed_by_id == user.player_profile.id %}
-                                            <button disabled style="padding: 8px 16px; background: rgba(255,255,255,0.1); color: var(--subtitle-color); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; font-weight: bold; cursor: not-allowed; font-size: 0.9rem;">
-                                                <i class="fas fa-clock"></i> Aguardando adversário
-                                            </button>
-                                        {% else %}
-                                            <button onclick="openAcceptResultModal('{{ match.id }}', '{{ match.player_a.name }} vs {{ match.player_b.name }}', '{{ match.proposed_result_json|escapejs }}')" style="padding: 8px 16px; background: #10b981; color: #fff; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
-                                                <i class="fas fa-check-double"></i> Aceitar Resultado
-                                            </button>
-                                        {% endif %}
+                                        <button disabled style="padding: 8px 16px; background: rgba(255,165,0,0.2); color: orange; border: 1px solid rgba(255,165,0,0.5); border-radius: 20px; font-weight: bold; cursor: not-allowed; font-size: 0.9rem;">
+                                            <i class="fas fa-clock"></i> Aguardando Confirmação
+                                        </button>
                                     {% endif %}
                                 </div>
                             {% endif %}
@@ -531,17 +543,85 @@
                     {% for msg in athlete_messages %}
                     <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 20px; border-left: 4px solid {% if not msg.is_read %}var(--highlight-color){% else %}rgba(255,255,255,0.2){% endif %};">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                            <strong style="color: #fff;">Mensagem do Sistema / Adversário</strong>
+                            <strong style="color: #fff;">{{ msg.subject }}</strong>
                             <span style="color: var(--subtitle-color); font-size: 0.85rem;">{{ msg.created_at|date:"d/m/Y H:i" }}</span>
                         </div>
-                        <p style="color: #ccc; margin: 0; line-height: 1.5;">{{ msg.message }}</p>
-                        {% if not msg.is_read %}
-                        <form method="post" action="{% url 'athlete_dashboard' %}" style="margin-top: 15px; text-align: right;">
-                            {% csrf_token %}
-                            <input type="hidden" name="message_id" value="{{ msg.id }}">
-                            <button type="submit" name="mark_message_read" style="background: transparent; border: 1px solid var(--highlight-color); color: var(--highlight-color); padding: 5px 15px; border-radius: 20px; cursor: pointer; font-size: 0.85rem;">Marcar como lida</button>
-                        </form>
-                        {% endif %}
+                        <p style="color: #ccc; margin: 0; line-height: 1.5;">{{ msg.body }}</p>
+                        
+                        <div style="margin-top: 15px;">
+                            {% if msg.related_match and msg.related_match.result_status == 'pending_approval' and msg.related_match.reported_by != my_player_profile %}
+                                {% if msg.subject == 'Novo Resultado Lançado' %}
+                                    {% with rm=msg.related_match pj=msg.related_match.proposed_result_json %}
+                                    <div style="width: 100%; margin-bottom: 16px; padding: 14px 16px; background: rgba(255,255,255,0.05); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);">
+                                    {% if my_player_profile == rm.player_a %}
+                                        {% if pj.sets_a > pj.sets_b %}
+                                            <div style="color: #34d399; font-weight: 700; font-size: 1rem; margin-bottom: 8px;">🏆 Placar proposto — Vitória <strong>sua</strong> por (Sets): {{ pj.sets_a }} x {{ pj.sets_b }}</div>
+                                        {% else %}
+                                            <div style="color: #f87171; font-weight: 700; font-size: 1rem; margin-bottom: 8px;">❌ Placar proposto — Vitória <strong>dele</strong> por (Sets): {{ pj.sets_b }} x {{ pj.sets_a }}</div>
+                                        {% endif %}
+                                    {% else %}
+                                        {% if pj.sets_b > pj.sets_a %}
+                                            <div style="color: #34d399; font-weight: 700; font-size: 1rem; margin-bottom: 8px;">🏆 Placar proposto — Vitória <strong>sua</strong> por (Sets): {{ pj.sets_b }} x {{ pj.sets_a }}</div>
+                                        {% else %}
+                                            <div style="color: #f87171; font-weight: 700; font-size: 1rem; margin-bottom: 8px;">❌ Placar proposto — Vitória <strong>dele</strong> por (Sets): {{ pj.sets_a }} x {{ pj.sets_b }}</div>
+                                        {% endif %}
+                                    {% endif %}
+                                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                                        {% if pj.set1_a is not None %}<span style="color: #aaa; font-size: 0.85rem;">1º Set: {{ pj.set1_a }}-{{ pj.set1_b }}</span>{% endif %}
+                                        {% if pj.set2_a is not None %}<span style="color: #aaa; font-size: 0.85rem;">2º Set: {{ pj.set2_a }}-{{ pj.set2_b }}</span>{% endif %}
+                                        {% if pj.set3_a is not None %}<span style="color: #aaa; font-size: 0.85rem;">3º Set: {{ pj.set3_a }}-{{ pj.set3_b }}</span>{% endif %}
+                                        {% if pj.set4_a is not None %}<span style="color: #aaa; font-size: 0.85rem;">4º Set: {{ pj.set4_a }}-{{ pj.set4_b }}</span>{% endif %}
+                                        {% if pj.set5_a is not None %}<span style="color: #aaa; font-size: 0.85rem;">5º Set: {{ pj.set5_a }}-{{ pj.set5_b }}</span>{% endif %}
+                                    </div>
+                                    </div>
+                                    {% endwith %}
+                                {% endif %}
+                            {% endif %}
+                            
+                            <div style="display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; align-items: center;">
+                                {% if msg.related_match and msg.related_match.schedule_status == 'aguardando_adversario' and msg.related_match.proposed_by != my_player_profile %}
+                                    {% if msg.subject == 'Proposta de Agendamento' or msg.subject == 'Reagendamento Proposto' %}
+                                        <form method="post" style="display: inline; margin: 0;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="match_id" value="{{ msg.related_match.id }}">
+                                            <button type="submit" name="decline_schedule" style="height: 38px; padding: 0 18px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 700; background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.5);">Recusar e Propor Novo</button>
+                                        </form>
+                                        <form method="post" style="display: inline; margin: 0;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="match_id" value="{{ msg.related_match.id }}">
+                                            <button type="submit" name="accept_schedule" style="height: 38px; padding: 0 18px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 700; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.5);">Aceitar Agendamento</button>
+                                        </form>
+                                    {% endif %}
+                                {% endif %}
+                                
+                                {% if msg.related_match and msg.related_match.schedule_status == 'unagendado' and msg.related_match.status == 'pending' %}
+                                    {% if msg.subject == 'Proposta de Agendamento' or msg.subject == 'Reagendamento Proposto' %}
+                                        <button onclick="openScheduleModal('{{ msg.related_match.id }}', '{{ msg.related_match.player_a.name }} vs {{ msg.related_match.player_b.name }}')" style="height: 38px; padding: 0 18px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 700; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.5);">
+                                            <i class="fas fa-calendar-plus"></i> Propor Novo Horário
+                                        </button>
+                                    {% endif %}
+                                {% endif %}
+                                
+                                {% if msg.related_match and msg.related_match.result_status == 'pending_approval' and msg.related_match.reported_by != my_player_profile %}
+                                    {% if msg.subject == 'Novo Resultado Lançado' %}
+                                        <button onclick="openSubmitResultModal('{{ msg.related_match.id }}', '{{ msg.related_match.player_a.name }} vs {{ msg.related_match.player_b.name }}')" style="height: 38px; padding: 0 18px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 700; background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.5);">✕ Recusar e Propor Novo</button>
+                                        <form method="post" style="display: inline; margin: 0;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="match_id" value="{{ msg.related_match.id }}">
+                                            <button type="submit" name="accept_result" style="height: 38px; padding: 0 18px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 700; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.5);">✓ Aceitar Resultado</button>
+                                        </form>
+                                    {% endif %}
+                                {% endif %}
+                                
+                                {% if not msg.is_read %}
+                                <form method="post" style="display: inline; margin: 0;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="message_id" value="{{ msg.id }}">
+                                    <button type="submit" name="mark_message_read" style="height: 34px; padding: 0 14px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: 600; background: transparent; border: 1px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.6);">Marcar lida</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
@@ -556,9 +636,10 @@
         <button onclick="closeScheduleModal()" style="position: absolute; top: 15px; right: 20px; background: transparent; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; z-index: 10;">&times;</button>
         
         <!-- Header -->
-        <div style="padding: 20px 30px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
-            <div>
+        <div style="padding: 20px 30px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 15px;">
                 <h3 style="color: #fff; font-size: 1.5rem; margin: 0; font-weight: 800;">Agenda: <span id="modalMatchName"></span></h3>
+
             </div>
             
             <div style="display: flex; gap: 20px; align-items: center;">
@@ -613,9 +694,11 @@
                 <!-- Slots -->
             </div>
             
-            <button type="submit" name="schedule_match" class="btn-save" style="width: 100%;" onclick="return validateSchedule()">
-                <i class="fas fa-check"></i> Agendar Neste Horário
-            </button>
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" name="schedule_match" class="btn-save" style="width: 100%;" onclick="return validateSchedule()">
+                    <i class="fas fa-check"></i> Agendar Neste Horário
+                </button>
+            </div>
         </form>
     </div>
 </div>
@@ -637,12 +720,12 @@
             
             <div style="display: flex; gap: 15px; margin-bottom: 20px;">
                 <div class="custom-form-group" style="flex: 1;">
-                    <label>Sets Jogador 1 (Você/Adversário)</label>
-                    <input type="number" name="sets_a" id="sets_a" min="0" max="3" class="sets-input">
+                    <label id="label_sets_a">Sets Jogador 1</label>
+                    <input type="number" name="sets_a" id="sets_a" min="0" max="3" class="sets-input" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; padding: 10px;">
                 </div>
                 <div class="custom-form-group" style="flex: 1;">
-                    <label>Sets Jogador 2</label>
-                    <input type="number" name="sets_b" id="sets_b" min="0" max="3" class="sets-input">
+                    <label id="label_sets_b">Sets Jogador 2</label>
+                    <input type="number" name="sets_b" id="sets_b" min="0" max="3" class="sets-input" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; padding: 10px;">
                 </div>
             </div>
             
@@ -664,37 +747,8 @@
     </div>
 </div>
 
-<!-- Modal Accept Result -->
-<div id="acceptResultModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; overflow-y: auto;">
-    <div class="glass-card" style="width: 100%; max-width: 500px; padding: 30px; border-radius: 16px; position: relative;">
-        <button type="button" onclick="closeAcceptResultModal()" style="position: absolute; top: 15px; right: 20px; background: transparent; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
-        <h3 style="color: #fff; font-size: 1.5rem; margin-bottom: 5px; font-weight: 800;">Confirmar Resultado</h3>
-        <p id="modalAcceptMatchName" style="color: var(--highlight-color); margin-bottom: 15px; font-weight: bold;"></p>
-        
-        <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 15px; margin-bottom: 25px; color: #fff;" id="proposedScoreDisplay">
-            <!-- Score filled via JS -->
+<!-- Score filled via JS -->
         </div>
-
-        <p style="color: #fff; margin-bottom: 15px;">Você concorda com o resultado lançado pelo adversário?</p>
-        
-        <div style="display: flex; gap: 15px;">
-            <form method="post" action="{% url 'athlete_dashboard' %}" style="flex: 1;">
-                {% csrf_token %}
-                <input type="hidden" name="match_id" id="modalAcceptMatchId1">
-                <button type="submit" name="accept_result" class="btn-save" style="width: 100%; background: #10b981; border-color: #10b981;">
-                    <i class="fas fa-check"></i> Sim, aceitar
-                </button>
-            </form>
-            <form method="post" action="{% url 'athlete_dashboard' %}" style="flex: 1;">
-                {% csrf_token %}
-                <input type="hidden" name="match_id" id="modalAcceptMatchId2">
-                <button type="submit" name="reject_result" class="btn-save" style="width: 100%; background: #ef4444; border-color: #ef4444;">
-                    <i class="fas fa-times"></i> Não, recusar
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
 
 {% endblock %}
 
@@ -705,21 +759,14 @@
         document.getElementById('modalMatchName').innerText = matchName;
         document.getElementById('scheduleModal').style.display = 'flex';
         
-        // Auto-fill date with today
-        const dateInput = document.getElementById('schedule_date');
-        if (!dateInput.value) {
-            const today = new Date();
-            dateInput.value = today.toISOString().split('T')[0];
-        }
-        
         // Auto-select first court if none selected
         const courtSelect = document.getElementById('schedule_court');
         if (!courtSelect.value && courtSelect.options.length > 1) {
             courtSelect.selectedIndex = 1;
         }
         
-        // Fetch agenda immediately
-        fetchAgenda();
+        // Load the calendar
+        goToToday();
     }
     
     function closeScheduleModal() {
@@ -750,24 +797,7 @@
     let currentYear = new Date().getFullYear();
     const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     
-    function openScheduleModal(matchId, matchName) {
-        document.getElementById('modalMatchId').value = matchId;
-        document.getElementById('modalMatchName').innerText = matchName;
-        document.getElementById('scheduleModal').style.display = 'flex';
-        
-        // Auto-select first court if none selected
-        const courtSelect = document.getElementById('schedule_court');
-        if (!courtSelect.value && courtSelect.options.length > 1) {
-            courtSelect.selectedIndex = 1; // skip disabled option? Actually, wait, the loop doesn't have a disabled option in the new html
-        }
-        
-        goToToday();
-    }
-    
-    function closeScheduleModal() {
-        document.getElementById('scheduleModal').style.display = 'none';
-        closeDayPopup();
-    }
+    // [duplicate removed]
     
     function changeMonth(dir) {
         currentMonth += dir;
@@ -1002,6 +1032,19 @@
     function openSubmitResultModal(matchId, matchName) {
         document.getElementById('modalSubmitMatchId').value = matchId;
         document.getElementById('modalSubmitMatchName').innerText = matchName;
+        
+        let names = matchName.split(" vs ");
+        if(names.length === 2) {
+            document.getElementById('label_sets_a').innerText = "Sets " + names[0];
+            document.getElementById('label_sets_b').innerText = "Sets " + names[1];
+        } else {
+            document.getElementById('label_sets_a').innerText = "Sets Jogador 1";
+            document.getElementById('label_sets_b').innerText = "Sets Jogador 2";
+        }
+        
+        // Clear previous inputs
+        document.querySelectorAll('.sets-input, .games-input-a, .games-input-b').forEach(input => input.value = '');
+        
         document.getElementById('submitResultModal').style.display = 'flex';
     }
     function closeSubmitResultModal() {
@@ -1111,6 +1154,32 @@
             if (clubSelect.value) {
                 updatePlayerSelect(clubSelect.value);
             }
+        }
+    });
+
+    // Auto-abrir agenda para contraproposta após recusar agendamento
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const openScheduleMatchId = urlParams.get('open_schedule');
+        const tabToOpen = urlParams.get('tab');
+        if (tabToOpen) {
+            const tabBtn = document.querySelector(`[onclick*="${tabToOpen}"]`);
+            if (tabBtn) {
+                tabBtn.click();
+            }
+        }
+        
+        if (openScheduleMatchId) {
+            // Mudar para aba Meus Jogos primeiro
+            const meusJogosBtn = document.querySelector('[onclick*="meus-jogos"]');
+            if (meusJogosBtn) meusJogosBtn.click();
+            
+            // Encontrar o nome do jogo correspondente
+            {% for match in my_matches %}
+            if (openScheduleMatchId === '{{ match.id }}') {
+                openScheduleModal('{{ match.id }}', '{{ match.player_a.name }} vs {{ match.player_b.name }}');
+            }
+            {% endfor %}
         }
     });
 {% endblock %}
