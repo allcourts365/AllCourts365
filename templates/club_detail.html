@@ -172,7 +172,7 @@
                 <h3 style="margin-bottom: 10px; color: var(--highlight-color); padding-right: 120px;">{{ t.name }}</h3>
                 <p style="margin-bottom: 5px;"><strong>Competição:</strong> {{ t.get_competition_type_display }}</p>
                 <p style="margin-bottom: 20px;"><strong>Rodada Atual:</strong> {{ t.current_round }}</p>
-                <a href="{% url 'clubs:ranking_detail' club.id t.id %}" class="btn-highlight" style="text-decoration: none; display: inline-block; padding: 8px 15px; font-size: 0.9rem;">Ver Classificação</a>
+                <a href="{% url 'clubs:ranking_detail' club.id t.id %}" style="text-decoration: none; display: inline-flex; align-items: center; gap: 5px; color: var(--subtitle-color); font-size: 1.1rem; font-weight: 500; margin-top: 10px;">Ver jogos e ranking &rarr;</a>
             </div>
             {% empty %}
             <p style="text-align: center; grid-column: 1 / -1;">Nenhum ranking ativo no momento.</p>
