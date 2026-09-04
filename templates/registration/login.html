@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login - AllCourts365{% endblock %}
+
+{% block extra_head %}
+<style>
+    .login-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 70vh;
+    }
+    .login-card {
+        width: 100%;
+        max-width: 400px;
+        padding: 40px;
+        text-align: center;
+    }
+    .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--subtitle-color, #ccc);
+        font-weight: 500;
+    }
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        color: #fff;
+        font-size: 1rem;
+        outline: none;
+        transition: border-color 0.3s;
+    }
+    .form-control:focus {
+        border-color: var(--highlight-color, #00BFFF);
+    }
+    .btn-login {
+        width: 100%;
+        padding: 12px;
+        background: var(--highlight-color, #00BFFF);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-top: 10px;
+    }
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 191, 255, 0.4);
+    }
+    .error-msg {
+        color: #ff4d4d;
+        background: rgba(255, 77, 77, 0.1);
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="glass-card login-card">
+        <h2 style="font-size: 2rem; color: #fff; margin-bottom: 10px; font-weight: 800;">Bem-vindo</h2>
+        <p style="color: var(--subtitle-color, #ccc); margin-bottom: 30px;">Faça login para acessar sua conta.</p>
+
+        {% if form.errors %}
+        <div class="error-msg">
+            Usuário ou senha incorretos. Tente novamente.
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_username">Usuário</label>
+                <input type="text" name="username" autofocus autocapitalize="none" autocomplete="username" maxlength="150" required id="id_username" class="form-control" placeholder="Seu nome de usuário">
+            </div>
+            
+            <div class="form-group">
+                <label for="id_password">Senha</label>
+                <input type="password" name="password" autocomplete="current-password" required id="id_password" class="form-control" placeholder="Sua senha">
+            </div>
+            
+            <button type="submit" class="btn-login">Entrar</button>
+            <input type="hidden" name="next" value="{{ next|default:'' }}">
+        </form>
+    </div>
+</div>
+{% endblock %}

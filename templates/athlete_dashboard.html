@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Painel do Atleta - AllCourts365{% endblock %}
+
+{% block content %}
+<div style="margin-top: 40px; margin-bottom: 40px; text-align: center;">
+    <h1 style="font-size: 2.8rem; font-weight: 800; color: #fff; margin-bottom: 10px;">Meu Painel</h1>
+    <p style="font-size: 1.1rem; color: var(--subtitle-color, #ccc);">Bem-vindo à sua área exclusiva de atleta.</p>
+</div>
+
+<div class="glass-card" style="padding: 40px; text-align: center; border-radius: 12px; margin-bottom: 30px;">
+    <i class="fas fa-tools" style="font-size: 3rem; color: var(--highlight-color, #00BFFF); margin-bottom: 20px;"></i>
+    <h2 style="font-size: 1.8rem; color: #fff; margin-bottom: 15px;">Em Construção</h2>
+    <p style="color: var(--subtitle-color, #ccc); font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
+        Estamos preparando um dashboard completo para você acompanhar seu desempenho, histórico de partidas, lançar resultados e ver seus próximos desafios. Em breve teremos novidades!
+    </p>
+</div>
+
+<div style="text-align: center;">
+    <form action="{% url 'logout' %}" method="post" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn-highlight" style="background: rgba(255, 77, 77, 0.2); border: 1px solid #ff4d4d; color: #ff4d4d; padding: 10px 20px; border-radius: 30px; font-weight: bold; cursor: pointer;">
+            <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+    </form>
+</div>
+{% endblock %}

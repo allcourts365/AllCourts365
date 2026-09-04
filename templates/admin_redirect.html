@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Redirecionando... - AllCourts365{% endblock %}
+
+{% block content %}
+<div style="display: flex; align-items: center; justify-content: center; min-height: 60vh;">
+    <div class="glass-card" style="padding: 40px; text-align: center; max-width: 500px; width: 100%;">
+        <i class="fas fa-circle-notch fa-spin" style="font-size: 3rem; color: var(--highlight-color); margin-bottom: 20px;"></i>
+        <h2 style="color: #fff; margin-bottom: 15px;">Redirecionando para o Admin...</h2>
+        <p style="color: var(--subtitle-color); margin-bottom: 25px;">
+            O Painel de Administração será aberto em uma nova guia.
+        </p>
+        
+        <div id="popup-blocked-msg" style="display: none; background: rgba(255, 77, 77, 0.1); border: 1px solid rgba(255, 77, 77, 0.3); padding: 20px; border-radius: 8px; margin-top: 20px;">
+            <p style="color: #ff4d4d; font-weight: bold; margin-bottom: 10px;">
+                <i class="fas fa-exclamation-triangle"></i> Bloqueador de Pop-ups ativado!
+            </p>
+            <p style="color: #fff; font-size: 0.95rem; margin-bottom: 15px;">
+                Seu navegador impediu a abertura automática da nova aba. Por favor, clique no botão abaixo para acessar o painel.
+            </p>
+            <a href="{% url 'admin:index' %}" target="_blank" onclick="window.location.href='{% url 'home' %}';" class="btn-highlight" style="text-decoration: none; display: inline-block; padding: 10px 20px; border-radius: 20px; font-weight: bold;">
+                Abrir Painel Admin
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.onload = function() {
+        setTimeout(function() {
+            var newTab = window.open("{% url 'admin:index' %}", "_blank");
+            
+            // Verifica se o popup foi bloqueado
+            if (!newTab || newTab.closed || typeof newTab.closed == 'undefined') {
+                document.getElementById('popup-blocked-msg').style.display = 'block';
+                document.querySelector('.fa-circle-notch').style.display = 'none';
+            } else {
+                // Sucesso: Volta a aba atual para a home ou dashboard padrão
+                window.location.href = "{% url 'home' %}";
+            }
+        }, 800); // pequeno delay visual
+    };
+</script>
+{% endblock %}

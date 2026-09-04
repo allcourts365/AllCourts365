@@ -44,6 +44,7 @@ class Club(models.Model):
         verbose_name_plural = "Clubes"
 
 class Player(models.Model):
+    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='player_profile', verbose_name="Usuário do Sistema")
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='players', verbose_name="Clube")
     name = models.CharField(max_length=200, verbose_name="Nome do Atleta")
 

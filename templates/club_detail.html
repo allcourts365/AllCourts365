@@ -3,6 +3,10 @@
 
 {% block title %}{{ club.name }} - AllCourts365{% endblock %}
 
+{% block admin_button %}
+<a href="#" class="btn-highlight" style="visibility: hidden; pointer-events: none;"><i class="fas fa-lock"></i> Admin AllCourts365</a>
+{% endblock %}
+
 {% block extra_head %}
 <style>
     :root {
@@ -140,8 +144,8 @@
         <p style="font-size: 0.95rem; color: var(--highlight-color); margin-top: auto;">📍 {{ club.address|default:"Endereço não informado" }}</p>
     </div>
     <div class="btn-wrapper" style="display: flex; align-items: center; justify-content: flex-end;">
-        <a href="{% url 'admin:login' %}?club_name={{ club.name|urlencode }}" target="_blank" class="btn-highlight" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap;">
-            <i class="fas fa-lock"></i> Admin do Clube
+        <a href="{% url 'login' %}" class="btn-highlight" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap;">
+            <i class="fas fa-sign-in-alt"></i> Entrar
         </a>
     </div>
 </div>

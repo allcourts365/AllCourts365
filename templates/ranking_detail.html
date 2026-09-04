@@ -3,6 +3,10 @@
 
 {% block title %}{{ ranking.name }} - {{ club.name }}{% endblock %}
 
+{% block admin_button %}
+<a href="#" class="btn-highlight" style="visibility: hidden; pointer-events: none;"><i class="fas fa-lock"></i> Admin AllCourts365</a>
+{% endblock %}
+
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <style>
