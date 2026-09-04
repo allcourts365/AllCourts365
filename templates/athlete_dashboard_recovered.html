@@ -1,0 +1,2421 @@
+--- MATCH 0 ---
+Created At: 2026-09-04T09:32:41-03:00
+Completed At: 2026-09-04T09:32:41-03:00
+File Path: `file:///c:/Users/ferna/Downloads/Projetos/AllCourts365/templates/athlete_dashboard.html`
+Total Lines: 620
+Total Bytes: 31612
+Showing lines 1 to 620
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: {% extends 'base.html' %}
+2: {% load static %}
+3: 
+4: {% block title %}Painel Administrativo do Atleta - AllCourts365{% endblock %}
+5: 
+6: {% block extra_head %}
+7: <style>
+8:     {% if linked_club %}
+9:     :root {
+10:         {% if linked_club.background_color %}--bg-color: {{ linked_club.background_color }};{% endif %}
+11:         {% if linked_club.overlay_color %}--overlay-color: {{ linked_club.overlay_color }};{% endif %}
+12:         {% if linked_club.overlay_opacity %}--overlay-opacity: {{ linked_club.overlay_opacity|stringformat:"s" }};{% endif %}
+13:         {% if linked_club.highlight_color %}--highlight-color: {{ linked_club.highlight_color }};{% endif %}
+14:         {% if linked_club.title_color %}--title-color: {{ linked_club.title_color }};{% endif %}
+15:         {% if linked_club.subtitle_color %}--subtitle-color: {{ linked_club.subtitle_color }};{% endif %}
+16:     }
+17:     
+18:     {% if linked_club.background_image %}
+19:     body {
+20:         background-image: url('{{ linked_club.background_image.url }}') !important;
+21:         background-size: cover !important;
+22:         background-position: center !important;
+23:         background-attachment: fixed !important;
+24:     }
+25:     {% endif %}
+26:     
+27:     {% if linked_club.watermark_image %}
+28:     .club-watermark {
+29:         position: fixed;
+30:         z-index: 1000;
+31:         opacity: {{ linked_club.watermark_opacity|default:"0.8"|stringformat:"s" }};
+32:         width: {{ linked_club.watermark_size_percent|default:"15"|stringformat:"s" }}%;
+33:         pointer-events: none;
+34:         
+35:         {% if linked_club.watermark_position == 'top-left' %} top: 20px; left: 20px;
+36:         {% elif linked_club.watermark_position == 'top-right' %} top: 20px; right: 20px;
+37:         {% elif linked_club.watermark_position == 'bottom-left' %} bottom: 20px; left: 20px;
+38:         {% elif linked_club.watermark_position == 'bottom-right' %} bottom: 20px; right: 20px;
+39:         {% elif linked_club.watermark_position == 'center' %} top: 50%; left: 50%; transform: translate(-50%, -50%);
+40:         {% else %} bottom: 20px; left: 20px; {% endif %}
+41:     }
+42:     {% endif %}
+43:     {% endif %}
+44: 
+45:     .club-header-grid {
+46:         display: grid;
+47:         grid-template-columns: 150px 1fr auto;
+48:         gap: 30px;
+49:         align-items: center;
+50:         margin-top: 40px;
+51:         margin-bottom: 40px;
+52:         min-height: 180px;
+53:     }
+54:     @media (max-width: 768px) {
+55:         .club-header-grid {
+56:             grid-template-columns: 1fr;
+57:             text-align: center;
+58:             justify-items: center;
+59:         }
+60:         .club-header-grid .btn-wrapper {
+61:             justify-content: center !important;
+62:             width: 100%;
+63:         }
+64:     }
+65: 
+66:     /* Status Badge */
+67:     .status-badge {
+68:         display: inline-flex;
+69:         align-items: center;
+70:         gap: 8px;
+71:         padding: 4px 10px;
+72:         border-radius: 20px;
+73:         font-size: 0.75rem;
+74:         font-weight: 700;
+75:         text-transform: uppercase;
+76:         letter-spacing: 0.5px;
+77:     }
+78:     .status-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+79:     .status-approved { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+80: 
+81:     /* Custom Form Styles */
+82:     .custom-form-group {
+83:         margin-bottom: 25px;
+84:         display: flex;
+85:         flex-direction: column;
+86:         align-items: flex-start;
+87:         width: 100%;
+88:     }
+89:     
+90:     .custom-form-group label {
+91:         color: #fff;
+92:         font-weight: 600;
+93:         margin-bottom: 8px;
+94:         font-size: 1rem;
+95:         letter-spacing: 0.5px;
+96:     }
+97:     
+98:     .custom-form-group input[type="text"],
+99:     .custom-form-group input[type="email"],
+100:     .custom-form-group select,
+101:     .custom-form-group input[type="date"],
+102:     .custom-form-group input[type="time"] {
+103:         width: 100%;
+104:         background: rgba(0, 0, 0, 0.4);
+105:         border: 1px solid rgba(255, 255, 255, 0.2);
+106:         color: #fff;
+107:         border-radius: 10px;
+108:         padding: 14px 18px;
+109:         font-size: 1.05rem;
+110:         transition: all 0.3s ease;
+111:         outline: none;
+112:         box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+113:     }
+114:     
+115:     .custom-form-group input:focus,
+116:     .custom-form-group select:focus {
+117:         background: rgba(0, 0, 0, 0.6);
+118:         border-color: var(--highlight-color, #3b82f6);
+119:         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+120:     }
+121: 
+122:     /* Radio Buttons Customizados */
+123:     .radio-group {
+124:         display: flex;
+125:         gap: 20px;
+126:         margin-top: 5px;
+127:     }
+128:     .radio-option {
+129:         display: flex;
+130:         align-items: center;
+131:         gap: 8px;
+132:         cursor: pointer;
+133:     }
+134:     .radio-option label {
+135:         margin: 0;
+136:         cursor: pointer;
+137:         font-weight: 500;
+138:         color: var(--subtitle-color, #ccc);
+139:     }
+140:     .radio-option input[type="radio"] {
+141:         appearance: none;
+142:         width: 22px;
+143:         height: 22px;
+144:         border: 2px solid rgba(255,255,255,0.4);
+145:         border-radius: 50%;
+146:         background: rgba(0,0,0,0.2);
+147:         cursor: pointer;
+148:         position: relative;
+149:         outline: none;
+150:         transition: all 0.2s ease;
+151:     }
+152:     .radio-option input[type="radio"]:checked {
+153:         border-color: var(--highlight-color, #3b82f6);
+154:     }
+155:     .radio-option input[type="radio"]:checked::after {
+156:         content: '';
+157:         position: absolute;
+158:         top: 50%;
+159:         left: 50%;
+160:         transform: translate(-50%, -50%);
+161:         width: 12px;
+162:         height: 12px;
+163:         background: var(--highlight-color, #3b82f6);
+164:         border-radius: 50%;
+165:     }
+166: 
+167:     /* Form Grid */
+168:     .form-grid {
+169:         display: grid;
+170:         grid-template-columns: 1fr;
+171:         gap: 0 25px;
+172:     }
+173:     @media (min-width: 768px) {
+174:         .form-grid {
+175:             grid-template-columns: 1fr 1fr;
+176:         }
+177:     }
+178:     .form-full-width {
+179:         grid-column: 1 / -1;
+180:     }
+181: 
+182:     /* Buttons */
+183:     .btn-save {
+184:         padding: 14px 28px;
+185:         background: var(--highlight-color, #3b82f6);
+186:         color: #fff;
+187:         border: none;
+188:         border-radius: 30px;
+189:         font-size: 1.1rem;
+190:         font-weight: 800;
+191:         cursor: pointer;
+192:         transition: transform 0.2s, box-shadow 0.2s;
+193:         display: inline-flex;
+194:         align-items: center;
+195:         justify-content: center;
+196:         gap: 10px;
+197:         text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+198:     }
+199:     .btn-save:hover {
+200:         transform: translateY(-3px);
+201:         box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+202:         color: #fff;
+203:     }
+204: </style>
+205: {% endblock %}
+206: 
+207: {% block watermark %}
+208:     {% if linked_club and linked_club.watermark_image %}
+209:         <img src="{{ linked_club.watermark_image.url }}" alt="Watermark" class="club-watermark">
+210:     {% elif site_config.watermark_image %}
+211:         <img src="{{ site_config.watermark_image.url }}" alt="Watermark" class="watermark">
+212:     {% endif %}
+213: {% endblock %}
+214: 
+215: {% block content %}
+216: {% if linked_club %}
+217: <div class="club-header glass-card club-header-grid">
+218:     <div style="width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+219:         {% if linked_club.logo %}
+220:             <img src="{{ linked_club.logo.url }}" alt="{{ linked_club.name }}" style="max-width: 100%; max-height: 100%; border-radius: 10px; object-fit: contain;">
+221:         {% else %}
+222:             <div style="width: 100%; height: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+223:                 <img src="{% static 'bolinha.png' %}" style="width: 80px; height: 80px; object-fit: contain; opacity: 0.8;" alt="Bola">
+224:             </div>
+225:         {% endif %}
+226:     </div>
+227:     <div style="display: flex; flex-direction: column; justify-content: center;">
+228:         <h1 style="font-size: 2.5rem; margin-bottom: 10px; line-height: 1.2;">
+229:             {% if linked_club.website %}
+230:                 <a href="{{ linked_club.website }}" target="_blank" style="color: var(--title-color); text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">{{ linked_club.name }}</a>
+231:             {% else %}
+232:                 {{ linked_club.name }}
+233:             {% endif %}
+234:         </h1>
+235:         <p style="margin-bottom: 10px; font-size: 1.1rem; line-height: 1.4;">{{ linked_club.description|default:"Sem descrição." }}</p>
+236:         <p style="font-size: 0.95rem; color: var(--highlight-color); margin-top: auto;">📍 {{ linked_club.address|default:"Endereço não informado" }}</p>
+237:     </div>
+238:     <div class="btn-wrapper" style="display: flex; align-items: center; justify-content: flex-end;">
+239:         <form action="{% url 'account_logout' %}" method="post">
+240:             {% csrf_token %}
+241:             <button type="submit" class="btn-highlight" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap; cursor: pointer;">
+242:                 <i class="fas fa-sign-out-alt"></i> Sair da Conta
+243:             </button>
+244:         </form>
+245:     </div>
+246: </div>
+247: {% endif %}
+248: 
+249: <div class="tournaments-section">
+250:     <h2 style="font-size: 2rem; margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px; text-align: center;">Bem vindo ao Painel Administrativo de Atleta</h2>
+251:     
+252:     <!-- Menu Horizontal de Abas -->
+253:     <div class="tabs-container">
+254:         <button class="tab-btn active" onclick="openTab('meu-clube', this)"><i class="fas fa-link"></i> Meu Clube</button>
+255:         <button class="tab-btn" onclick="openTab('meu-perfil', this)"><i class="fas fa-user-edit"></i> Meu Perfil</button>
+256:         <button class="tab-btn" onclick="openTab('meus-jogos', this)"><i class="fas fa-calendar-alt"></i> Meus Jogos</button>
+257:     </div>
+258: 
+259:     <!-- Aba: Meu Clube -->
+260:     <div id="meu-clube" class="tab-content active">
+261:         <div class="glass-card" style="padding: 50px; border-radius: 16px; text-align: center; min-height: 450px; display: flex; flex-direction: column; justify-content: center; max-width: 800px; margin: 0 auto;">
+262:             <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 30px; font-weight: 900;">
+263:                 Vínculo com Clube
+264:             </h2>
+265: 
+266:             {% if linked_club %}
+267:                 <!-- Usuário já vinculado a um clube -->
+268:                 <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+269:                     <div style="width: 120px; height: 120px; background: rgba(16, 185, 129, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; border: 2px solid rgba(16,185,129,0.3);">
+270:                         <i class="fas fa-check-circle" style="font-size: 4.5rem; color: #34d399;"></i>
+271:                     </div>
+272:                     
+273:                     <h3 style="color: #fff; font-size: 1.8rem; font-weight: 800; margin-bottom: 15px;">Vínculo Ativo</h3>
+274:                     <p style="color: var(--subtitle-color); font-size: 1.1rem; margin-bottom: 5px;">Você está oficialmente vinculado ao clube:</p>
+275:                     <h4 style="color: var(--highlight-color); font-size: 2.5rem; margin-bottom: 20px; font-weight: 900; letter-spacing: -0.5px;">{{ linked_club.name }}</h4>
+276:                     
+277:                     <div style="background: rgba(0,0,0,0.3); padding: 15px 30px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);">
+278:                         <span style="color: var(--subtitle-color); font-size: 1.1rem;">Perfil Atleta:</span>
+279:                         <strong style="color: #fff; font-size: 1.2rem; margin-left: 8px;">{{ user.player_profile.name }}</strong>
+280:                     </div>
+281:                     
+282:                     <div style="margin-top: 50px;">
+283:                         <a href="{% url 'clubs:detail' linked_club.id %}" class="btn-save">
+284:                             <i class="fas fa-arrow-right"></i> Acessar Página do Clube
+285:                         </a>
+286:                     </div>
+287:                 </div>
+288:             {% elif pending_request %}
+289:                 <!-- Solicitação pendente -->
+290:                 <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+291:                     <div style="width: 120px; height: 120px; background: rgba(245, 158, 11, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; border: 2px solid rgba(245,158,11,0.3);">
+292:                         <i class="fas fa-clock" style="font-size: 4.5rem; color: #fbbf24;"></i>
+293:                     </div>
+294:                     
+295:                     <h3 style="color: #fff; font-size: 1.8rem; font-weight: 800; margin-bottom: 15px;">Solicitação em Análise</h3>
+296:                     <p style="color: var(--subtitle-color); font-size: 1.2rem; max-width: 500px; line-height: 1.6;">
+297:                         Você solicitou vínculo com o clube <strong style="color: #fff;">{{ pending_request.club.name }}</strong> para assumir o perfil de atleta <strong style="color: #fff;">{{ pending_request.player.name }}</strong>.
+298:                     </p>
+299:                     
+300:                     <div style="margin-top: 40px;">
+301:                         <span class="status-badge status-pending">
+302:                             <i class="fas fa-hourglass-half"></i> Aguardando Aprovação do Administrador
+303:                         </span>
+304:                     </div>
+305:                 </div>
+306:             {% else %}
+307:                 <!-- Formulário para solicitar vínculo -->
+308:                 <p style="color: var(--subtitle-color); font-size: 1.2rem; margin-bottom: 40px; line-height: 1.6; max-width: 600px; margin-left: auto; margin-right: auto;">
+309:                     Você ainda não está vinculado a nenhum clube no sistema. Escolha o seu clube abaixo e selecione o seu perfil de atleta para solicitar o acesso.
+310:                 </p>
+311:                 
+312:                 <form method="post" action="{% url 'athlete_dashboard' %}" id="linkForm" style="max-width: 450px; margin: 0 auto; text-align: left; background: rgba(0,0,0,0.2); padding: 30px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+313:                     {% csrf_token %}
+314:                     
+315:                     {% if club_context %}
+316:                         <div class="custom-form-group">
+317:                             <label><i class="fas fa-map-marker-alt" style="color: var(--highlight-color); margin-right: 5px;"></i> 1. Clube Solicitado</label>
+318:                             <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 14px 18px; border-radius: 10px; color: #fff; font-size: 1.05rem; font-weight: 600;">
+319:                                 {{ club_context.name }}
+320:                             </div>
+321:                             <input type="hidden" name="club" id="id_club" value="{{ club_context.id }}">
+322:                         </div>
+323:                     {% else %}
+324:                         <div class="custom-form-group">
+325:                             <label for="id_club"><i class="fas fa-map-marker-alt" style="color: var(--highlight-color); margin-right: 5px;"></i> 1. Selecione o Clube</label>
+326:                             <select name="club" id="id_club" required>
+327:                                 <option value="">Escolha um clube...</option>
+328:                                 {% for club in clubs %}
+329:                                 <option value="{{ club.id }}">{{ club.name }}</option>
+330:                                 {% endfor %}
+331:                             </select>
+332:                         </div>
+333:                     {% endif %}
+334:                     
+335:                     <div class="custom-form-group">
+336:                         <label for="id_player"><i class="fas fa-user-tag" style="color: var(--highlight-color); margin-right: 5px;"></i> 2. Identifique seu Perfil de Atleta</label>
+337:                         <select name="player" id="id_player" required disabled>
+338:                             <option value="">Selecione o clube primeiro</option>
+339:                         </select>
+340:                     </div>
+341:                     
+342:                     <button type="submit" name="link_request" class="btn-save" style="width: 100%; margin-top: 15px; padding: 16px;">
+343:                         <i class="fas fa-paper-plane"></i> Enviar Solicitação de Vínculo
+344:                     </button>
+345:                 </form>
+346:             {% endif %}
+347:         </div>
+348:     </div>
+349:     
+350:     <!-- Aba: Meu Perfil -->
+351:     <div id="meu-perfil" class="tab-content">
+352:         <div class="glass-card" style="padding: 50px; border-radius: 16px; max-width: 800px; margin: 0 auto;">
+353:             <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 40px; font-weight: 900; text-align: center;">
+354:                 Meu Perfil
+355:             </h2>
+356:             
+357:             <form method="post" action="{% url 'athlete_dashboard' %}">
+358:                 {% csrf_token %}
+359:                 
+360:                 <!-- Dados Pessoais -->
+361:                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 25px;">
+362:                     <i class="fas fa-id-card" style="font-size: 1.5rem; color: var(--highlight-color);"></i>
+363:                     <h4 style="color: #fff; font-size: 1.4rem; font-weight: 800; margin: 0;">Dados Pessoais</h4>
+364:                 </div>
+365:                 
+366:                 <div class="form-grid">
+367:                     <div class="custom-form-group">
+368:                         <label for="{{ user_form.first_name.id_for_label }}">Primeiro Nome</label>
+369:                         {{ user_form.first_name }}
+370:                     </div>
+371:                     <div class="custom-form-group">
+372:                         <label for="{{ user_form.last_name.id_for_label }}">Último Nome</label>
+373:                         {{ user_form.last_name }}
+374:                     </div>
+375:                     <div class="custom-form-group form-full-width">
+376:                         <label for="{{ user_form.email.id_for_label }}">Endereço de E-mail</label>
+377:                         {{ user_form.email }}
+378:                     </div>
+379:                 </div>
+380: 
+381:                 <!-- Divisor -->
+382:                 <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 30px 0 40px 0;"></div>
+383: 
+384:                 <!-- Dados de Atleta -->
+385:                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 25px;">
+386:                     <i class="fas fa-table-tennis" style="font-size: 1.5rem; color: var(--highlight-color);"></i>
+387:                     <h4 style="color: #fff; font-size: 1.4rem; font-weight: 800; margin: 0;">Preferências em Quadra</h4>
+388:                 </div>
+389: 
+390:                 <div class="form-grid">
+391:                     <div class="custom-form-group form-full-width">
+392:                         <label for="{{ profile_form.full_name.id_for_label }}">Nome Completo (Para Rankings e Chaves)</label>
+393:                         {{ profile_form.full_name }}
+394:                     </div>
+395:                     <div class="custom-form-group form-full-width">
+396:                         <label for="{{ profile_form.racket.id_for_label }}">Marca/Modelo da Raquete (Opcional)</label>
+397:                         {{ profile_form.racket }}
+398:                     </div>
+399:                     
+400:                     <div class="custom-form-group">
+401:                         <label>Mão Dominante (Empunhadura)</label>
+402:                         <div class="radio-group">
+403:                             {% for radio in profile_form.handedness %}
+404:                                 {% if radio.choice_label != "---------" and radio.choice_value != "" %}
+405:                                 <div class="radio-option">
+406:                                     {{ radio.tag }}
+407:                                     <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+408:                                 </div>
+409:                                 {% endif %}
+410:                             {% endfor %}
+411:                         </div>
+412:                     </div>
+413:                     
+414:                     <div class="custom-form-group">
+415:                         <label>Tipo de Backhand</label>
+416:                         <div class="radio-group">
+417:                             {% for radio in profile_form.backhand %}
+418:                                 {% if radio.choice_label != "---------" and radio.choice_value != "" %}
+419:                                 <div class="radio-option">
+420:                                     {{ radio.tag }}
+421:                                     <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+422:                                 </div>
+423:                                 {% endif %}
+424:                             {% endfor %}
+425:                         </div>
+426:                     </div>
+427:                 </div>
+428:                 
+429:                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px;">
+430:                     <a href="{% url 'account_reset_password' %}" style="color: var(--subtitle-color); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 1.1rem; padding: 10px; border-radius: 8px; transition: background 0.2s;">
+431:                         <i class="fas fa-key"></i> Redefinir Minha Senha
+432:                     </a>
+433:                     <button type="submit" name="update_profile" class="btn-save">
+434:                         <i class="fas fa-save"></i> Salvar Alterações
+435:                     </button>
+436:                 </div>
+437:             </form>
+438:         </div>
+439:     </div>
+440: 
+441:     <!-- Aba: Meus Jogos -->
+442:     <div id="meus-jogos" class="tab-content">
+443:         <div class="glass-card" style="padding: 40px; border-radius: 16px; max-width: 800px; margin: 0 auto;">
+444:             <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 30px; font-weight: 900; text-align: center;">
+445:                 Meus Jogos
+446:             </h2>
+447:             
+448:             {% if not my_matches %}
+449:                 <p style="color: var(--subtitle-color); text-align: center; font-size: 1.1rem;">Você ainda não possui jogos gerados em nenhum torneio ou ranking.</p>
+450:             {% else %}
+451:                 <div style="display: flex; flex-direction: column; gap: 20px;">
+452:                     {% for match in my_matches %}
+453:                     <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
+454:                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+455:                             <div>
+456:                                 <span style="background: var(--highlight-color); color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">{{ match.tournament.name }}</span>
+457:                                 <span style="color: var(--subtitle-color); font-size: 0.9rem; margin-left: 10px;">Rodada {{ match.round_number }}</span>
+458:                             </div>
+459:                             <div>
+460:                                 {% if match.status == 'completed' %}
+461:                                     <span class="status-badge status-approved"><i class="fas fa-check"></i> Finalizado</span>
+462:                                 {% elif match.status == 'cancelled' %}
+463:                                     <span class="status-badge status-pending" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border-color: rgba(239, 68, 68, 0.4);"><i class="fas fa-times"></i> Cancelado</span>
+464:                                 {% else %}
+465:                                     <span class="status-badge status-pending"><i class="fas fa-clock"></i> Pendente</span>
+466:                                 {% endif %}
+467:                             </div>
+468:                         </div>
+469:                         
+470:                         <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px;">
+471:                             <div style="text-align: right; flex: 1;">
+472:                                 <h4 style="color: #fff; font-size: 1.2rem; margin: 0;">{{ match.player_a.name|default:"A Definir" }}</h4>
+473:                             </div>
+474:                             <div style="color: var(--subtitle-color); font-weight: bold; font-size: 1.2rem;">X</div>
+475:                             <div style="text-align: left; flex: 1;">
+476:                                 <h4 style="color: #fff; font-size: 1.2rem; margin: 0;">{{ match.player_b.name|default:"A Definir" }}</h4>
+477:                             </div>
+478:                         </div>
+479: 
+480:                         <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+481:                             <div>
+482:                                 <p style="color: var(--subtitle-color); margin: 0; font-size: 0.95rem;">
+483:                                     <i class="fas fa-calendar-day"></i> 
+484:                                     {% if match.scheduled_datetime %}
+485:                                         {{ match.scheduled_datetime|date:"d/m/Y \à\s H:i" }} na quadra <strong>{{ match.court.name }}</strong>
+486:                                     {% else %}
+487:                                         Ainda não agendado
+488:                                     {% endif %}
+489:                                 </p>
+490:                             </div>
+491:                             
+492:                             {% if match.status == 'pending' and match.round_number == match.tournament.current_round and match.player_a and match.player_b %}
+493:                                 <button onclick="openScheduleModal('{{ match.id }}', '{{ match.player_a.name }} vs {{ match.player_b.name }}')" style="padding: 8px 16px; background: #fff; color: #000; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
+494:                                     <i class="fas fa-calendar-plus"></i> Agendar
+495:                                 </button>
+496:                             {% endif %}
+497:                         </div>
+498:                     </div>
+499:                     {% endfor %}
+500:                 </div>
+501:             {% endif %}
+502:         </div>
+503:     </div>
+504: </div>
+505: 
+506: <!-- Modal de Agendamento -->
+507: <div id="scheduleModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;">
+508:     <div class="glass-card" style="width: 100%; max-width: 500px; padding: 30px; border-radius: 16px; position: relative;">
+509:         <button onclick="closeScheduleModal()" style="position: absolute; top: 15px; right: 20px; background: transparent; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+510:         <h3 style="color: #fff; font-size: 1.5rem; margin-bottom: 5px; font-weight: 800;">Agendar Jogo</h3>
+511:         <p id="modalMatchName" style="color: var(--highlight-color); margin-bottom: 25px; font-weight: bold;"></p>
+512:         
+513:         <form method="post" action="{% url 'athlete_dashboard' %}">
+514:             {% csrf_token %}
+515:             <input type="hidden" name="match_id" id="modalMatchId">
+516:             
+517:             <div class="custom-form-group">
+518:                 <label>Quadra (Somente quadras de Ranking)</label>
+519:                 <select name="court" required>
+520:                     <option value="">Selecione uma quadra...</option>
+521:                     {% for court in courts %}
+522:                     <option value="{{ court.id }}">{{ court.name }}</option>
+523:                     {% endfor %}
+524:                 </select>
+525:                 {% if not courts %}
+526:                 <small style="color: #ef4444; margin-top: 5px;">Nenhuma quadra configurada como "Quadra de Ranking" no clube.</small>
+527:                 {% endif %}
+528:             </div>
+529:             
+530:             <div style="display: flex; gap: 15px;">
+531:                 <div class="custom-form-group" style="flex: 1;">
+532:                     <label>Data</label>
+533:                     <input type="date" name="date" required style="color-scheme: dark;">
+534:                 </div>
+535:                 <div class="custom-form-group" style="flex: 1;">
+536:                     <label>Hora</label>
+537:                     <input type="time" name="time" required style="color-scheme: dark;">
+538:                 </div>
+539:             </div>
+540:             
+541:             <button type="submit" name="schedule_match" class="btn-save" style="width: 100%; margin-top: 10px;" {% if not courts %}disabled{% endif %}>
+542:                 <i class="fas fa-check"></i> Confirmar Agendamento
+543:             </button>
+544:         </form>
+545:     </div>
+546: </div>
+547: {% endblock %}
+548: 
+549: {% block extra_scripts %}
+550:     // Controle do Modal
+551:     function openScheduleModal(matchId, matchName) {
+552:         document.getElementById('modalMatchId').value = matchId;
+553:         document.getElementById('modalMatchName').innerText = matchName;
+554:         document.getElementById('scheduleModal').style.display = 'flex';
+555:     }
+556:     
+557:     function closeScheduleModal() {
+558:         document.getElementById('scheduleModal').style.display = 'none';
+559:     }
+560: 
+561:     // Funções para controle das Abas
+562:     function openTab(tabId, element) {
+563:         // Esconde todos os conteúdos
+564:         var contents = document.getElementsByClassName("tab-content");
+565:         for (var i = 0; i < contents.length; i++) {
+566:             contents[i].classList.remove("active");
+567:         }
+568:         
+569:         // Remove a classe active de todos os botões
+570:         var buttons = document.getElementsByClassName("tab-btn");
+571:         for (var i = 0; i < buttons.length; i++) {
+572:             buttons[i].classList.remove("active");
+573:         }
+574:         
+575:         // Mostra a aba selecionada e adiciona active no botão
+576:         document.getElementById(tabId).classList.add("active");
+577:         element.classList.add("active");
+578:     }
+579: 
+580:     // Lógica para carregamento dinâmico de atletas no select
+581:     document.addEventListener("DOMContentLoaded", function() {
+582:         const clubSelect = document.getElementById('id_club');
+583:         const playerSelect = document.getElementById('id_player');
+584:         
+585:         if (clubSelect && playerSelect) {
+586:             const playersData = {{ players_json|safe }};
+587:             
+588:             function updatePlayerSelect(clubId) {
+589:                 playerSelect.innerHTML = '<option value="">Selecione o Atleta...</option>';
+590:                 
+591:                 if (clubId && playersData[clubId] && playersData[clubId].length > 0) {
+592:                     playerSelect.disabled = false;
+593:                     playersData[clubId].forEach(player => {
+594:                         const option = document.createElement('option');
+595:                         option.value = player.id;
+596:                         option.textContent = player.name;
+597:                         playerSelect.appendChild(option);
+598:                     });
+599:                 } else {
+600:                     playerSelect.disabled = true;
+601:                     if (clubId) {
+602:                         playerSelect.innerHTML = '<option value="">Nenhum atleta disponível neste clube</option>';
+603:                     } else {
+604:                         playerSelect.innerHTML = '<option value="">Selecione o clube primeiro</option>';
+605:                     }
+606:                 }
+607:             }
+608: 
+609:             clubSelect.addEventListener('change', function() {
+610:                 updatePlayerSelect(this.value);
+611:             });
+612:             
+613:             // Dispara na montagem se o clube já estiver preenchido (caso do hidden input)
+614:             if (clubSelect.value) {
+615:                 updatePlayerSelect(clubSelect.value);
+616:             }
+617:         }
+618:     });
+619: {% endblock %}
+620: 
+The above content shows the entire, complete file contents of the requested file.
+
+--- MATCH 1 ---
+Created At: 2026-09-04T10:06:18-03:00
+Completed At: 2026-09-04T10:06:18-03:00
+File Path: `file:///c:/Users/ferna/Downloads/Projetos/AllCourts365/templates/athlete_dashboard.html`
+Total Lines: 602
+Total Bytes: 30524
+Showing lines 1 to 602
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: {% extends 'base.html' %}
+2: {% load static %}
+3: 
+4: {% block title %}Painel Administrativo do Atleta - AllCourts365{% endblock %}
+5: 
+6: {% block extra_head %}
+7: <style>
+8:     {% if linked_club %}
+9:     :root {
+10:         {% if linked_club.background_color %}--bg-color: {{ linked_club.background_color }};{% endif %}
+11:         {% if linked_club.overlay_color %}--overlay-color: {{ linked_club.overlay_color }};{% endif %}
+12:         {% if linked_club.overlay_opacity %}--overlay-opacity: {{ linked_club.overlay_opacity|stringformat:"s" }};{% endif %}
+13:         {% if linked_club.highlight_color %}--highlight-color: {{ linked_club.highlight_color }};{% endif %}
+14:         {% if linked_club.title_color %}--title-color: {{ linked_club.title_color }};{% endif %}
+15:         {% if linked_club.subtitle_color %}--subtitle-color: {{ linked_club.subtitle_color }};{% endif %}
+16:     }
+17:     
+18:     {% if linked_club.background_image %}
+19:     body {
+20:         background-image: url('{{ linked_club.background_image.url }}') !important;
+21:         background-size: cover !important;
+22:         background-position: center !important;
+23:         background-attachment: fixed !important;
+24:     }
+25:     {% endif %}
+26:     
+27:     {% if linked_club.watermark_image %}
+28:     .club-watermark {
+29:         position: fixed;
+30:         z-index: 1000;
+31:         opacity: {{ linked_club.watermark_opacity|default:"0.8"|stringformat:"s" }};
+32:         width: {{ linked_club.watermark_size_percent|default:"15"|stringformat:"s" }}%;
+33:         pointer-events: none;
+34:         
+35:         {% if linked_club.watermark_position == 'top-left' %} top: 20px; left: 20px;
+36:         {% elif linked_club.watermark_position == 'top-right' %} top: 20px; right: 20px;
+37:         {% elif linked_club.watermark_position == 'bottom-left' %} bottom: 20px; left: 20px;
+38:         {% elif linked_club.watermark_position == 'bottom-right' %} bottom: 20px; right: 20px;
+39:         {% elif linked_club.watermark_position == 'center' %} top: 50%; left: 50%; transform: translate(-50%, -50%);
+40:         {% else %} bottom: 20px; left: 20px; {% endif %}
+41:     }
+42:     {% endif %}
+43:     {% endif %}
+44: 
+45:     .club-header-grid {
+46:         display: grid;
+47:         grid-template-columns: 150px 1fr auto;
+48:         gap: 30px;
+49:         align-items: center;
+50:         margin-top: 40px;
+51:         margin-bottom: 40px;
+52:         min-height: 180px;
+53:     }
+54:     @media (max-width: 768px) {
+55:         .club-header-grid {
+56:             grid-template-columns: 1fr;
+57:             text-align: center;
+58:             justify-items: center;
+59:         }
+60:         .club-header-grid .btn-wrapper {
+61:             justify-content: center !important;
+62:             width: 100%;
+63:         }
+64:     }
+65: 
+66:     /* Status Badge */
+67:     .status-badge {
+68:         display: inline-flex;
+69:         align-items: center;
+70:         gap: 8px;
+71:         padding: 4px 10px;
+72:         border-radius: 20px;
+73:         font-size: 0.75rem;
+74:         font-weight: 700;
+75:         text-transform: uppercase;
+76:         letter-spacing: 0.5px;
+77:     }
+78:     .status-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+79:     .status-approved { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+80: 
+81:     /* Custom Form Styles */
+82:     .custom-form-group {
+83:         margin-bottom: 25px;
+84:         display: flex;
+85:         flex-direction: column;
+86:         align-items: flex-start;
+87:         width: 100%;
+88:     }
+89:     
+90:     .custom-form-group label {
+91:         color: #fff;
+92:         font-weight: 600;
+93:         margin-bottom: 8px;
+94:         font-size: 1rem;
+95:         letter-spacing: 0.5px;
+96:     }
+97:     
+98:     .custom-form-group input[type="text"],
+99:     .custom-form-group input[type="email"],
+100:     .custom-form-group select,
+101:     .custom-form-group input[type="date"],
+102:     .custom-form-group input[type="time"] {
+103:         width: 100%;
+104:         background: rgba(0, 0, 0, 0.4);
+105:         border: 1px solid rgba(255, 255, 255, 0.2);
+106:         color: #fff;
+107:         border-radius: 10px;
+108:         padding: 14px 18px;
+109:         font-size: 1.05rem;
+110:         transition: all 0.3s ease;
+111:         outline: none;
+112:         box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+113:     }
+114:     
+115:     .custom-form-group input:focus,
+116:     .custom-form-group select:focus {
+117:         background: rgba(0, 0, 0, 0.6);
+118:         border-color: var(--highlight-color, #3b82f6);
+119:         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+120:     }
+121: 
+122:     /* Radio Buttons Customizados */
+123:     .radio-group {
+124:         display: flex;
+125:         gap: 20px;
+126:         margin-top: 5px;
+127:     }
+128:     .radio-option {
+129:         display: flex;
+130:         align-items: center;
+131:         gap: 8px;
+132:         cursor: pointer;
+133:     }
+134:     .radio-option label {
+135:         margin: 0;
+136:         cursor: pointer;
+137:         font-weight: 500;
+138:         color: var(--subtitle-color, #ccc);
+139:     }
+140:     .radio-option input[type="radio"] {
+141:         appearance: none;
+142:         width: 22px;
+143:         height: 22px;
+144:         border: 2px solid rgba(255,255,255,0.4);
+145:         border-radius: 50%;
+146:         background: rgba(0,0,0,0.2);
+147:         cursor: pointer;
+148:         position: relative;
+149:         outline: none;
+150:         transition: all 0.2s ease;
+151:     }
+152:     .radio-option input[type="radio"]:checked {
+153:         border-color: var(--highlight-color, #3b82f6);
+154:     }
+155:     .radio-option input[type="radio"]:checked::after {
+156:         content: '';
+157:         position: absolute;
+158:         top: 50%;
+159:         left: 50%;
+160:         transform: translate(-50%, -50%);
+161:         width: 12px;
+162:         height: 12px;
+163:         background: var(--highlight-color, #3b82f6);
+164:         border-radius: 50%;
+165:     }
+166: 
+167:     /* Form Grid */
+168:     .form-grid {
+169:         display: grid;
+170:         grid-template-columns: 1fr;
+171:         gap: 0 25px;
+172:     }
+173:     @media (min-width: 768px) {
+174:         .form-grid {
+175:             grid-template-columns: 1fr 1fr;
+176:         }
+177:     }
+178:     .form-full-width {
+179:         grid-column: 1 / -1;
+180:     }
+181: 
+182:     /* Buttons */
+183:     .btn-save {
+184:         padding: 14px 28px;
+185:         background: var(--highlight-color, #3b82f6);
+186:         color: #fff;
+187:         border: none;
+188:         border-radius: 30px;
+189:         font-size: 1.1rem;
+190:         font-weight: 800;
+191:         cursor: pointer;
+192:         transition: transform 0.2s, box-shadow 0.2s;
+193:         display: inline-flex;
+194:         align-items: center;
+195:         justify-content: center;
+196:         gap: 10px;
+197:         text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+198:     }
+199:     .btn-save:hover {
+200:         transform: translateY(-3px);
+201:         box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+202:         color: #fff;
+203:     }
+204: </style>
+205: {% endblock %}
+206: 
+207: {% block watermark %}
+208:     {% if linked_club and linked_club.watermark_image %}
+209:         <img src="{{ linked_club.watermark_image.url }}" alt="Watermark" class="club-watermark">
+210:     {% elif site_config.watermark_image %}
+211:         <img src="{{ site_config.watermark_image.url }}" alt="Watermark" class="watermark">
+212:     {% endif %}
+213: {% endblock %}
+214: 
+215: {% block content %}
+216: {% if linked_club %}
+217: <div class="club-header glass-card club-header-grid">
+218:     <div style="width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+219:         {% if linked_club.logo %}
+220:             <img src="{{ linked_club.logo.url }}" alt="{{ linked_club.name }}" style="max-width: 100%; max-height: 100%; border-radius: 10px; object-fit: contain;">
+221:         {% else %}
+222:             <div style="width: 100%; height: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+223:                 <img src="{% static 'bolinha.png' %}" style="width: 80px; height: 80px; object-fit: contain; opacity: 0.8;" alt="Bola">
+224:             </div>
+225:         {% endif %}
+226:     </div>
+227:     <div style="display: flex; flex-direction: column; justify-content: center;">
+228:         <h1 style="font-size: 2.5rem; margin-bottom: 10px; line-height: 1.2;">
+229:             {% if linked_club.website %}
+230:                 <a href="{{ linked_club.website }}" target="_blank" style="color: var(--title-color); text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">{{ linked_club.name }}</a>
+231:             {% else %}
+232:                 {{ linked_club.name }}
+233:             {% endif %}
+234:         </h1>
+235:         <p style="margin-bottom: 10px; font-size: 1.1rem; line-height: 1.4;">{{ linked_club.description|default:"Sem descrição." }}</p>
+236:         <p style="font-size: 0.95rem; color: var(--highlight-color); margin-top: auto;">📍 {{ linked_club.address|default:"Endereço não informado" }}</p>
+237:     </div>
+238:     <div class="btn-wrapper" style="display: flex; align-items: center; justify-content: flex-end;">
+239:         <form action="{% url 'account_logout' %}" method="post">
+240:             {% csrf_token %}
+241:             <button type="submit" class="btn-highlight" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap; cursor: pointer;">
+242:                 <i class="fas fa-sign-out-alt"></i> Sair da Conta
+243:             </button>
+244:         </form>
+245:     </div>
+246: </div>
+247: {% endif %}
+248: 
+249: <div class="tournaments-section">
+250:     <h2 style="font-size: 2rem; margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px; text-align: center;">Bem vindo ao Painel Administrativo de Atleta</h2>
+251:     
+252:     <!-- Menu Horizontal de Abas -->
+253:     <div class="tabs-container">
+254:         <button class="tab-btn active" onclick="openTab('meu-clube', this)"><i class="fas fa-link"></i> Meu Clube</button>
+255:         <button class="tab-btn" onclick="openTab('meu-perfil', this)"><i class="fas fa-user-edit"></i> Meu Perfil</button>
+256:         <button class="tab-btn" onclick="openTab('meus-jogos', this)"><i class="fas fa-calendar-alt"></i> Meus Jogos</button>
+257:     </div>
+258: 
+259:     <!-- Aba: Meu Clube -->
+260:     <div id="meu-clube" class="tab-content active">
+261:         <div class="glass-card" style="padding: 50px; border-radius: 16px; text-align: center; min-height: 450px; display: flex; flex-direction: column; justify-content: center; max-width: 800px; margin: 0 auto;">
+262:             <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 30px; font-weight: 900;">
+263:                 Vínculo com Clube
+264:             </h2>
+265: 
+266:             {% if linked_club %}
+267:                 <!-- Usuário já vinculado a um clube -->
+268:                 <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+269:                     <div style="width: 120px; height: 120px; background: rgba(16, 185, 129, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; border: 2px solid rgba(16,185,129,0.3);">
+270:                         <i class="fas fa-check-circle" style="font-size: 4.5rem; color: #34d399;"></i>
+271:                     </div>
+272:                     
+273:                     <h3 style="color: #fff; font-size: 1.8rem; font-weight: 800; margin-bottom: 15px;">Vínculo Ativo</h3>
+274:                     <p style="color: var(--subtitle-color); font-size: 1.1rem; margin-bottom: 5px;">Você está oficialmente vinculado ao clube:</p>
+275:                     <h4 style="color: var(--highlight-color); font-size: 2.5rem; margin-bottom: 20px; font-weight: 900; letter-spacing: -0.5px;">{{ linked_club.name }}</h4>
+276:                     
+277:                     <div style="background: rgba(0,0,0,0.3); padding: 15px 30px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);">
+278:                         <span style="color: var(--subtitle-color); font-size: 1.1rem;">Perfil Atleta:</span>
+279:                         <strong style="color: #fff; font-size: 1.2rem; margin-left: 8px;">{{ user.player_profile.name }}</strong>
+280:                     </div>
+281:                     
+282:                     <div style="margin-top: 50px;">
+283:                         <a href="{% url 'clubs:detail' linked_club.id %}" class="btn-save">
+284:                             <i class="fas fa-arrow-right"></i> Acessar Página do Clube
+285:                         </a>
+286:                     </div>
+287:                 </div>
+288:             {% elif pending_request %}
+289:                 <!-- Solicitação pendente -->
+290:                 <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+291:                     <div style="width: 120px; height: 120px; background: rgba(245, 158, 11, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; border: 2px solid rgba(245,158,11,0.3);">
+292:                         <i class="fas fa-clock" style="font-size: 4.5rem; color: #fbbf24;"></i>
+293:                     </div>
+294:                     
+295:                     <h3 style="color: #fff; font-size: 1.8rem; font-weight: 800; margin-bottom: 15px;">Solicitação em Análise</h3>
+296:                     <p style="color: var(--subtitle-color); font-size: 1.2rem; max-width: 500px; line-height: 1.6;">
+297:                         Você solicitou vínculo com o clube <strong style="color: #fff;">{{ pending_request.club.name }}</strong> para assumir o perfil de atleta <strong style="color: #fff;">{{ pending_request.player.name }}</strong>.
+298:                     </p>
+299:                     
+300:                     <div style="margin-top: 40px;">
+301:                         <span class="status-badge status-pending">
+302:                             <i class="fas fa-hourglass-half"></i> Aguardando Aprovação do Administrador
+303:                         </span>
+304:                     </div>
+305:                 </div>
+306:             {% else %}
+307:                 <!-- Formulário para solicitar vínculo -->
+308:                 <p style="color: var(--subtitle-color); font-size: 1.2rem; margin-bottom: 40px; line-height: 1.6; max-width: 600px; margin-left: auto; margin-right: auto;">
+309:                     Você ainda não está vinculado a nenhum clube no sistema. Escolha o seu clube abaixo e selecione o seu perfil de atleta para solicitar o acesso.
+310:                 </p>
+311:                 
+312:                 <form method="post" action="{% url 'athlete_dashboard' %}" id="linkForm" style="max-width: 450px; margin: 0 auto; text-align: left; background: rgba(0,0,0,0.2); padding: 30px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+313:                     {% csrf_token %}
+314:                     
+315:                     {% if club_context %}
+316:                         <div class="custom-form-group">
+317:                             <label><i class="fas fa-map-marker-alt" style="color: var(--highlight-color); margin-right: 5px;"></i> 1. Clube Solicitado</label>
+318:                             <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 14px 18px; border-radius: 10px; color: #fff; font-size: 1.05rem; font-weight: 600;">
+319:                                 {{ club_context.name }}
+320:                             </div>
+321:                             <input type="hidden" name="club" id="id_club" value="{{ club_context.id }}">
+322:                         </div>
+323:                     {% else %}
+324:                         <div class="custom-form-group">
+325:                             <label for="id_club"><i class="fas fa-map-marker-alt" style="color: var(--highlight-color); margin-right: 5px;"></i> 1. Selecione o Clube</label>
+326:                             <select name="club" id="id_club" required>
+327:                                 <option value="">Escolha um clube...</option>
+328:                                 {% for club in clubs %}
+329:                                 <option value="{{ club.id }}">{{ club.name }}</option>
+330:                                 {% endfor %}
+331:                             </select>
+332:                         </div>
+333:                     {% endif %}
+334:                     
+335:                     <div class="custom-form-group">
+336:                         <label for="id_player"><i class="fas fa-user-tag" style="color: var(--highlight-color); margin-right: 5px;"></i> 2. Identifique seu Perfil de Atleta</label>
+337:                         <select name="player" id="id_player" required disabled>
+338:                             <option value="">Selecione o clube primeiro</option>
+339:                         </select>
+340:                     </div>
+341:                     
+342:                     <button type="submit" name="link_request" class="btn-save" style="width: 100%; margin-top: 15px; padding: 16px;">
+343:                         <i class="fas fa-paper-plane"></i> Enviar Solicitação de Vínculo
+344:                     </button>
+345:                 </form>
+346:             {% endif %}
+347:         </div>
+348:     </div>
+349:     
+350:     <!-- Aba: Meu Perfil -->
+351:     <div id="meu-perfil" class="tab-content">
+352:         <div class="glass-card" style="padding: 50px; border-radius: 16px; max-width: 800px; margin: 0 auto;">
+353:             <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 40px; font-weight: 900; text-align: center;">
+354:                 Meu Perfil
+355:             </h2>
+356:             
+357:             <form method="post" action="{% url 'athlete_dashboard' %}">
+358:                 {% csrf_token %}
+359:                 
+360:                 <!-- Dados Pessoais -->
+361:                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 25px;">
+362:                     <i class="fas fa-id-card" style="font-size: 1.5rem; color: var(--highlight-color);"></i>
+363:                     <h4 style="color: #fff; font-size: 1.4rem; font-weight: 800; margin: 0;">Dados Pessoais</h4>
+364:                 </div>
+365:                 
+366:                 <div class="form-grid">
+367:                     <div class="custom-form-group">
+368:                         <label for="{{ user_form.first_name.id_for_label }}">Primeiro Nome</label>
+369:                         {{ user_form.first_name }}
+370:                     </div>
+371:                     <div class="custom-form-group">
+372:                         <label for="{{ user_form.last_name.id_for_label }}">Último Nome</label>
+373:                         {{ user_form.last_name }}
+374:                     </div>
+375:                     <div class="custom-form-group form-full-width">
+376:                         <label for="{{ user_form.email.id_for_label }}">Endereço de E-mail</label>
+377:                         {{ user_form.email }}
+378:                     </div>
+379:                 </div>
+380: 
+381:                 <!-- Divisor -->
+382:                 <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 30px 0 40px 0;"></div>
+383: 
+384:                 <!-- Dados de Atleta -->
+385:                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 25px;">
+386:                     <i class="fas fa-table-tennis" style="font-size: 1.5rem; color: var(--highlight-color);"></i>
+387:                     <h4 style="color: #fff; font-size: 1.4rem; font-weight: 800; margin: 0;">Preferências em Quadra</h4>
+388:                 </div>
+389: 
+390:                 <div class="form-grid">
+391:                     <div class="custom-form-group form-full-width">
+392:                         <label for="{{ profile_form.full_name.id_for_label }}">Nome Completo (Para Rankings e Chaves)</label>
+393:                         {{ profile_form.full_name }}
+394:                     </div>
+395:                     <div class="custom-form-group form-full-width">
+396:                         <label for="{{ profile_form.racket.id_for_label }}">Marca/Modelo da Raquete (Opcional)</label>
+397:                         {{ profile_form.racket }}
+398:                     </div>
+399:                     
+400:                     <div class="custom-form-group">
+401:                         <label>Mão Dominante (Empunhadura)</label>
+402:                         {{ profile_form.handedness }}
+403:                     </div>
+404:                     
+405:                     <div class="custom-form-group">
+406:                         <label>Tipo de Backhand</label>
+407:                         {{ profile_form.backhand }}
+408:                     </div>
+409:                 </div>
+410:                 
+411:                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px;">
+412:                     <a href="{% url 'account_reset_password' %}" style="color: var(--subtitle-color); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 1.1rem; padding: 10px; border-radius: 8px; transition: background 0.2s;">
+413:                         <i class="fas fa-key"></i> Redefinir Minha Senha
+414:                     </a>
+415:                     <button type="submit" name="update_profile" class="btn-save">
+416:                         <i class="fas fa-save"></i> Salvar Alterações
+417:                     </button>
+418:                 </div>
+419:             </form>
+420:         </div>
+421:     </div>
+422: 
+423:     <!-- Aba: Meus Jogos -->
+424:     <div id="meus-jogos" class="tab-content">
+425:         <div class="glass-card" style="padding: 40px; border-radius: 16px; max-width: 800px; margin: 0 auto;">
+426:             <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 30px; font-weight: 900; text-align: center;">
+427:                 Meus Jogos
+428:             </h2>
+429:             
+430:             {% if not my_matches %}
+431:                 <p style="color: var(--subtitle-color); text-align: center; font-size: 1.1rem;">Você ainda não possui jogos gerados em nenhum torneio ou ranking.</p>
+432:             {% else %}
+433:                 <div style="display: flex; flex-direction: column; gap: 20px;">
+434:                     {% for match in my_matches %}
+435:                     <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
+436:                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+437:                             <div>
+438:                                 <span style="background: var(--highlight-color); color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">{{ match.tournament.name }}</span>
+439:                                 <span style="color: var(--subtitle-color); font-size: 0.9rem; margin-left: 10px;">Rodada {{ match.round_number }}</span>
+440:                             </div>
+441:                             <div>
+442:                                 {% if match.status == 'completed' %}
+443:                                     <span class="status-badge status-approved"><i class="fas fa-check"></i> Finalizado</span>
+444:                                 {% elif match.status == 'cancelled' %}
+445:                                     <span class="status-badge status-pending" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border-color: rgba(239, 68, 68, 0.4);"><i class="fas fa-times"></i> Cancelado</span>
+446:                                 {% else %}
+447:                                     <span class="status-badge status-pending"><i class="fas fa-clock"></i> Pendente</span>
+448:                                 {% endif %}
+449:                             </div>
+450:                         </div>
+451:                         
+452:                         <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px;">
+453:                             <div style="text-align: right; flex: 1;">
+454:                                 <h4 style="color: #fff; font-size: 1.2rem; margin: 0;">{{ match.player_a.name|default:"A Definir" }}</h4>
+455:                             </div>
+456:                             <div style="color: var(--subtitle-color); font-weight: bold; font-size: 1.2rem;">X</div>
+457:                             <div style="text-align: left; flex: 1;">
+458:                                 <h4 style="color: #fff; font-size: 1.2rem; margin: 0;">{{ match.player_b.name|default:"A Definir" }}</h4>
+459:                             </div>
+460:                         </div>
+461: 
+462:                         <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+463:                             <div>
+464:                                 <p style="color: var(--subtitle-color); margin: 0; font-size: 0.95rem;">
+465:                                     <i class="fas fa-calendar-day"></i> 
+466:                                     {% if match.scheduled_datetime %}
+467:                                         {{ match.scheduled_datetime|date:"d/m/Y \à\s H:i" }} na quadra <strong>{{ match.court.name }}</strong>
+468:                                     {% else %}
+469:                                         Ainda não agendado
+470:                                     {% endif %}
+471:                                 </p>
+472:                             </div>
+473:                             
+474:                             {% if match.status == 'pending' and match.round_number == match.tournament.current_round and match.player_a and match.player_b %}
+475:                                 <button onclick="openScheduleModal('{{ match.id }}', '{{ match.player_a.name }} vs {{ match.player_b.name }}')" style="padding: 8px 16px; background: #fff; color: #000; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
+476:                                     <i class="fas fa-calendar-plus"></i> Agendar
+477:                                 </button>
+478:                             {% endif %}
+479:                         </div>
+480:                     </div>
+481:                     {% endfor %}
+482:                 </div>
+483:             {% endif %}
+484:         </div>
+485:     </div>
+486: </div>
+487: 
+488: <!-- Modal de Agendamento -->
+489: <div id="scheduleModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;">
+490:     <div class="glass-card" style="width: 100%; max-width: 500px; padding: 30px; border-radius: 16px; position: relative;">
+491:         <button onclick="closeScheduleModal()" style="position: absolute; top: 15px; right: 20px; background: transparent; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+492:         <h3 style="color: #fff; font-size: 1.5rem; margin-bottom: 5px; font-weight: 800;">Agendar Jogo</h3>
+493:         <p id="modalMatchName" style="color: var(--highlight-color); margin-bottom: 25px; font-weight: bold;"></p>
+494:         
+495:         <form method="post" action="{% url 'athlete_dashboard' %}">
+496:             {% csrf_token %}
+497:             <input type="hidden" name="match_id" id="modalMatchId">
+498:             
+499:             <div class="custom-form-group">
+500:                 <label>Quadra (Somente quadras de Ranking)</label>
+501:                 <select name="court" required>
+502:                     <option value="">Selecione uma quadra...</option>
+503:                     {% for court in courts %}
+504:                     <option value="{{ court.id }}">{{ court.name }}</option>
+505:                     {% endfor %}
+506:                 </select>
+507:                 {% if not courts %}
+508:                 <small style="color: #ef4444; margin-top: 5px;">Nenhuma quadra configurada como "Quadra de Ranking" no clube.</small>
+509:                 {% endif %}
+510:             </div>
+511:             
+512:             <div style="display: flex; gap: 15px;">
+513:                 <div class="custom-form-group" style="flex: 1;">
+514:                     <label>Data</label>
+515:                     <input type="date" name="date" required style="color-scheme: dark;">
+516:                 </div>
+517:                 <div class="custom-form-group" style="flex: 1;">
+518:                     <label>Hora</label>
+519:                     <input type="time" name="time" required style="color-scheme: dark;">
+520:                 </div>
+521:             </div>
+522:             
+523:             <button type="submit" name="schedule_match" class="btn-save" style="width: 100%; margin-top: 10px;" {% if not courts %}disabled{% endif %}>
+524:                 <i class="fas fa-check"></i> Confirmar Agendamento
+525:             </button>
+526:         </form>
+527:     </div>
+528: </div>
+529: {% endblock %}
+530: 
+531: {% block extra_scripts %}
+532:     // Controle do Modal
+533:     function openScheduleModal(matchId, matchName) {
+534:         document.getElementById('modalMatchId').value = matchId;
+535:         document.getElementById('modalMatchName').innerText = matchName;
+536:         document.getElementById('scheduleModal').style.display = 'flex';
+537:     }
+538:     
+539:     function closeScheduleModal() {
+540:         document.getElementById('scheduleModal').style.display = 'none';
+541:     }
+542: 
+543:     // Funções para controle das Abas
+544:     function openTab(tabId, element) {
+545:         // Esconde todos os conteúdos
+546:         var contents = document.getElementsByClassName("tab-content");
+547:         for (var i = 0; i < contents.length; i++) {
+548:             contents[i].classList.remove("active");
+549:         }
+550:         
+551:         // Remove a classe active de todos os botões
+552:         var buttons = document.getElementsByClassName("tab-btn");
+553:         for (var i = 0; i < buttons.length; i++) {
+554:             buttons[i].classList.remove("active");
+555:         }
+556:         
+557:         // Mostra a aba selecionada e adiciona active no botão
+558:         document.getElementById(tabId).classList.add("active");
+559:         element.classList.add("active");
+560:     }
+561: 
+562:     // Lógica para carregamento dinâmico de atletas no select
+563:     document.addEventListener("DOMContentLoaded", function() {
+564:         const clubSelect = document.getElementById('id_club');
+565:         const playerSelect = document.getElementById('id_player');
+566:         
+567:         if (clubSelect && playerSelect) {
+568:             const playersData = {{ players_json|safe }};
+569:             
+570:             function updatePlayerSelect(clubId) {
+571:                 playerSelect.innerHTML = '<option value="">Selecione o Atleta...</option>';
+572:                 
+573:                 if (clubId && playersData[clubId] && playersData[clubId].length > 0) {
+574:                     playerSelect.disabled = false;
+575:                     playersData[clubId].forEach(player => {
+576:                         const option = document.createElement('option');
+577:                         option.value = player.id;
+578:                         option.textContent = player.name;
+579:                         playerSelect.appendChild(option);
+580:                     });
+581:                 } else {
+582:                     playerSelect.disabled = true;
+583:                     if (clubId) {
+584:                         playerSelect.innerHTML = '<option value="">Nenhum atleta disponível neste clube</option>';
+585:                     } else {
+586:                         playerSelect.innerHTML = '<option value="">Selecione o clube primeiro</option>';
+587:                     }
+588:                 }
+589:             }
+590: 
+591:             clubSelect.addEventListener('change', function() {
+592:                 updatePlayerSelect(this.value);
+593:             });
+594:             
+595:             // Dispara na montagem se o clube já estiver preenchido (caso do hidden input)
+596:             if (clubSelect.value) {
+597:                 updatePlayerSelect(clubSelect.value);
+598:             }
+599:         }
+600:     });
+601: {% endblock %}
+602: 
+The above content shows the entire, complete file contents of the requested file.
+
+--- MATCH 2 ---
+Created At: 2026-09-04T10:22:22-03:00
+Completed At: 2026-09-04T10:22:22-03:00
+File Path: `file:///c:/Users/ferna/Downloads/Projetos/AllCourts365/templates/athlete_dashboard.html`
+Total Lines: 602
+Total Bytes: 30670
+Showing lines 1 to 602
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: {% extends 'base.html' %}
+2: {% load static %}
+3: 
+4: {% block title %}Painel Administrativo do Atleta - AllCourts365{% endblock %}
+5: 
+6: {% block extra_head %}
+7: <style>
+8:     {% if linked_club %}
+9:     :root {
+10:         {% if linked_club.background_color %}--bg-color: {{ linked_club.background_color }};{% endif %}
+11:         {% if linked_club.overlay_color %}--overlay-color: {{ linked_club.overlay_color }};{% endif %}
+12:         {% if linked_club.overlay_opacity %}--overlay-opacity: {{ linked_club.overlay_opacity|stringformat:"s" }};{% endif %}
+13:         {% if linked_club.highlight_color %}--highlight-color: {{ linked_club.highlight_color }};{% endif %}
+14:         {% if linked_club.title_color %}--title-color: {{ linked_club.title_color }};{% endif %}
+15:         {% if linked_club.subtitle_color %}--subtitle-color: {{ linked_club.subtitle_color }};{% endif %}
+16:     }
+17:     
+18:     {% if linked_club.background_image %}
+19:     body {
+20:         background-image: url('{{ linked_club.background_image.url }}') !important;
+21:         background-size: cover !important;
+22:         background-position: center !important;
+23:         background-attachment: fixed !important;
+24:     }
+25:     {% endif %}
+26:     
+27:     {% if linked_club.watermark_image %}
+28:     .club-watermark {
+29:         position: fixed;
+30:         z-index: 1000;
+31:         opacity: {{ linked_club.watermark_opacity|default:"0.8"|stringformat:"s" }};
+32:         width: {{ linked_club.watermark_size_percent|default:"15"|stringformat:"s" }}%;
+33:         pointer-events: none;
+34:         
+35:         {% if linked_club.watermark_position == 'top-left' %} top: 20px; left: 20px;
+36:         {% elif linked_club.watermark_position == 'top-right' %} top: 20px; right: 20px;
+37:         {% elif linked_club.watermark_position == 'bottom-left' %} bottom: 20px; left: 20px;
+38:         {% elif linked_club.watermark_position == 'bottom-right' %} bottom: 20px; right: 20px;
+39:         {% elif linked_club.watermark_position == 'center' %} top: 50%; left: 50%; transform: translate(-50%, -50%);
+40:         {% else %} bottom: 20px; left: 20px; {% endif %}
+41:     }
+42:     {% endif %}
+43:     {% endif %}
+44: 
+45:     .club-header-grid {
+46:         display: grid;
+47:         grid-template-columns: 150px 1fr auto;
+48:         gap: 30px;
+49:         align-items: center;
+50:         margin-top: 40px;
+51:         margin-bottom: 40px;
+52:         min-height: 180px;
+53:     }
+54:     @media (max-width: 768px) {
+55:         .club-header-grid {
+56:             grid-template-columns: 1fr;
+57:             text-align: center;
+58:             justify-items: center;
+59:         }
+60:         .club-header-grid .btn-wrapper {
+61:             justify-content: center !important;
+62:             width: 100%;
+63:         }
+64:     }
+65: 
+66:     /* Status Badge */
+67:     .status-badge {
+68:         display: inline-flex;
+69:         align-items: center;
+70:         gap: 8px;
+71:         padding: 4px 10px;
+72:         border-radius: 20px;
+73:         font-size: 0.75rem;
+74:         font-weight: 700;
+75:         text-transform: uppercase;
+76:         letter-spacing: 0.5px;
+77:     }
+78:     .status-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+79:     .status-approved { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+80: 
+81:     /* Custom Form Styles */
+82:     .custom-form-group {
+83:         margin-bottom: 25px;
+84:         display: flex;
+85:         flex-direction: column;
+86:         align-items: flex-start;
+87:         width: 100%;
+88:     }
+89:     
+90:     .custom-form-group label {
+91:         color: #fff;
+92:         font-weight: 600;
+93:         margin-bottom: 8px;
+94:         font-size: 1rem;
+95:         letter-spacing: 0.5px;
+96:     }
+97:     
+98:     .custom-form-group input[type="text"],
+99:     .custom-form-group input[type="email"],
+100:     .custom-form-group select,
+101:     .custom-form-group input[type="date"],
+102:     .custom-form-group input[type="time"] {
+103:         width: 100%;
+104:         background: rgba(0, 0, 0, 0.4);
+105:         border: 1px solid rgba(255, 255, 255, 0.2);
+106:         color: #fff;
+107:         border-radius: 10px;
+108:         padding: 14px 18px;
+109:         font-size: 1.05rem;
+110:         transition: all 0.3s ease;
+111:         outline: none;
+112:         box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+113:     }
+114:     
+115:     .custom-form-group input:focus,
+116:     .custom-form-group select:focus {
+117:         background: rgba(0, 0, 0, 0.6);
+118:         border-color: var(--highlight-color, #3b82f6);
+119:         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+120:     }
+121: 
+122:     /* Radio Buttons Customizados */
+123:     .radio-group {
+124:         display: flex;
+125:         gap: 20px;
+126:         margin-top: 5px;
+127:     }
+128:     .radio-option {
+129:         display: flex;
+130:         align-items: center;
+131:         gap: 8px;
+132:         cursor: pointer;
+133:     }
+134:     .radio-option label {
+135:         margin: 0;
+136:         cursor: pointer;
+137:         font-weight: 500;
+138:         color: var(--subtitle-color, #ccc);
+139:     }
+140:     .radio-option input[type="radio"] {
+141:         appearance: none;
+142:         width: 22px;
+143:         height: 22px;
+144:         border: 2px solid rgba(255,255,255,0.4);
+145:         border-radius: 50%;
+146:         background: rgba(0,0,0,0.2);
+147:         cursor: pointer;
+148:         position: relative;
+149:         outline: none;
+150:         transition: all 0.2s ease;
+151:     }
+152:     .radio-option input[type="radio"]:checked {
+153:         border-color: var(--highlight-color, #3b82f6);
+154:     }
+155:     .radio-option input[type="radio"]:checked::after {
+156:         content: '';
+157:         position: absolute;
+158:         top: 50%;
+159:         left: 50%;
+160:         transform: translate(-50%, -50%);
+161:         width: 12px;
+162:         height: 12px;
+163:         background: var(--highlight-color, #3b82f6);
+164:         border-radius: 50%;
+165:     }
+166: 
+167:     /* Form Grid */
+168:     .form-grid {
+169:         display: grid;
+170:         grid-template-columns: 1fr;
+171:         gap: 0 25px;
+172:     }
+173:     @media (min-width: 768px) {
+174:         .form-grid {
+175:             grid-template-columns: 1fr 1fr;
+176:         }
+177:     }
+178:     .form-full-width {
+179:         grid-column: 1 / -1;
+180:     }
+181: 
+182:     /* Buttons */
+183:     .btn-save {
+184:         padding: 14px 28px;
+185:         background: var(--highlight-color, #3b82f6);
+186:         color: #fff;
+187:         border: none;
+188:         border-radius: 30px;
+189:         font-size: 1.1rem;
+190:         font-weight: 800;
+191:         cursor: pointer;
+192:         transition: transform 0.2s, box-shadow 0.2s;
+193:         display: inline-flex;
+194:         align-items: center;
+195:         justify-content: center;
+196:         gap: 10px;
+197:         text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+198:     }
+199:     .btn-save:hover {
+200:         transform: translateY(-3px);
+201:         box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+202:         color: #fff;
+203:     }
+204: </style>
+205: {% endblock %}
+206: 
+207: {% block watermark %}
+208:     {% if linked_club and linked_club.watermark_image %}
+209:         <img src="{{ linked_club.watermark_image.url }}" alt="Watermark" class="club-watermark">
+210:     {% elif site_config.watermark_image %}
+211:         <img src="{{ site_config.watermark_image.url }}" alt="Watermark" class="watermark">
+212:     {% endif %}
+213: {% endblock %}
+214: 
+215: {% block content %}
+216: {% if linked_club %}
+217: <div class="club-header glass-card club-header-grid">
+218:     <div style="width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+219:         {% if linked_club.logo %}
+220:             <img src="{{ linked_club.logo.url }}" alt="{{ linked_club.name }}" style="max-width: 100%; max-height: 100%; border-radius: 10px; object-fit: contain;">
+221:         {% else %}
+222:             <div style="width: 100%; height: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+223:                 <img src="{% static 'bolinha.png' %}" style="width: 80px; height: 80px; object-fit: contain; opacity: 0.8;" alt="Bola">
+224:             </div>
+225:         {% endif %}
+226:     </div>
+227:     <div style="display: flex; flex-direction: column; justify-content: center;">
+228:         <h1 style="font-size: 2.5rem; margin-bottom: 10px; line-height: 1.2;">
+229:             {% if linked_club.website %}
+230:                 <a href="{{ linked_club.website }}" target="_blank" style="color: var(--title-color); text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">{{ linked_club.name }}</a>
+231:             {% else %}
+232:                 {{ linked_club.name }}
+233:             {% endif %}
+234:         </h1>
+235:         <p style="margin-bottom: 10px; font-size: 1.1rem; line-height: 1.4;">{{ linked_club.description|default:"Sem descrição." }}</p>
+236:         <p style="font-size: 0.95rem; color: var(--highlight-color); margin-top: auto;">📍 {{ linked_club.address|default:"Endereço não informado" }}</p>
+237:     </div>
+238:     <div class="btn-wrapper" style="display: flex; align-items: center; justify-content: flex-end;">
+239:         <form action="{% url 'account_logout' %}" method="post">
+240:             {% csrf_token %}
+241:             <button type="submit" class="btn-highlight" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap; cursor: pointer;">
+242:                 <i class="fas fa-sign-out-alt"></i> Sair da Conta
+243:             </button>
+244:         </form>
+245:     </div>
+246: </div>
+247: {% endif %}
+248: 
+249: <div class="tournaments-section">
+250:     <h2 style="font-size: 2rem; margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px; text-align: center;">Bem vindo ao Painel Administrativo de Atleta</h2>
+251:     
+252:     <!-- Menu Horizontal de Abas -->
+253:     <div class="tabs-container">
+254:         <button class="tab-btn {% if not linked_club %}active{% endif %}" onclick="openTab('meu-clube', this)"><i class="fas fa-link"></i> Meu Clube</button>
+255:         <button class="tab-btn {% if linked_club %}active{% endif %}" onclick="openTab('meu-perfil', this)"><i class="fas fa-user-edit"></i> Meu Perfil</button>
+256:         <button class="tab-btn" onclick="openTab('meus-jogos', this)"><i class="fas fa-calendar-alt"></i> Meus Jogos</button>
+257:     </div>
+258: 
+259:     <!-- Aba: Meu Clube -->
+260:     <div id="meu-clube" class="tab-content {% if not linked_club %}active{% endif %}">
+261:         <div class="glass-card" style="padding: 50px; border-radius: 16px; text-align: center; min-height: 450px; display: flex; flex-direction: column; justify-content: center; max-width: 800px; margin: 0 auto;">
+262:             <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 30px; font-weight: 900;">
+263:                 Vínculo com Clube
+264:             </h2>
+265: 
+266:             {% if linked_club %}
+267:                 <!-- Usuário já vinculado a um clube -->
+268:                 <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+269:                     <div style="width: 120px; height: 120px; background: rgba(16, 185, 129, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; border: 2px solid rgba(16,185,129,0.3);">
+270:                         <i class="fas fa-check-circle" style="font-size: 4.5rem; color: #34d399;"></i>
+271:                     </div>
+272:                     
+273:                     <h3 style="color: #fff; font-size: 1.8rem; font-weight: 800; margin-bottom: 15px;">Vínculo Ativo</h3>
+274:                     <p style="color: var(--subtitle-color); font-size: 1.1rem; margin-bottom: 5px;">Você está oficialmente vinculado ao clube:</p>
+275:                     <h4 style="color: var(--highlight-color); font-size: 2.5rem; margin-bottom: 20px; font-weight: 900; letter-spacing: -0.5px;">{{ linked_club.name }}</h4>
+276:                     
+277:                     <div style="background: rgba(0,0,0,0.3); padding: 15px 30px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);">
+278:                         <span style="color: var(--subtitle-color); font-size: 1.1rem;">Perfil Atleta:</span>
+279:                         <strong style="color: #fff; font-size: 1.2rem; margin-left: 8px;">{{ user.player_profile.name }}</strong>
+280:                     </div>
+281:                     
+282:                     <div style="margin-top: 50px;">
+283:                         <a href="{% url 'clubs:detail' linked_club.id %}" class="btn-save">
+284:                             <i class="fas fa-arrow-right"></i> Acessar Página do Clube
+285:                         </a>
+286:                     </div>
+287:                 </div>
+288:             {% elif pending_request %}
+289:                 <!-- Solicitação pendente -->
+290:                 <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+291:                     <div style="width: 120px; height: 120px; background: rgba(245, 158, 11, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; border: 2px solid rgba(245,158,11,0.3);">
+292:                         <i class="fas fa-clock" style="font-size: 4.5rem; color: #fbbf24;"></i>
+293:                     </div>
+294:                     
+295:                     <h3 style="color: #fff; font-size: 1.8rem; font-weight: 800; margin-bottom: 15px;">Solicitação em Análise</h3>
+296:                     <p style="color: var(--subtitle-color); font-size: 1.2rem; max-width: 500px; line-height: 1.6;">
+297:                         Você solicitou vínculo com o clube <strong style="color: #fff;">{{ pending_request.club.name }}</strong> para assumir o perfil de atleta <strong style="color: #fff;">{{ pending_request.player.name }}</strong>.
+298:                     </p>
+299:                     
+300:                     <div style="margin-top: 40px;">
+301:                         <span class="status-badge status-pending">
+302:                             <i class="fas fa-hourglass-half"></i> Aguardando Aprovação do Administrador
+303:                         </span>
+304:                     </div>
+305:                 </div>
+306:             {% else %}
+307:                 <!-- Formulário para solicitar vínculo -->
+308:                 <p style="color: var(--subtitle-color); font-size: 1.2rem; margin-bottom: 40px; line-height: 1.6; max-width: 600px; margin-left: auto; margin-right: auto;">
+309:                     Você ainda não está vinculado a nenhum clube no sistema. Escolha o seu clube abaixo e selecione o seu perfil de atleta para solicitar o acesso.
+310:                 </p>
+311:                 
+312:                 <form method="post" action="{% url 'athlete_dashboard' %}" id="linkForm" style="max-width: 450px; margin: 0 auto; text-align: left; background: rgba(0,0,0,0.2); padding: 30px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+313:                     {% csrf_token %}
+314:                     
+315:                     {% if club_context %}
+316:                         <div class="custom-form-group">
+317:                             <label><i class="fas fa-map-marker-alt" style="color: var(--highlight-color); margin-right: 5px;"></i> 1. Clube Solicitado</label>
+318:                             <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 14px 18px; border-radius: 10px; color: #fff; font-size: 1.05rem; font-weight: 600;">
+319:                                 {{ club_context.name }}
+320:                             </div>
+321:                             <input type="hidden" name="club" id="id_club" value="{{ club_context.id }}">
+322:                         </div>
+323:                     {% else %}
+324:                         <div class="custom-form-group">
+325:                             <label for="id_club"><i class="fas fa-map-marker-alt" style="color: var(--highlight-color); margin-right: 5px;"></i> 1. Selecione o Clube</label>
+326:                             <select name="club" id="id_club" required>
+327:                                 <option value="">Escolha um clube...</option>
+328:                                 {% for club in clubs %}
+329:                                 <option value="{{ club.id }}">{{ club.name }}</option>
+330:                                 {% endfor %}
+331:                             </select>
+332:                         </div>
+333:                     {% endif %}
+334:                     
+335:                     <div class="custom-form-group">
+336:                         <label for="id_player"><i class="fas fa-user-tag" style="color: var(--highlight-color); margin-right: 5px;"></i> 2. Identifique seu Perfil de Atleta</label>
+337:                         <select name="player" id="id_player" required disabled>
+338:                             <option value="">Selecione o clube primeiro</option>
+339:                         </select>
+340:                     </div>
+341:                     
+342:                     <button type="submit" name="link_request" class="btn-save" style="width: 100%; margin-top: 15px; padding: 16px;">
+343:                         <i class="fas fa-paper-plane"></i> Enviar Solicitação de Vínculo
+344:                     </button>
+345:                 </form>
+346:             {% endif %}
+347:         </div>
+348:     </div>
+349:     
+350:     <!-- Aba: Meu Perfil -->
+351:     <div id="meu-perfil" class="tab-content {% if linked_club %}active{% endif %}">
+352:         <div class="glass-card" style="padding: 50px; border-radius: 16px; max-width: 800px; margin: 0 auto;">
+353:             <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 40px; font-weight: 900; text-align: center;">
+354:                 Meu Perfil
+355:             </h2>
+356:             
+357:             <form method="post" action="{% url 'athlete_dashboard' %}">
+358:                 {% csrf_token %}
+359:                 
+360:                 <!-- Dados Pessoais -->
+361:                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 25px;">
+362:                     <i class="fas fa-id-card" style="font-size: 1.5rem; color: var(--highlight-color);"></i>
+363:                     <h4 style="color: #fff; font-size: 1.4rem; font-weight: 800; margin: 0;">Dados Pessoais</h4>
+364:                 </div>
+365:                 
+366:                 <div class="form-grid">
+367:                     <div class="custom-form-group">
+368:                         <label for="{{ user_form.first_name.id_for_label }}">Primeiro Nome</label>
+369:                         {{ user_form.first_name }}
+370:                     </div>
+371:                     <div class="custom-form-group">
+372:                         <label for="{{ user_form.last_name.id_for_label }}">Último Nome</label>
+373:                         {{ user_form.last_name }}
+374:                     </div>
+375:                     <div class="custom-form-group form-full-width">
+376:                         <label for="{{ user_form.email.id_for_label }}">Endereço de E-mail</label>
+377:                         {{ user_form.email }}
+378:                     </div>
+379:                 </div>
+380: 
+381:                 <!-- Divisor -->
+382:                 <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 30px 0 40px 0;"></div>
+383: 
+384:                 <!-- Dados de Atleta -->
+385:                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 25px;">
+386:                     <i class="fas fa-table-tennis" style="font-size: 1.5rem; color: var(--highlight-color);"></i>
+387:                     <h4 style="color: #fff; font-size: 1.4rem; font-weight: 800; margin: 0;">Preferências em Quadra</h4>
+388:                 </div>
+389: 
+390:                 <div class="form-grid">
+391:                     <div class="custom-form-group form-full-width">
+392:                         <label for="{{ profile_form.full_name.id_for_label }}">Nome Completo (Para Rankings e Chaves)</label>
+393:                         {{ profile_form.full_name }}
+394:                     </div>
+395:                     <div class="custom-form-group form-full-width">
+396:                         <label for="{{ profile_form.racket.id_for_label }}">Marca/Modelo da Raquete (Opcional)</label>
+397:                         {{ profile_form.racket }}
+398:                     </div>
+399:                     
+400:                     <div class="custom-form-group">
+401:                         <label>Mão Dominante (Empunhadura)</label>
+402:                         {{ profile_form.handedness }}
+403:                     </div>
+404:                     
+405:                     <div class="custom-form-group">
+406:                         <label>Tipo de Backhand</label>
+407:                         {{ profile_form.backhand }}
+408:                     </div>
+409:                 </div>
+410:                 
+411:                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px;">
+412:                     <a href="{% url 'account_reset_password' %}" style="color: var(--subtitle-color); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 1.1rem; padding: 10px; border-radius: 8px; transition: background 0.2s;">
+413:                         <i class="fas fa-key"></i> Redefinir Minha Senha
+414:                     </a>
+415:                     <button type="submit" name="update_profile" class="btn-save">
+416:                         <i class="fas fa-save"></i> Salvar Alterações
+417:                     </button>
+418:                 </div>
+419:             </form>
+420:         </div>
+421:     </div>
+422: 
+423:     <!-- Aba: Meus Jogos -->
+424:     <div id="meus-jogos" class="tab-content">
+425:         <div class="glass-card" style="padding: 40px; border-radius: 16px; max-width: 800px; margin: 0 auto;">
+426:             <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 30px; font-weight: 900; text-align: center;">
+427:                 Meus Jogos
+428:             </h2>
+429:             
+430:             {% if not my_matches %}
+431:                 <p style="color: var(--subtitle-color); text-align: center; font-size: 1.1rem;">Você ainda não possui jogos gerados em nenhum torneio ou ranking.</p>
+432:             {% else %}
+433:                 <div style="display: flex; flex-direction: column; gap: 20px;">
+434:                     {% for match in my_matches %}
+435:                     <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
+436:                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+437:                             <div>
+438:                                 <span style="background: var(--highlight-color); color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">{{ match.tournament.name }}</span>
+439:                                 <span style="color: var(--subtitle-color); font-size: 0.9rem; margin-left: 10px;">Rodada {{ match.round_number }}</span>
+440:                             </div>
+441:                             <div>
+442:                                 {% if match.status == 'completed' %}
+443:                                     <span class="status-badge status-approved"><i class="fas fa-check"></i> Finalizado</span>
+444:                                 {% elif match.status == 'cancelled' %}
+445:                                     <span class="status-badge status-pending" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border-color: rgba(239, 68, 68, 0.4);"><i class="fas fa-times"></i> Cancelado</span>
+446:                                 {% else %}
+447:                                     <span class="status-badge status-pending"><i class="fas fa-clock"></i> Pendente</span>
+448:                                 {% endif %}
+449:                             </div>
+450:                         </div>
+451:                         
+452:                         <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px;">
+453:                             <div style="text-align: right; flex: 1;">
+454:                                 <h4 style="color: #fff; font-size: 1.2rem; margin: 0;">{{ match.player_a.name|default:"A Definir" }}</h4>
+455:                             </div>
+456:                             <div style="color: var(--subtitle-color); font-weight: bold; font-size: 1.2rem;">X</div>
+457:                             <div style="text-align: left; flex: 1;">
+458:                                 <h4 style="color: #fff; font-size: 1.2rem; margin: 0;">{{ match.player_b.name|default:"A Definir" }}</h4>
+459:                             </div>
+460:                         </div>
+461: 
+462:                         <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+463:                             <div>
+464:                                 <p style="color: var(--subtitle-color); margin: 0; font-size: 0.95rem;">
+465:                                     <i class="fas fa-calendar-day"></i> 
+466:                                     {% if match.scheduled_datetime %}
+467:                                         {{ match.scheduled_datetime|date:"d/m/Y \à\s H:i" }} na quadra <strong>{{ match.court.name }}</strong>
+468:                                     {% else %}
+469:                                         Ainda não agendado
+470:                                     {% endif %}
+471:                                 </p>
+472:                             </div>
+473:                             
+474:                             {% if match.status == 'pending' and match.round_number == match.tournament.current_round and match.player_a and match.player_b %}
+475:                                 <button onclick="openScheduleModal('{{ match.id }}', '{{ match.player_a.name }} vs {{ match.player_b.name }}')" style="padding: 8px 16px; background: #fff; color: #000; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
+476:                                     <i class="fas fa-calendar-plus"></i> Agendar
+477:                                 </button>
+478:                             {% endif %}
+479:                         </div>
+480:                     </div>
+481:                     {% endfor %}
+482:                 </div>
+483:             {% endif %}
+484:         </div>
+485:     </div>
+486: </div>
+487: 
+488: <!-- Modal de Agendamento -->
+489: <div id="scheduleModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;">
+490:     <div class="glass-card" style="width: 100%; max-width: 500px; padding: 30px; border-radius: 16px; position: relative;">
+491:         <button onclick="closeScheduleModal()" style="position: absolute; top: 15px; right: 20px; background: transparent; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+492:         <h3 style="color: #fff; font-size: 1.5rem; margin-bottom: 5px; font-weight: 800;">Agendar Jogo</h3>
+493:         <p id="modalMatchName" style="color: var(--highlight-color); margin-bottom: 25px; font-weight: bold;"></p>
+494:         
+495:         <form method="post" action="{% url 'athlete_dashboard' %}">
+496:             {% csrf_token %}
+497:             <input type="hidden" name="match_id" id="modalMatchId">
+498:             
+499:             <div class="custom-form-group">
+500:                 <label>Quadra (Somente quadras de Ranking)</label>
+501:                 <select name="court" required>
+502:                     <option value="">Selecione uma quadra...</option>
+503:                     {% for court in courts %}
+504:                     <option value="{{ court.id }}">{{ court.name }}</option>
+505:                     {% endfor %}
+506:                 </select>
+507:                 {% if not courts %}
+508:                 <small style="color: #ef4444; margin-top: 5px;">Nenhuma quadra configurada como "Quadra de Ranking" no clube.</small>
+509:                 {% endif %}
+510:             </div>
+511:             
+512:             <div style="display: flex; gap: 15px;">
+513:                 <div class="custom-form-group" style="flex: 1;">
+514:                     <label>Data</label>
+515:                     <input type="date" name="date" required style="color-scheme: dark;">
+516:                 </div>
+517:                 <div class="custom-form-group" style="flex: 1;">
+518:                     <label>Hora</label>
+519:                     <input type="time" name="time" required style="color-scheme: dark;">
+520:                 </div>
+521:             </div>
+522:             
+523:             <button type="submit" name="schedule_match" class="btn-save" style="width: 100%; margin-top: 10px;" {% if not courts %}disabled{% endif %}>
+524:                 <i class="fas fa-check"></i> Confirmar Agendamento
+525:             </button>
+526:         </form>
+527:     </div>
+528: </div>
+529: {% endblock %}
+530: 
+531: {% block extra_scripts %}
+532:     // Controle do Modal
+533:     function openScheduleModal(matchId, matchName) {
+534:         document.getElementById('modalMatchId').value = matchId;
+535:         document.getElementById('modalMatchName').innerText = matchName;
+536:         document.getElementById('scheduleModal').style.display = 'flex';
+537:     }
+538:     
+539:     function closeScheduleModal() {
+540:         document.getElementById('scheduleModal').style.display = 'none';
+541:     }
+542: 
+543:     // Funções para controle das Abas
+544:     function openTab(tabId, element) {
+545:         // Esconde todos os conteúdos
+546:         var contents = document.getElementsByClassName("tab-content");
+547:         for (var i = 0; i < contents.length; i++) {
+548:             contents[i].classList.remove("active");
+549:         }
+550:         
+551:         // Remove a classe active de todos os botões
+552:         var buttons = document.getElementsByClassName("tab-btn");
+553:         for (var i = 0; i < buttons.length; i++) {
+554:             buttons[i].classList.remove("active");
+555:         }
+556:         
+557:         // Mostra a aba selecionada e adiciona active no botão
+558:         document.getElementById(tabId).classList.add("active");
+559:         element.classList.add("active");
+560:     }
+561: 
+562:     // Lógica para carregamento dinâmico de atletas no select
+563:     document.addEventListener("DOMContentLoaded", function() {
+564:         const clubSelect = document.getElementById('id_club');
+565:         const playerSelect = document.getElementById('id_player');
+566:         
+567:         if (clubSelect && playerSelect) {
+568:             const playersData = {{ players_json|safe }};
+569:             
+570:             function updatePlayerSelect(clubId) {
+571:                 playerSelect.innerHTML = '<option value="">Selecione o Atleta...</option>';
+572:                 
+573:                 if (clubId && playersData[clubId] && playersData[clubId].length > 0) {
+574:                     playerSelect.disabled = false;
+575:                     playersData[clubId].forEach(player => {
+576:                         const option = document.createElement('option');
+577:                         option.value = player.id;
+578:                         option.textContent = player.name;
+579:                         playerSelect.appendChild(option);
+580:                     });
+581:                 } else {
+582:                     playerSelect.disabled = true;
+583:                     if (clubId) {
+584:                         playerSelect.innerHTML = '<option value="">Nenhum atleta disponível neste clube</option>';
+585:                     } else {
+586:                         playerSelect.innerHTML = '<option value="">Selecione o clube primeiro</option>';
+587:                     }
+588:                 }
+589:             }
+590: 
+591:             clubSelect.addEventListener('change', function() {
+592:                 updatePlayerSelect(this.value);
+593:             });
+594:             
+595:             // Dispara na montagem se o clube já estiver preenchido (caso do hidden input)
+596:             if (clubSelect.value) {
+597:                 updatePlayerSelect(clubSelect.value);
+598:             }
+599:         }
+600:     });
+601: {% endblock %}
+602: 
+The above content shows the entire, complete file contents of the requested file.
+
+--- MATCH 3 ---
+Created At: 2026-09-04T10:54:55-03:00
+Completed At: 2026-09-04T10:54:55-03:00
+File Path: `file:///C:/Users/ferna/Downloads/Projetos/AllCourts365/templates/club_detail.html`
+Total Lines: 247
+Total Bytes: 11463
+Showing lines 1 to 247
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: {% extends 'base.html' %}
+2: {% load static %}
+3: 
+4: {% block title %}{{ club.name }} - AllCourts365{% endblock %}
+5: 
+6: {% block admin_button %}
+7: <a href="#" class="btn-highlight" style="visibility: hidden; pointer-events: none;"><i class="fas fa-lock"></i> Admin AllCourts365</a>
+8: {% endblock %}
+9: 
+10: {% block extra_head %}
+11: <style>
+12:     :root {
+13:         {% if club.background_color %}--bg-color: {{ club.background_color }};{% endif %}
+14:         {% if club.overlay_color %}--overlay-color: {{ club.overlay_color }};{% endif %}
+15:         {% if club.overlay_opacity %}--overlay-opacity: {{ club.overlay_opacity|stringformat:"s" }};{% endif %}
+16:         {% if club.highlight_color %}--highlight-color: {{ club.highlight_color }};{% endif %}
+17:         {% if club.title_color %}--title-color: {{ club.title_color }};{% endif %}
+18:         {% if club.subtitle_color %}--subtitle-color: {{ club.subtitle_color }};{% endif %}
+19:     }
+20:     
+21:     {% if club.background_image %}
+22:     body {
+23:         background-image: url('{{ club.background_image.url }}') !important;
+24:         background-size: cover !important;
+25:         background-position: center !important;
+26:         background-attachment: fixed !important;
+27:     }
+28:     {% endif %}
+29:     
+30:     {% if club.watermark_image %}
+31:     .club-watermark {
+32:         position: fixed;
+33:         z-index: 1000;
+34:         opacity: {{ club.watermark_opacity|default:"0.8"|stringformat:"s" }};
+35:         width: {{ club.watermark_size_percent|default:"15"|stringformat:"s" }}%;
+36:         pointer-events: none;
+37:         
+38:         {% if club.watermark_position == 'top-left' %} top: 20px; left: 20px;
+39:         {% elif club.watermark_position == 'top-right' %} top: 20px; right: 20px;
+40:         {% elif club.watermark_position == 'bottom-left' %} bottom: 20px; left: 20px;
+41:         {% elif club.watermark_position == 'bottom-right' %} bottom: 20px; right: 20px;
+42:         {% elif club.watermark_position == 'center' %} top: 50%; left: 50%; transform: translate(-50%, -50%);
+43:         {% elif club.watermark_position == 'center' %} top: 50%; left: 50%; transform: translate(-50%, -50%);
+44:         {% else %} bottom: 20px; left: 20px; {% endif %}
+45:     }
+46:     {% endif %}
+47: 
+48:     .status-badge {
+49:         position: absolute;
+50:         top: 15px;
+51:         right: 15px;
+52:         padding: 4px 10px;
+53:         border-radius: 20px;
+54:         font-size: 0.75rem;
+55:         font-weight: 700;
+56:         text-transform: uppercase;
+57:         display: flex;
+58:         align-items: center;
+59:         gap: 6px;
+60:         letter-spacing: 0.5px;
+61:     }
+62:     
+63:     .status-finished {
+64:         background-color: rgba(239, 68, 68, 0.2);
+65:         color: #ef4444;
+66:         border: 1px solid rgba(239, 68, 68, 0.4);
+67:     }
+68:     
+69:     .status-active {
+70:         background-color: rgba(34, 197, 94, 0.2);
+71:         color: #22c55e;
+72:         border: 1px solid rgba(34, 197, 94, 0.4);
+73:     }
+74: 
+75:     @keyframes spin-ball {
+76:         from { transform: rotate(0deg); }
+77:         to { transform: rotate(360deg); }
+78:     }
+79:     
+80:     .ball-spinning {
+81:         display: inline-block;
+82:         animation: spin-ball 2s linear infinite;
+83:         width: 14px;
+84:         height: 14px;
+85:     }
+86:     
+87:     .ball-static {
+88:         display: inline-block;
+89:         width: 14px;
+90:         height: 14px;
+91:     }
+92: 
+93:     .club-header-grid {
+94:         display: grid;
+95:         grid-template-columns: 150px 1fr auto;
+96:         gap: 30px;
+97:         align-items: center;
+98:         margin-top: 40px;
+99:         margin-bottom: 40px;
+100:         min-height: 180px;
+101:     }
+102:     @media (max-width: 768px) {
+103:         .club-header-grid {
+104:             grid-template-columns: 1fr;
+105:             text-align: center;
+106:             justify-items: center;
+107:         }
+108:         .club-header-grid .btn-wrapper {
+109:             justify-content: center !important;
+110:             width: 100%;
+111:         }
+112:     }
+113: </style>
+114: {% endblock %}
+115: 
+116: {% block watermark %}
+117:     {% if club.watermark_image %}
+118:         <img src="{{ club.watermark_image.url }}" alt="Watermark" class="club-watermark">
+119:     {% elif site_config.watermark_image %}
+120:         <img src="{{ site_config.watermark_image.url }}" alt="Watermark" class="watermark">
+121:     {% endif %}
+122: {% endblock %}
+123: 
+124: {% block content %}
+125: <div class="club-header glass-card club-header-grid">
+126:     <div style="width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+127:         {% if club.logo %}
+128:             <img src="{{ club.logo.url }}" alt="{{ club.name }}" style="max-width: 100%; max-height: 100%; border-radius: 10px; object-fit: contain;">
+129:         {% else %}
+130:             <div style="width: 100%; height: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+131:                 <img src="{% static 'bolinha.png' %}" style="width: 80px; height: 80px; object-fit: contain; opacity: 0.8;" alt="Bola">
+132:             </div>
+133:         {% endif %}
+134:     </div>
+135:     <div style="display: flex; flex-direction: column; justify-content: center;">
+136:         <h1 style="font-size: 2.5rem; margin-bottom: 10px; line-height: 1.2;">
+137:             {% if club.website %}
+138:                 <a href="{{ club.website }}" target="_blank" style="color: var(--title-color); text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">{{ club.name }}</a>
+139:             {% else %}
+140:                 {{ club.name }}
+141:             {% endif %}
+142:         </h1>
+143:         <p style="margin-bottom: 10px; font-size: 1.1rem; line-height: 1.4;">{{ club.description|default:"Sem descrição." }}</p>
+144:         <p style="font-size: 0.95rem; color: var(--highlight-color); margin-top: auto;">📍 {{ club.address|default:"Endereço não informado" }}</p>
+145:     </div>
+146:     <div class="btn-wrapper" style="display: flex; align-items: center; justify-content: flex-end;">
+147:         {% if user.is_authenticated and not user.is_superuser %}
+148:             <a href="{% url 'login_redirect' %}?club={{ club.id }}" class="btn-highlight" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap;">
+149:                 <i class="fas fa-sign-in-alt"></i> Entrar
+150:             </a>
+151:         {% else %}
+152:             {% if user.is_authenticated and user.is_superuser %}
+153:                 <!-- Se for SuperAdmin, o botão força o logout para permitir o login de um atleta/adm do clube -->
+154:                 <a href="{% url 'account_logout' %}?next=/accounts/login/?club={{ club.id }}" class="btn-highlight" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap;">
+155:                     <i class="fas fa-sign-in-alt"></i> Entrar
+156:                 </a>
+157:             {% else %}
+158:                 <a href="{% url 'account_login' %}?club={{ club.id }}" class="btn-highlight" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap;">
+159:                     <i class="fas fa-sign-in-alt"></i> Entrar
+160:                 </a>
+161:             {% endif %}
+162:         {% endif %}
+163:     </div>
+164: </div>
+165: 
+166: <div class="tournaments-section">
+167:     <h2 style="font-size: 2rem; margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px; text-align: center;">Bem-vindo ao Ranking interno e Torneios de Tenis do {{ club.name }}</h2>
+168:     
+169:     <!-- Menu Horizontal de Abas -->
+170:     <div class="tabs-container">
+171:         <button class="tab-btn active" onclick="openTab('rankings', this)">Rankings</button>
+172:         <button class="tab-btn" onclick="openTab('knockouts', this)">Torneios Eliminatórios</button>
+173:     </div>
+174: 
+175:     <!-- Aba: Rankings -->
+176:     <div id="rankings" class="tab-content active">
+177:         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
+178:             {% for t in rankings %}
+179:             <div class="glass-card" style="position: relative;">
+180:                 {% if t.is_finished %}
+181:                     <div class="status-badge status-finished">
+182:                         <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Encerrado"> Encerrado
+183:                     </div>
+184:                 {% else %}
+185:                     <div class="status-badge status-active">
+186:                         <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Em andamento"> Em andamento
+187:                     </div>
+188:                 {% endif %}
+189:                 <h3 style="margin-bottom: 10px; color: var(--highlight-color); padding-right: 120px;">{{ t.name }}</h3>
+190:                 <p style="margin-bottom: 5px;"><strong>Competição:</strong> {{ t.get_competition_type_display }}</p>
+191:                 <p style="margin-bottom: 20px;"><strong>Rodada Atual:</strong> {{ t.current_round }}</p>
+192:                 <a href="{% url 'clubs:ranking_detail' club.id t.id %}" style="text-decoration: none; display: inline-flex; align-items: center; gap: 5px; color: var(--subtitle-color); font-size: 1.1rem; font-weight: 500; margin-top: 10px;">Ver jogos e ranking &rarr;</a>
+193:             </div>
+194:             {% empty %}
+195:             <p style="text-align: center; grid-column: 1 / -1;">Nenhum ranking ativo no momento.</p>
+196:             {% endfor %}
+197:         </div>
+198:     </div>
+199:     
+200:     <!-- Aba: Torneios Eliminatórios -->
+201:     <div id="knockouts" class="tab-content">
+202:         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
+203:             {% for t in knockouts %}
+204:             <div class="glass-card" style="position: relative;">
+205:                 {% if t.is_finished %}
+206:                     <div class="status-badge status-finished">
+207:                         <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Encerrado"> Encerrado
+208:                     </div>
+209:                 {% else %}
+210:                     <div class="status-badge status-active">
+211:                         <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Em andamento"> Em andamento
+212:                     </div>
+213:                 {% endif %}
+214:                 <h3 style="margin-bottom: 10px; color: var(--highlight-color); padding-right: 120px;">{{ t.name }}</h3>
+215:                 <p style="margin-bottom: 5px;"><strong>Competição:</strong> {{ t.get_competition_type_display }}</p>
+216:                 <p style="margin-bottom: 20px;"><strong>Fase Atual:</strong> Rodada {{ t.current_round }}</p>
+217:                 <a href="#" class="btn-highlight" style="text-decoration: none; display: inline-block; padding: 8px 15px; font-size: 0.9rem;">Ver Chaves</a>
+218:             </div>
+219:             {% empty %}
+220:             <p style="text-align: center; grid-column: 1 / -1;">Nenhum torneio eliminatório ativo no momento.</p>
+221:             {% endfor %}
+222:         </div>
+223:     </div>
+224: </div>
+225: {% endblock %}
+226: 
+227: {% block extra_scripts %}
+228: // Funções para controle das Abas
+229: function openTab(tabId, element) {
+230:     // Esconde todos os conteúdos
+231:     var contents = document.getElementsByClassName("tab-content");
+232:     for (var i = 0; i < contents.length; i++) {
+233:         contents[i].classList.remove("active");
+234:     }
+235:     
+236:     // Remove a classe active de todos os botões
+237:     var buttons = document.getElementsByClassName("tab-btn");
+238:     for (var i = 0; i < buttons.length; i++) {
+239:         buttons[i].classList.remove("active");
+240:     }
+241:     
+242:     // Mostra a aba selecionada e adiciona active no botão
+243:     document.getElementById(tabId).classList.add("active");
+244:     element.classList.add("active");
+245: }
+246: {% endblock %}
+247: 
+The above content shows the entire, complete file contents of the requested file.
+
+--- MATCH 4 ---
+Created At: 2026-09-04T10:55:22-03:00
+Completed At: 2026-09-04T10:55:22-03:00
+File Path: `file:///c:/Users/ferna/Downloads/Projetos/AllCourts365/templates/athlete_dashboard.html`
+Total Lines: 800
+Total Bytes: 38255
+Showing lines 1 to 300
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: {% extends 'base.html' %}
+2: {% load static %}
+3: 
+4: {% block title %}Painel Administrativo do Atleta - AllCourts365{% endblock %}
+5: 
+6: {% block extra_head %}
+7: <style>
+8:     /* Bypassing base.html container margins */
+9:     .full-width-wrapper {
+10:         display: flex;
+11:         flex-direction: column;
+12:         min-height: calc(100vh - 80px); /* 80px is approx navbar height */
+13:         margin-top: 0;
+14:         width: 100vw;
+15:         max-width: 100%;
+16:         margin-left: calc(-50vw + 50%);
+17:     }
+18: 
+19:     @media (min-width: 992px) {
+20:         .full-width-wrapper {
+21:             flex-direction: row;
+22:         }
+23:     }
+24: 
+25:     /* Sidebar (Menu Lateral) no Canto Esquerdo Total */
+26:     .dashboard-sidebar {
+27:         width: 100%;
+28:         padding: 40px 20px;
+29:         display: flex;
+30:         flex-direction: column;
+31:         gap: 10px;
+32:         background: rgba(15, 23, 42, 0.6);
+33:         border-right: 1px solid rgba(255, 255, 255, 0.15); /* Linha separando */
+34:         backdrop-filter: blur(20px);
+35:         -webkit-backdrop-filter: blur(20px);
+36:     }
+37: 
+38:     @media (min-width: 992px) {
+39:         .dashboard-sidebar {
+40:             width: 320px;
+41:             flex-shrink: 0;
+42:             min-height: calc(100vh - 80px);
+43:             position: sticky;
+44:             top: 80px;
+45:         }
+46:     }
+47: 
+48:     .sidebar-header {
+49:         text-align: center;
+50:         padding-bottom: 30px;
+51:         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+52:         margin-bottom: 20px;
+53:     }
+54: 
+55:     .sidebar-avatar {
+56:         width: 100px;
+57:         height: 100px;
+58:         background: linear-gradient(135deg, var(--highlight-color, #3b82f6), #1e40af);
+59:         border-radius: 50%;
+60:         display: flex;
+61:         align-items: center;
+62:         justify-content: center;
+63:         font-size: 2.8rem;
+64:         font-weight: 800;
+65:         color: #fff;
+66:         margin: 0 auto 15px auto;
+67:         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+68:         border: 3px solid rgba(255,255,255,0.2);
+69:     }
+70: 
+71:     /* Menu Items */
+72:     .menu-item {
+73:         display: flex;
+74:         align-items: center;
+75:         gap: 15px;
+76:         padding: 16px 20px;
+77:         border-radius: 12px;
+78:         color: var(--subtitle-color, #ccc);
+79:         text-decoration: none;
+80:         font-size: 1.15rem;
+81:         font-weight: 600;
+82:         cursor: pointer;
+83:         transition: all 0.2s ease;
+84:         border: 1px solid transparent;
+85:         background: transparent;
+86:         width: 100%;
+87:         text-align: left;
+88:     }
+89: 
+90:     .menu-item:hover {
+91:         background: rgba(255, 255, 255, 0.05);
+92:         color: #fff;
+93:     }
+94: 
+95:     .menu-item.active {
+96:         background: rgba(255, 255, 255, 0.1);
+97:         color: #fff;
+98:         border-left: 5px solid var(--highlight-color, #3b82f6);
+99:         box-shadow: inset 0 0 20px rgba(255,255,255,0.02);
+100:     }
+101:     
+102:     .menu-item i {
+103:         font-size: 1.3rem;
+104:         width: 25px;
+105:         text-align: center;
+106:         color: var(--highlight-color, #3b82f6);
+107:     }
+108:     
+109:     .menu-item.logout {
+110:         margin-top: 30px;
+111:         color: #ef4444;
+112:         background: rgba(239, 68, 68, 0.1);
+113:         border: 1px solid rgba(239, 68, 68, 0.2);
+114:     }
+115:     .menu-item.logout i {
+116:         color: #ef4444;
+117:     }
+118:     .menu-item.logout:hover {
+119:         background: rgba(239, 68, 68, 0.2);
+120:         border-color: rgba(239, 68, 68, 0.4);
+121:         color: #fff;
+122:     }
+123: 
+124:     /* Main Content Area (Centralizada) */
+125:     .dashboard-content {
+126:         flex: 1;
+127:         width: 100%;
+128:         padding: 40px 20px;
+129:         display: flex;
+130:         flex-direction: column;
+131:         align-items: center; /* Centraliza o conteúdo inteiro */
+132:     }
+133: 
+134:     .dashboard-main-title {
+135:         font-size: 2.8rem;
+136:         font-weight: 900;
+137:         color: #fff;
+138:         margin-bottom: 5px;
+139:         text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+140:         text-align: center;
+141:     }
+142:     .dashboard-main-subtitle {
+143:         font-size: 1.2rem;
+144:         color: var(--subtitle-color, #ccc);
+145:         margin-bottom: 40px;
+146:         text-align: center;
+147:     }
+148: 
+149:     /* Sections */
+150:     .dashboard-section {
+151:         display: none;
+152:         animation: fadeIn 0.4s ease;
+153:         width: 100%;
+154:         max-width: 800px; /* Limita a largura dos cards centrais */
+155:     }
+156:     .dashboard-section.active {
+157:         display: block;
+158:     }
+159: 
+160:     @keyframes fadeIn {
+161:         from { opacity: 0; transform: translateY(15px); }
+162:         to { opacity: 1; transform: translateY(0); }
+163:     }
+164: 
+165:     /* Custom Form Styles (No Crispy) */
+166:     .custom-form-group {
+167:         margin-bottom: 25px;
+168:         display: flex;
+169:         flex-direction: column;
+170:         align-items: flex-start;
+171:         width: 100%;
+172:     }
+173:     
+174:     .custom-form-group label {
+175:         color: #fff;
+176:         font-weight: 600;
+177:         margin-bottom: 8px;
+178:         font-size: 1rem;
+179:         letter-spacing: 0.5px;
+180:     }
+181:     
+182:     .custom-form-group input[type="text"],
+183:     .custom-form-group input[type="email"],
+184:     .custom-form-group select {
+185:         width: 100%;
+186:         background: rgba(0, 0, 0, 0.4);
+187:         border: 1px solid rgba(255, 255, 255, 0.2);
+188:         color: #fff;
+189:         border-radius: 10px;
+190:         padding: 14px 18px;
+191:         font-size: 1.05rem;
+192:         transition: all 0.3s ease;
+193:         outline: none;
+194:         box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+195:     }
+196:     
+197:     .custom-form-group input:focus,
+198:     .custom-form-group select:focus {
+199:         background: rgba(0, 0, 0, 0.6);
+200:         border-color: var(--highlight-color, #3b82f6);
+201:         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+202:     }
+203: 
+204:     /* Radio Buttons Customizados */
+205:     .radio-group {
+206:         display: flex;
+207:         gap: 20px;
+208:         margin-top: 5px;
+209:     }
+210:     .radio-option {
+211:         display: flex;
+212:         align-items: center;
+213:         gap: 8px;
+214:         cursor: pointer;
+215:     }
+216:     .radio-option label {
+217:         margin: 0;
+218:         cursor: pointer;
+219:         font-weight: 500;
+220:         color: var(--subtitle-color, #ccc);
+221:     }
+222:     .radio-option input[type="radio"] {
+223:         appearance: none;
+224:         width: 22px;
+225:         height: 22px;
+226:         border: 2px solid rgba(255,255,255,0.4);
+227:         border-radius: 50%;
+228:         background: rgba(0,0,0,0.2);
+229:         cursor: pointer;
+230:         position: relative;
+231:         outline: none;
+232:         transition: all 0.2s ease;
+233:     }
+234:     .radio-option input[type="radio"]:checked {
+235:         border-color: var(--highlight-color, #3b82f6);
+236:     }
+237:     .radio-option input[type="radio"]:checked::after {
+238:         content: '';
+239:         position: absolute;
+240:         top: 50%;
+241:         left: 50%;
+242:         transform: translate(-50%, -50%);
+243:         width: 12px;
+244:         height: 12px;
+245:         background: var(--highlight-color, #3b82f6);
+246:         border-radius: 50%;
+247:     }
+248: 
+249:     /* Form Grid */
+250:     .form-grid {
+251:         display: grid;
+252:         grid-template-columns: 1fr;
+253:         gap: 0 25px;
+254:     }
+255:     @media (min-width: 768px) {
+256:         .form-grid {
+257:             grid-template-columns: 1fr 1fr;
+258:         }
+259:     }
+260:     .form-full-width {
+261:         grid-column: 1 / -1;
+262:     }
+263: 
+264:     /* Buttons */
+265:     .btn-save {
+266:         padding: 14px 28px;
+267:         background: var(--highlight-color, #3b82f6);
+268:         color: #fff;
+269:         border: none;
+270:         border-radius: 30px;
+271:         font-size: 1.1rem;
+272:         font-weight: 800;
+273:         cursor: pointer;
+274:         transition: transform 0.2s, box-shadow 0.2s;
+275:         display: inline-flex;
+276:         align-items: center;
+277:         justify-content: center;
+278:         gap: 10px;
+279:         text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+280:     }
+281:     .btn-save:hover {
+282:         transform: translateY(-3px);
+283:         box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+284:         color: #fff;
+285:     }
+286: 
+287:     .status-badge {
+288:         display: inline-flex;
+289:         align-items: center;
+290:         gap: 8px;
+291:         padding: 10px 20px;
+292:         border-radius: 30px;
+293:         font-size: 1rem;
+294:         font-weight: bold;
+295:     }
+296:     .status-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+297:     .status-approved { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+298: </style>
+299: {% endblock %}
+300: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+

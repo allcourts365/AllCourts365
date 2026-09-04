@@ -9,4 +9,6 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('redirecionar/', views.login_redirect, name='login_redirect'),
     path('painel-atleta/', views.athlete_dashboard, name='athlete_dashboard'),
+    path('api/agenda/', views.api_court_agenda, name='api_court_agenda'),
+    path('api/agenda/mensal/', views.api_monthly_agenda, name='api_monthly_agenda'),
 ]

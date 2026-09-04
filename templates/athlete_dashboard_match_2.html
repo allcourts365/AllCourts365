@@ -1,0 +1,601 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Painel Administrativo do Atleta - AllCourts365{% endblock %}
+
+{% block extra_head %}
+<style>
+    {% if linked_club %}
+    :root {
+        {% if linked_club.background_color %}--bg-color: {{ linked_club.background_color }};{% endif %}
+        {% if linked_club.overlay_color %}--overlay-color: {{ linked_club.overlay_color }};{% endif %}
+        {% if linked_club.overlay_opacity %}--overlay-opacity: {{ linked_club.overlay_opacity|stringformat:"s" }};{% endif %}
+        {% if linked_club.highlight_color %}--highlight-color: {{ linked_club.highlight_color }};{% endif %}
+        {% if linked_club.title_color %}--title-color: {{ linked_club.title_color }};{% endif %}
+        {% if linked_club.subtitle_color %}--subtitle-color: {{ linked_club.subtitle_color }};{% endif %}
+    }
+    
+    {% if linked_club.background_image %}
+    body {
+        background-image: url('{{ linked_club.background_image.url }}') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-attachment: fixed !important;
+    }
+    {% endif %}
+    
+    {% if linked_club.watermark_image %}
+    .club-watermark {
+        position: fixed;
+        z-index: 1000;
+        opacity: {{ linked_club.watermark_opacity|default:"0.8"|stringformat:"s" }};
+        width: {{ linked_club.watermark_size_percent|default:"15"|stringformat:"s" }}%;
+        pointer-events: none;
+        
+        {% if linked_club.watermark_position == 'top-left' %} top: 20px; left: 20px;
+        {% elif linked_club.watermark_position == 'top-right' %} top: 20px; right: 20px;
+        {% elif linked_club.watermark_position == 'bottom-left' %} bottom: 20px; left: 20px;
+        {% elif linked_club.watermark_position == 'bottom-right' %} bottom: 20px; right: 20px;
+        {% elif linked_club.watermark_position == 'center' %} top: 50%; left: 50%; transform: translate(-50%, -50%);
+        {% else %} bottom: 20px; left: 20px; {% endif %}
+    }
+    {% endif %}
+    {% endif %}
+
+    .club-header-grid {
+        display: grid;
+        grid-template-columns: 150px 1fr auto;
+        gap: 30px;
+        align-items: center;
+        margin-top: 40px;
+        margin-bottom: 40px;
+        min-height: 180px;
+    }
+    @media (max-width: 768px) {
+        .club-header-grid {
+            grid-template-columns: 1fr;
+            text-align: center;
+            justify-items: center;
+        }
+        .club-header-grid .btn-wrapper {
+            justify-content: center !important;
+            width: 100%;
+        }
+    }
+
+    /* Status Badge */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .status-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+    .status-approved { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+
+    /* Custom Form Styles */
+    .custom-form-group {
+        margin-bottom: 25px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+    }
+    
+    .custom-form-group label {
+        color: #fff;
+        font-weight: 600;
+        margin-bottom: 8px;
+        font-size: 1rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .custom-form-group input[type="text"],
+    .custom-form-group input[type="email"],
+    .custom-form-group select,
+    .custom-form-group input[type="date"],
+    .custom-form-group input[type="time"] {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+        border-radius: 10px;
+        padding: 14px 18px;
+        font-size: 1.05rem;
+        transition: all 0.3s ease;
+        outline: none;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .custom-form-group input:focus,
+    .custom-form-group select:focus {
+        background: rgba(0, 0, 0, 0.6);
+        border-color: var(--highlight-color, #3b82f6);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    }
+
+    /* Radio Buttons Customizados */
+    .radio-group {
+        display: flex;
+        gap: 20px;
+        margin-top: 5px;
+    }
+    .radio-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+    .radio-option label {
+        margin: 0;
+        cursor: pointer;
+        font-weight: 500;
+        color: var(--subtitle-color, #ccc);
+    }
+    .radio-option input[type="radio"] {
+        appearance: none;
+        width: 22px;
+        height: 22px;
+        border: 2px solid rgba(255,255,255,0.4);
+        border-radius: 50%;
+        background: rgba(0,0,0,0.2);
+        cursor: pointer;
+        position: relative;
+        outline: none;
+        transition: all 0.2s ease;
+    }
+    .radio-option input[type="radio"]:checked {
+        border-color: var(--highlight-color, #3b82f6);
+    }
+    .radio-option input[type="radio"]:checked::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 12px;
+        height: 12px;
+        background: var(--highlight-color, #3b82f6);
+        border-radius: 50%;
+    }
+
+    /* Form Grid */
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0 25px;
+    }
+    @media (min-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+    .form-full-width {
+        grid-column: 1 / -1;
+    }
+
+    /* Buttons */
+    .btn-save {
+        padding: 14px 28px;
+        background: var(--highlight-color, #3b82f6);
+        color: #fff;
+        border: none;
+        border-radius: 30px;
+        font-size: 1.1rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    .btn-save:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block watermark %}
+    {% if linked_club and linked_club.watermark_image %}
+        <img src="{{ linked_club.watermark_image.url }}" alt="Watermark" class="club-watermark">
+    {% elif site_config.watermark_image %}
+        <img src="{{ site_config.watermark_image.url }}" alt="Watermark" class="watermark">
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+{% if linked_club %}
+<div class="club-header glass-card club-header-grid">
+    <div style="width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        {% if linked_club.logo %}
+            <img src="{{ linked_club.logo.url }}" alt="{{ linked_club.name }}" style="max-width: 100%; max-height: 100%; border-radius: 10px; object-fit: contain;">
+        {% else %}
+            <div style="width: 100%; height: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                <img src="{% static 'bolinha.png' %}" style="width: 80px; height: 80px; object-fit: contain; opacity: 0.8;" alt="Bola">
+            </div>
+        {% endif %}
+    </div>
+    <div style="display: flex; flex-direction: column; justify-content: center;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 10px; line-height: 1.2;">
+            {% if linked_club.website %}
+                <a href="{{ linked_club.website }}" target="_blank" style="color: var(--title-color); text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">{{ linked_club.name }}</a>
+            {% else %}
+                {{ linked_club.name }}
+            {% endif %}
+        </h1>
+        <p style="margin-bottom: 10px; font-size: 1.1rem; line-height: 1.4;">{{ linked_club.description|default:"Sem descrição." }}</p>
+        <p style="font-size: 0.95rem; color: var(--highlight-color); margin-top: auto;">📍 {{ linked_club.address|default:"Endereço não informado" }}</p>
+    </div>
+    <div class="btn-wrapper" style="display: flex; align-items: center; justify-content: flex-end;">
+        <form action="{% url 'account_logout' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn-highlight" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap; cursor: pointer;">
+                <i class="fas fa-sign-out-alt"></i> Sair da Conta
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<div class="tournaments-section">
+    <h2 style="font-size: 2rem; margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px; text-align: center;">Bem vindo ao Painel Administrativo de Atleta</h2>
+    
+    <!-- Menu Horizontal de Abas -->
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="openTab('meu-clube', this)"><i class="fas fa-link"></i> Meu Clube</button>
+        <button class="tab-btn" onclick="openTab('meu-perfil', this)"><i class="fas fa-user-edit"></i> Meu Perfil</button>
+        <button class="tab-btn" onclick="openTab('meus-jogos', this)"><i class="fas fa-calendar-alt"></i> Meus Jogos</button>
+    </div>
+
+    <!-- Aba: Meu Clube -->
+    <div id="meu-clube" class="tab-content active">
+        <div class="glass-card" style="padding: 50px; border-radius: 16px; text-align: center; min-height: 450px; display: flex; flex-direction: column; justify-content: center; max-width: 800px; margin: 0 auto;">
+            <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 30px; font-weight: 900;">
+                Vínculo com Clube
+            </h2>
+
+            {% if linked_club %}
+                <!-- Usuário já vinculado a um clube -->
+                <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                    <div style="width: 120px; height: 120px; background: rgba(16, 185, 129, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; border: 2px solid rgba(16,185,129,0.3);">
+                        <i class="fas fa-check-circle" style="font-size: 4.5rem; color: #34d399;"></i>
+                    </div>
+                    
+                    <h3 style="color: #fff; font-size: 1.8rem; font-weight: 800; margin-bottom: 15px;">Vínculo Ativo</h3>
+                    <p style="color: var(--subtitle-color); font-size: 1.1rem; margin-bottom: 5px;">Você está oficialmente vinculado ao clube:</p>
+                    <h4 style="color: var(--highlight-color); font-size: 2.5rem; margin-bottom: 20px; font-weight: 900; letter-spacing: -0.5px;">{{ linked_club.name }}</h4>
+                    
+                    <div style="background: rgba(0,0,0,0.3); padding: 15px 30px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);">
+                        <span style="color: var(--subtitle-color); font-size: 1.1rem;">Perfil Atleta:</span>
+                        <strong style="color: #fff; font-size: 1.2rem; margin-left: 8px;">{{ user.player_profile.name }}</strong>
+                    </div>
+                    
+                    <div style="margin-top: 50px;">
+                        <a href="{% url 'clubs:detail' linked_club.id %}" class="btn-save">
+                            <i class="fas fa-arrow-right"></i> Acessar Página do Clube
+                        </a>
+                    </div>
+                </div>
+            {% elif pending_request %}
+                <!-- Solicitação pendente -->
+                <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                    <div style="width: 120px; height: 120px; background: rgba(245, 158, 11, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; border: 2px solid rgba(245,158,11,0.3);">
+                        <i class="fas fa-clock" style="font-size: 4.5rem; color: #fbbf24;"></i>
+                    </div>
+                    
+                    <h3 style="color: #fff; font-size: 1.8rem; font-weight: 800; margin-bottom: 15px;">Solicitação em Análise</h3>
+                    <p style="color: var(--subtitle-color); font-size: 1.2rem; max-width: 500px; line-height: 1.6;">
+                        Você solicitou vínculo com o clube <strong style="color: #fff;">{{ pending_request.club.name }}</strong> para assumir o perfil de atleta <strong style="color: #fff;">{{ pending_request.player.name }}</strong>.
+                    </p>
+                    
+                    <div style="margin-top: 40px;">
+                        <span class="status-badge status-pending">
+                            <i class="fas fa-hourglass-half"></i> Aguardando Aprovação do Administrador
+                        </span>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Formulário para solicitar vínculo -->
+                <p style="color: var(--subtitle-color); font-size: 1.2rem; margin-bottom: 40px; line-height: 1.6; max-width: 600px; margin-left: auto; margin-right: auto;">
+                    Você ainda não está vinculado a nenhum clube no sistema. Escolha o seu clube abaixo e selecione o seu perfil de atleta para solicitar o acesso.
+                </p>
+                
+                <form method="post" action="{% url 'athlete_dashboard' %}" id="linkForm" style="max-width: 450px; margin: 0 auto; text-align: left; background: rgba(0,0,0,0.2); padding: 30px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+                    {% csrf_token %}
+                    
+                    {% if club_context %}
+                        <div class="custom-form-group">
+                            <label><i class="fas fa-map-marker-alt" style="color: var(--highlight-color); margin-right: 5px;"></i> 1. Clube Solicitado</label>
+                            <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 14px 18px; border-radius: 10px; color: #fff; font-size: 1.05rem; font-weight: 600;">
+                                {{ club_context.name }}
+                            </div>
+                            <input type="hidden" name="club" id="id_club" value="{{ club_context.id }}">
+                        </div>
+                    {% else %}
+                        <div class="custom-form-group">
+                            <label for="id_club"><i class="fas fa-map-marker-alt" style="color: var(--highlight-color); margin-right: 5px;"></i> 1. Selecione o Clube</label>
+                            <select name="club" id="id_club" required>
+                                <option value="">Escolha um clube...</option>
+                                {% for club in clubs %}
+                                <option value="{{ club.id }}">{{ club.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="custom-form-group">
+                        <label for="id_player"><i class="fas fa-user-tag" style="color: var(--highlight-color); margin-right: 5px;"></i> 2. Identifique seu Perfil de Atleta</label>
+                        <select name="player" id="id_player" required disabled>
+                            <option value="">Selecione o clube primeiro</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" name="link_request" class="btn-save" style="width: 100%; margin-top: 15px; padding: 16px;">
+                        <i class="fas fa-paper-plane"></i> Enviar Solicitação de Vínculo
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Aba: Meu Perfil -->
+    <div id="meu-perfil" class="tab-content">
+        <div class="glass-card" style="padding: 50px; border-radius: 16px; max-width: 800px; margin: 0 auto;">
+            <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 40px; font-weight: 900; text-align: center;">
+                Meu Perfil
+            </h2>
+            
+            <form method="post" action="{% url 'athlete_dashboard' %}">
+                {% csrf_token %}
+                
+                <!-- Dados Pessoais -->
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 25px;">
+                    <i class="fas fa-id-card" style="font-size: 1.5rem; color: var(--highlight-color);"></i>
+                    <h4 style="color: #fff; font-size: 1.4rem; font-weight: 800; margin: 0;">Dados Pessoais</h4>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="custom-form-group">
+                        <label for="{{ user_form.first_name.id_for_label }}">Primeiro Nome</label>
+                        {{ user_form.first_name }}
+                    </div>
+                    <div class="custom-form-group">
+                        <label for="{{ user_form.last_name.id_for_label }}">Último Nome</label>
+                        {{ user_form.last_name }}
+                    </div>
+                    <div class="custom-form-group form-full-width">
+                        <label for="{{ user_form.email.id_for_label }}">Endereço de E-mail</label>
+                        {{ user_form.email }}
+                    </div>
+                </div>
+
+                <!-- Divisor -->
+                <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 30px 0 40px 0;"></div>
+
+                <!-- Dados de Atleta -->
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 25px;">
+                    <i class="fas fa-table-tennis" style="font-size: 1.5rem; color: var(--highlight-color);"></i>
+                    <h4 style="color: #fff; font-size: 1.4rem; font-weight: 800; margin: 0;">Preferências em Quadra</h4>
+                </div>
+
+                <div class="form-grid">
+                    <div class="custom-form-group form-full-width">
+                        <label for="{{ profile_form.full_name.id_for_label }}">Nome Completo (Para Rankings e Chaves)</label>
+                        {{ profile_form.full_name }}
+                    </div>
+                    <div class="custom-form-group form-full-width">
+                        <label for="{{ profile_form.racket.id_for_label }}">Marca/Modelo da Raquete (Opcional)</label>
+                        {{ profile_form.racket }}
+                    </div>
+                    
+                    <div class="custom-form-group">
+                        <label>Mão Dominante (Empunhadura)</label>
+                        {{ profile_form.handedness }}
+                    </div>
+                    
+                    <div class="custom-form-group">
+                        <label>Tipo de Backhand</label>
+                        {{ profile_form.backhand }}
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px;">
+                    <a href="{% url 'account_reset_password' %}" style="color: var(--subtitle-color); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 1.1rem; padding: 10px; border-radius: 8px; transition: background 0.2s;">
+                        <i class="fas fa-key"></i> Redefinir Minha Senha
+                    </a>
+                    <button type="submit" name="update_profile" class="btn-save">
+                        <i class="fas fa-save"></i> Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Aba: Meus Jogos -->
+    <div id="meus-jogos" class="tab-content">
+        <div class="glass-card" style="padding: 40px; border-radius: 16px; max-width: 800px; margin: 0 auto;">
+            <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 30px; font-weight: 900; text-align: center;">
+                Meus Jogos
+            </h2>
+            
+            {% if not my_matches %}
+                <p style="color: var(--subtitle-color); text-align: center; font-size: 1.1rem;">Você ainda não possui jogos gerados em nenhum torneio ou ranking.</p>
+            {% else %}
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    {% for match in my_matches %}
+                    <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                            <div>
+                                <span style="background: var(--highlight-color); color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">{{ match.tournament.name }}</span>
+                                <span style="color: var(--subtitle-color); font-size: 0.9rem; margin-left: 10px;">Rodada {{ match.round_number }}</span>
+                            </div>
+                            <div>
+                                {% if match.status == 'completed' %}
+                                    <span class="status-badge status-approved"><i class="fas fa-check"></i> Finalizado</span>
+                                {% elif match.status == 'cancelled' %}
+                                    <span class="status-badge status-pending" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border-color: rgba(239, 68, 68, 0.4);"><i class="fas fa-times"></i> Cancelado</span>
+                                {% else %}
+                                    <span class="status-badge status-pending"><i class="fas fa-clock"></i> Pendente</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px;">
+                            <div style="text-align: right; flex: 1;">
+                                <h4 style="color: #fff; font-size: 1.2rem; margin: 0;">{{ match.player_a.name|default:"A Definir" }}</h4>
+                            </div>
+                            <div style="color: var(--subtitle-color); font-weight: bold; font-size: 1.2rem;">X</div>
+                            <div style="text-align: left; flex: 1;">
+                                <h4 style="color: #fff; font-size: 1.2rem; margin: 0;">{{ match.player_b.name|default:"A Definir" }}</h4>
+                            </div>
+                        </div>
+
+                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <p style="color: var(--subtitle-color); margin: 0; font-size: 0.95rem;">
+                                    <i class="fas fa-calendar-day"></i> 
+                                    {% if match.scheduled_datetime %}
+                                        {{ match.scheduled_datetime|date:"d/m/Y \à\s H:i" }} na quadra <strong>{{ match.court.name }}</strong>
+                                    {% else %}
+                                        Ainda não agendado
+                                    {% endif %}
+                                </p>
+                            </div>
+                            
+                            {% if match.status == 'pending' and match.round_number == match.tournament.current_round and match.player_a and match.player_b %}
+                                <button onclick="openScheduleModal('{{ match.id }}', '{{ match.player_a.name }} vs {{ match.player_b.name }}')" style="padding: 8px 16px; background: #fff; color: #000; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
+                                    <i class="fas fa-calendar-plus"></i> Agendar
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Agendamento -->
+<div id="scheduleModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center;">
+    <div class="glass-card" style="width: 100%; max-width: 500px; padding: 30px; border-radius: 16px; position: relative;">
+        <button onclick="closeScheduleModal()" style="position: absolute; top: 15px; right: 20px; background: transparent; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        <h3 style="color: #fff; font-size: 1.5rem; margin-bottom: 5px; font-weight: 800;">Agendar Jogo</h3>
+        <p id="modalMatchName" style="color: var(--highlight-color); margin-bottom: 25px; font-weight: bold;"></p>
+        
+        <form method="post" action="{% url 'athlete_dashboard' %}">
+            {% csrf_token %}
+            <input type="hidden" name="match_id" id="modalMatchId">
+            
+            <div class="custom-form-group">
+                <label>Quadra (Somente quadras de Ranking)</label>
+                <select name="court" required>
+                    <option value="">Selecione uma quadra...</option>
+                    {% for court in courts %}
+                    <option value="{{ court.id }}">{{ court.name }}</option>
+                    {% endfor %}
+                </select>
+                {% if not courts %}
+                <small style="color: #ef4444; margin-top: 5px;">Nenhuma quadra configurada como "Quadra de Ranking" no clube.</small>
+                {% endif %}
+            </div>
+            
+            <div style="display: flex; gap: 15px;">
+                <div class="custom-form-group" style="flex: 1;">
+                    <label>Data</label>
+                    <input type="date" name="date" required style="color-scheme: dark;">
+                </div>
+                <div class="custom-form-group" style="flex: 1;">
+                    <label>Hora</label>
+                    <input type="time" name="time" required style="color-scheme: dark;">
+                </div>
+            </div>
+            
+            <button type="submit" name="schedule_match" class="btn-save" style="width: 100%; margin-top: 10px;" {% if not courts %}disabled{% endif %}>
+                <i class="fas fa-check"></i> Confirmar Agendamento
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+    // Controle do Modal
+    function openScheduleModal(matchId, matchName) {
+        document.getElementById('modalMatchId').value = matchId;
+        document.getElementById('modalMatchName').innerText = matchName;
+        document.getElementById('scheduleModal').style.display = 'flex';
+    }
+    
+    function closeScheduleModal() {
+        document.getElementById('scheduleModal').style.display = 'none';
+    }
+
+    // Funções para controle das Abas
+    function openTab(tabId, element) {
+        // Esconde todos os conteúdos
+        var contents = document.getElementsByClassName("tab-content");
+        for (var i = 0; i < contents.length; i++) {
+            contents[i].classList.remove("active");
+        }
+        
+        // Remove a classe active de todos os botões
+        var buttons = document.getElementsByClassName("tab-btn");
+        for (var i = 0; i < buttons.length; i++) {
+            buttons[i].classList.remove("active");
+        }
+        
+        // Mostra a aba selecionada e adiciona active no botão
+        document.getElementById(tabId).classList.add("active");
+        element.classList.add("active");
+    }
+
+    // Lógica para carregamento dinâmico de atletas no select
+    document.addEventListener("DOMContentLoaded", function() {
+        const clubSelect = document.getElementById('id_club');
+        const playerSelect = document.getElementById('id_player');
+        
+        if (clubSelect && playerSelect) {
+            const playersData = {{ players_json|safe }};
+            
+            function updatePlayerSelect(clubId) {
+                playerSelect.innerHTML = '<option value="">Selecione o Atleta...</option>';
+                
+                if (clubId && playersData[clubId] && playersData[clubId].length > 0) {
+                    playerSelect.disabled = false;
+                    playersData[clubId].forEach(player => {
+                        const option = document.createElement('option');
+                        option.value = player.id;
+                        option.textContent = player.name;
+                        playerSelect.appendChild(option);
+                    });
+                } else {
+                    playerSelect.disabled = true;
+                    if (clubId) {
+                        playerSelect.innerHTML = '<option value="">Nenhum atleta disponível neste clube</option>';
+                    } else {
+                        playerSelect.innerHTML = '<option value="">Selecione o clube primeiro</option>';
+                    }
+                }
+            }
+
+            clubSelect.addEventListener('change', function() {
+                updatePlayerSelect(this.value);
+            });
+            
+            // Dispara na montagem se o clube já estiver preenchido (caso do hidden input)
+            if (clubSelect.value) {
+                updatePlayerSelect(clubSelect.value);
+            }
+        }
+    });
+{% endblock %}

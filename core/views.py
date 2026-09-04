@@ -123,6 +123,139 @@ def athlete_dashboard(request):
             except Exception as e:
                 messages.error(request, f'Erro ao agendar o jogo: {str(e)}')
             
+    # --- Lógica de Lançamento de Resultados e Mensagens ---
+        elif 'submit_result' in request.POST:
+            match_id = request.POST.get('match_id')
+            try:
+                match = Match.objects.get(id=match_id)
+                # Verifica se o usuário é um dos jogadores e se o jogo está pendente
+                if user.player_profile not in [match.player_a, match.player_b] or match.status != 'pending':
+                    messages.error(request, 'Não é possível lançar resultado para este jogo.')
+                    return redirect('athlete_dashboard')
+                
+                # Monta o JSON com as parciais propostas
+                proposed = {
+                    'sets_a': request.POST.get('sets_a'), 'sets_b': request.POST.get('sets_b'),
+                    'set1_a': request.POST.get('set1_a'), 'set1_b': request.POST.get('set1_b'),
+                    'set2_a': request.POST.get('set2_a'), 'set2_b': request.POST.get('set2_b'),
+                    'set3_a': request.POST.get('set3_a'), 'set3_b': request.POST.get('set3_b'),
+                    'set4_a': request.POST.get('set4_a'), 'set4_b': request.POST.get('set4_b'),
+                    'set5_a': request.POST.get('set5_a'), 'set5_b': request.POST.get('set5_b'),
+                }
+                
+                # Limpa valores vazios e converte pra int
+                for k, v in proposed.items():
+                    proposed[k] = int(v) if v else None
+                    
+                match.proposed_result_json = proposed
+                match.result_status = 'pending_approval'
+                match.reported_by = user.player_profile
+                match.save()
+                
+                # Envia mensagem para o adversário
+                opponent = match.player_b if match.player_a == user.player_profile else match.player_a
+                if opponent and opponent.user:
+                    from core.models import Message
+                    Message.objects.create(
+                        sender=user,
+                        recipient=opponent.user,
+                        subject="Novo Resultado Lançado",
+                        body=f"{user.player_profile.name} lançou o resultado do jogo {match.tournament.name} (Rodada {match.round_number}). Por favor, acesse seus jogos para aceitar ou rejeitar o placar.",
+                        related_match=match
+                    )
+                
+                messages.success(request, 'Resultado lançado! Aguardando aprovação do adversário.')
+            except Exception as e:
+                messages.error(request, f'Erro ao lançar resultado: {str(e)}')
+            return redirect('athlete_dashboard')
+            
+        elif 'accept_result' in request.POST:
+            match_id = request.POST.get('match_id')
+            try:
+                match = Match.objects.get(id=match_id)
+                
+                if user.player_profile not in [match.player_a, match.player_b] or match.result_status != 'pending_approval' or match.reported_by == user.player_profile:
+                    messages.error(request, 'Você não pode aceitar este resultado.')
+                    return redirect('athlete_dashboard')
+                
+                proposed = match.proposed_result_json or {}
+                
+                # Transfere os valores do JSON para os campos reais do modelo
+                match.sets_a = proposed.get('sets_a')
+                match.sets_b = proposed.get('sets_b')
+                match.set1_a = proposed.get('set1_a')
+                match.set1_b = proposed.get('set1_b')
+                match.set2_a = proposed.get('set2_a')
+                match.set2_b = proposed.get('set2_b')
+                match.set3_a = proposed.get('set3_a')
+                match.set3_b = proposed.get('set3_b')
+                match.set4_a = proposed.get('set4_a')
+                match.set4_b = proposed.get('set4_b')
+                match.set5_a = proposed.get('set5_a')
+                match.set5_b = proposed.get('set5_b')
+                
+                match.result_status = 'approved'
+                match.save() # Isso vai acionar o cálculo automático de sets e status no models.py
+                
+                # Mensagem de confirmação pro lançador original
+                if match.reported_by and match.reported_by.user:
+                    from core.models import Message
+                    Message.objects.create(
+                        sender=user,
+                        recipient=match.reported_by.user,
+                        subject="Resultado Aceito",
+                        body=f"{user.player_profile.name} aceitou o resultado do jogo {match.tournament.name} (Rodada {match.round_number}). O jogo foi finalizado e os pontos computados.",
+                        related_match=match
+                    )
+                    
+                messages.success(request, 'Resultado aceito e jogo finalizado!')
+            except Exception as e:
+                messages.error(request, f'Erro ao aceitar resultado: {str(e)}')
+            return redirect('athlete_dashboard')
+            
+        elif 'reject_result' in request.POST:
+            match_id = request.POST.get('match_id')
+            rejection_reason = request.POST.get('rejection_reason', '')[:200]
+            try:
+                match = Match.objects.get(id=match_id)
+                
+                if user.player_profile not in [match.player_a, match.player_b] or match.result_status != 'pending_approval' or match.reported_by == user.player_profile:
+                    messages.error(request, 'Você não pode rejeitar este resultado.')
+                    return redirect('athlete_dashboard')
+                
+                reported_by_user = match.reported_by.user if match.reported_by else None
+                
+                match.proposed_result_json = None
+                match.result_status = 'unreported'
+                match.reported_by = None
+                match.save()
+                
+                # Mensagem de rejeição pro lançador original
+                if reported_by_user:
+                    from core.models import Message
+                    reason_text = f" Motivo: {rejection_reason}" if rejection_reason.strip() else " Nenhum motivo informado."
+                    Message.objects.create(
+                        sender=user,
+                        recipient=reported_by_user,
+                        subject="Resultado Rejeitado",
+                        body=f"{user.player_profile.name} não aceitou o resultado que você lançou no jogo {match.tournament.name} (Rodada {match.round_number}).{reason_text} Por favor, entre em contato para alinhar o placar correto e lance novamente.",
+                        related_match=match
+                    )
+                    
+                messages.success(request, 'Resultado rejeitado. O adversário foi notificado.')
+            except Exception as e:
+                messages.error(request, f'Erro ao rejeitar resultado: {str(e)}')
+            return redirect('athlete_dashboard')
+            
+        elif 'mark_message_read' in request.POST:
+            msg_id = request.POST.get('message_id')
+            try:
+                from core.models import Message
+                msg = Message.objects.get(id=msg_id, recipient=user)
+                msg.is_read = True
+                msg.save()
+            except:
+                pass
             return redirect('athlete_dashboard')
     
     else:
@@ -148,6 +281,11 @@ def athlete_dashboard(request):
         my_matches = Match.objects.filter(Q(player_a=p) | Q(player_b=p)).select_related('tournament', 'player_a', 'player_b', 'court').order_by('-tournament__current_round', 'round_number')
         courts = Court.objects.filter(club=linked_club, is_ranking_court=True)
 
+    # Busca Mensagens
+    from core.models import Message
+    user_messages = Message.objects.filter(recipient=user).order_by('-created_at')
+    unread_messages_count = user_messages.filter(is_read=False).count()
+
     context = {
         'linked_club': linked_club,
         'user_form': user_form,
@@ -158,6 +296,130 @@ def athlete_dashboard(request):
         'players_json': json.dumps(players_data),
         'my_matches': my_matches,
         'courts': courts,
+        'user_messages': user_messages,
+        'unread_messages_count': unread_messages_count,
     }
     
     return render(request, 'athlete_dashboard.html', context)
+
+from django.http import JsonResponse
+
+@login_required
+def api_court_agenda(request):
+    court_id = request.GET.get('court_id')
+    date_str = request.GET.get('date')
+    
+    if not court_id or not date_str:
+        return JsonResponse({'error': 'Parâmetros inválidos'}, status=400)
+        
+    try:
+        court = Court.objects.get(id=court_id)
+        club = court.club
+        req_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        weekday = req_date.weekday()
+        
+        # Obter open e close times do clube
+        if weekday < 5:
+            t_open, t_close = club.weekday_open, club.weekday_close
+        elif weekday == 5:
+            t_open, t_close = club.saturday_open, club.saturday_close
+        else:
+            t_open, t_close = club.sunday_open, club.sunday_close
+            
+        if not t_open or not t_close:
+            return JsonResponse({'slots': []}) # Clube fechado neste dia
+            
+        # Buscar conflitos (jogos agendados nesta quadra neste dia)
+        start_of_day = timezone.make_aware(datetime.combine(req_date, datetime.min.time()))
+        end_of_day = timezone.make_aware(datetime.combine(req_date, datetime.max.time()))
+        
+        matches = Match.objects.filter(
+            court=court,
+            scheduled_datetime__range=(start_of_day, end_of_day),
+            status__in=['pending', 'completed']
+        )
+        
+        # Gerar slots a cada 30 minutos
+        slots = []
+        current_time = datetime.combine(req_date, t_open)
+        end_time = datetime.combine(req_date, t_close)
+        
+        while current_time < end_time:
+            slot_dt = timezone.make_aware(current_time)
+            
+            is_booked = False
+            conflict_details = None
+            
+            for m in matches:
+                if m.scheduled_datetime:
+                    diff = abs((m.scheduled_datetime - slot_dt).total_seconds())
+                    if diff < (90 * 60): # 90 minutos de intervalo de segurança
+                        is_booked = True
+                        conflict_details = f"{m.player_a.name if m.player_a else 'TBD'} vs {m.player_b.name if m.player_b else 'TBD'}"
+                        break
+                        
+            slots.append({
+                'time': current_time.strftime('%H:%M'),
+                'is_booked': is_booked,
+                'details': conflict_details if is_booked else None
+            })
+            
+            current_time += timedelta(minutes=30)
+            
+        return JsonResponse({'slots': slots})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+def api_monthly_agenda(request):
+    court_id = request.GET.get('court_id')
+    year = request.GET.get('year')
+    month = request.GET.get('month')
+    
+    if not court_id or not year or not month:
+        return JsonResponse({'error': 'Parâmetros inválidos'}, status=400)
+        
+    try:
+        court = Court.objects.get(id=court_id)
+        year = int(year)
+        month = int(month)
+        
+        # Calculate start and end of month
+        start_date = datetime(year, month, 1).date()
+        if month == 12:
+            end_date = datetime(year + 1, 1, 1).date() - timedelta(days=1)
+        else:
+            end_date = datetime(year, month + 1, 1).date() - timedelta(days=1)
+            
+        start_dt = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
+        end_dt = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
+        
+        matches = Match.objects.filter(
+            court=court,
+            scheduled_datetime__range=(start_dt, end_dt),
+            status__in=['pending', 'completed']
+        ).select_related('player_a', 'player_b')
+        
+        # Group by day
+        days_data = {}
+        for m in matches:
+            if not m.scheduled_datetime: continue
+            
+            day = m.scheduled_datetime.day
+            if day not in days_data:
+                days_data[day] = []
+                
+            p1_name = m.player_a.name if m.player_a else "TBD"
+            p2_name = m.player_b.name if m.player_b else "TBD"
+                
+            days_data[day].append({
+                'id': m.id,
+                'title': f"{p1_name} vs {p2_name}",
+                'time': m.scheduled_datetime.strftime('%H:%M')
+            })
+            
+        return JsonResponse({'days': days_data})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

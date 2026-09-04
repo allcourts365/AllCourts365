@@ -216,11 +216,23 @@ class Match(models.Model):
         ('cancelled', 'Não Ocorreu (Cancelado)'),
     ]
 
+    RESULT_STATUS_CHOICES = [
+        ('unreported', 'Não Lançado'),
+        ('pending_approval', 'Aguardando Aprovação'),
+        ('approved', 'Aprovado'),
+        ('rejected', 'Rejeitado'),
+    ]
+
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='matches', null=True, blank=True)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='all_matches', null=True, blank=True)
     round_number = models.IntegerField(verbose_name="Rodada")
     player_a = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='matches_as_a', null=True, blank=True)
     player_b = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='matches_as_b', null=True, blank=True)
+    
+    # Workflow de lançamento de resultados
+    result_status = models.CharField(max_length=20, choices=RESULT_STATUS_CHOICES, default='unreported')
+    reported_by = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True, blank=True, related_name='reported_results')
+    proposed_result_json = models.JSONField(null=True, blank=True, verbose_name="Resultado Proposto")
     
     sets_a = models.IntegerField(null=True, blank=True, verbose_name="Sets Ganhos (A)")
     sets_b = models.IntegerField(null=True, blank=True, verbose_name="Sets Ganhos (B)")

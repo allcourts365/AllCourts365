@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ club.name }} - AllCourts365{% endblock %}
+
+{% block admin_button %}
+<a href="#" class="btn-highlight" style="visibility: hidden; pointer-events: none;"><i class="fas fa-lock"></i> Admin AllCourts365</a>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root {
+        {% if club.background_color %}--bg-color: {{ club.background_color }};{% endif %}
+        {% if club.overlay_color %}--overlay-color: {{ club.overlay_color }};{% endif %}
+        {% if club.overlay_opacity %}--overlay-opacity: {{ club.overlay_opacity|stringformat:"s" }};{% endif %}
+        {% if club.highlight_color %}--highlight-color: {{ club.highlight_color }};{% endif %}
+        {% if club.title_color %}--title-color: {{ club.title_color }};{% endif %}
+        {% if club.subtitle_color %}--subtitle-color: {{ club.subtitle_color }};{% endif %}
+    }
+    
+    {% if club.background_image %}
+    body {
+        background-image: url('{{ club.background_image.url }}') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-attachment: fixed !important;
+    }
+    {% endif %}
+    
+    {% if club.watermark_image %}
+    .club-watermark {
+        position: fixed;
+        z-index: 1000;
+        opacity: {{ club.watermark_opacity|default:"0.8"|stringformat:"s" }};
+        width: {{ club.watermark_size_percent|default:"15"|stringformat:"s" }}%;
+        pointer-events: none;
+        
+        {% if club.watermark_position == 'top-left' %} top: 20px; left: 20px;
+        {% elif club.watermark_position == 'top-right' %} top: 20px; right: 20px;
+        {% elif club.watermark_position == 'bottom-left' %} bottom: 20px; left: 20px;
+        {% elif club.watermark_position == 'bottom-right' %} bottom: 20px; right: 20px;
+        {% elif club.watermark_position == 'center' %} top: 50%; left: 50%; transform: translate(-50%, -50%);
+        {% elif club.watermark_position == 'center' %} top: 50%; left: 50%; transform: translate(-50%, -50%);
+        {% else %} bottom: 20px; left: 20px; {% endif %}
+    }
+    {% endif %}
+
+    .status-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-finished {
+        background-color: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+    
+    .status-active {
+        background-color: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.4);
+    }
+
+    @keyframes spin-ball {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    .ball-spinning {
+        display: inline-block;
+        animation: spin-ball 2s linear infinite;
+        width: 14px;
+        height: 14px;
+    }
+    
+    .ball-static {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+    }
+
+    .club-header-grid {
+        display: grid;
+        grid-template-columns: 150px 1fr auto;
+        gap: 30px;
+        align-items: center;
+        margin-top: 40px;
+        margin-bottom: 40px;
+        min-height: 180px;
+    }
+    @media (max-width: 768px) {
+        .club-header-grid {
+            grid-template-columns: 1fr;
+            text-align: center;
+            justify-items: center;
+        }
+        .club-header-grid .btn-wrapper {
+            justify-content: center !important;
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block watermark %}
+    {% if club.watermark_image %}
+        <img src="{{ club.watermark_image.url }}" alt="Watermark" class="club-watermark">
+    {% elif site_config.watermark_image %}
+        <img src="{{ site_config.watermark_image.url }}" alt="Watermark" class="watermark">
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="club-header glass-card club-header-grid">
+    <div style="width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        {% if club.logo %}
+            <img src="{{ club.logo.url }}" alt="{{ club.name }}" style="max-width: 100%; max-height: 100%; border-radius: 10px; object-fit: contain;">
+        {% else %}
+            <div style="width: 100%; height: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                <img src="{% static 'bolinha.png' %}" style="width: 80px; height: 80px; object-fit: contain; opacity: 0.8;" alt="Bola">
+            </div>
+        {% endif %}
+    </div>
+    <div style="display: flex; flex-direction: column; justify-content: center;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 10px; line-height: 1.2;">
+            {% if club.website %}
+                <a href="{{ club.website }}" target="_blank" style="color: var(--title-color); text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">{{ club.name }}</a>
+            {% else %}
+                {{ club.name }}
+            {% endif %}
+        </h1>
+        <p style="margin-bottom: 10px; font-size: 1.1rem; line-height: 1.4;">{{ club.description|default:"Sem descrição." }}</p>
+        <p style="font-size: 0.95rem; color: var(--highlight-color); margin-top: auto;">📍 {{ club.address|default:"Endereço não informado" }}</p>
+    </div>
+    <div class="btn-wrapper" style="display: flex; align-items: center; justify-content: flex-end;">
+        {% if user.is_authenticated and not user.is_superuser %}
+            <a href="{% url 'login_redirect' %}?club={{ club.id }}" class="btn-highlight" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap;">
+                <i class="fas fa-sign-in-alt"></i> Entrar
+            </a>
+        {% else %}
+            {% if user.is_authenticated and user.is_superuser %}
+                <!-- Se for SuperAdmin, o botão força o logout para permitir o login de um atleta/adm do clube -->
+                <a href="{% url 'account_logout' %}?next=/accounts/login/?club={{ club.id }}" class="btn-highlight" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap;">
+                    <i class="fas fa-sign-in-alt"></i> Entrar
+                </a>
+            {% else %}
+                <a href="{% url 'account_login' %}?club={{ club.id }}" class="btn-highlight" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap;">
+                    <i class="fas fa-sign-in-alt"></i> Entrar
+                </a>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="tournaments-section">
+    <h2 style="font-size: 2rem; margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px; text-align: center;">Bem-vindo ao Ranking interno e Torneios de Tenis do {{ club.name }}</h2>
+    
+    <!-- Menu Horizontal de Abas -->
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="openTab('rankings', this)">Rankings</button>
+        <button class="tab-btn" onclick="openTab('knockouts', this)">Torneios Eliminatórios</button>
+    </div>
+
+    <!-- Aba: Rankings -->
+    <div id="rankings" class="tab-content active">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
+            {% for t in rankings %}
+            <div class="glass-card" style="position: relative;">
+                {% if t.is_finished %}
+                    <div class="status-badge status-finished">
+                        <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Encerrado"> Encerrado
+                    </div>
+                {% else %}
+                    <div class="status-badge status-active">
+                        <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Em andamento"> Em andamento
+                    </div>
+                {% endif %}
+                <h3 style="margin-bottom: 10px; color: var(--highlight-color); padding-right: 120px;">{{ t.name }}</h3>
+                <p style="margin-bottom: 5px;"><strong>Competição:</strong> {{ t.get_competition_type_display }}</p>
+                <p style="margin-bottom: 20px;"><strong>Rodada Atual:</strong> {{ t.current_round }}</p>
+                <a href="{% url 'clubs:ranking_detail' club.id t.id %}" style="text-decoration: none; display: inline-flex; align-items: center; gap: 5px; color: var(--subtitle-color); font-size: 1.1rem; font-weight: 500; margin-top: 10px;">Ver jogos e ranking &rarr;</a>
+            </div>
+            {% empty %}
+            <p style="text-align: center; grid-column: 1 / -1;">Nenhum ranking ativo no momento.</p>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Aba: Torneios Eliminatórios -->
+    <div id="knockouts" class="tab-content">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
+            {% for t in knockouts %}
+            <div class="glass-card" style="position: relative;">
+                {% if t.is_finished %}
+                    <div class="status-badge status-finished">
+                        <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Encerrado"> Encerrado
+                    </div>
+                {% else %}
+                    <div class="status-badge status-active">
+                        <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Em andamento"> Em andamento
+                    </div>
+                {% endif %}
+                <h3 style="margin-bottom: 10px; color: var(--highlight-color); padding-right: 120px;">{{ t.name }}</h3>
+                <p style="margin-bottom: 5px;"><strong>Competição:</strong> {{ t.get_competition_type_display }}</p>
+                <p style="margin-bottom: 20px;"><strong>Fase Atual:</strong> Rodada {{ t.current_round }}</p>
+                <a href="#" class="btn-highlight" style="text-decoration: none; display: inline-block; padding: 8px 15px; font-size: 0.9rem;">Ver Chaves</a>
+            </div>
+            {% empty %}
+            <p style="text-align: center; grid-column: 1 / -1;">Nenhum torneio eliminatório ativo no momento.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+// Funções para controle das Abas
+function openTab(tabId, element) {
+    // Esconde todos os conteúdos
+    var contents = document.getElementsByClassName("tab-content");
+    for (var i = 0; i < contents.length; i++) {
+        contents[i].classList.remove("active");
+    }
+    
+    // Remove a classe active de todos os botões
+    var buttons = document.getElementsByClassName("tab-btn");
+    for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove("active");
+    }
+    
+    // Mostra a aba selecionada e adiciona active no botão
+    document.getElementById(tabId).classList.add("active");
+    element.classList.add("active");
+}
+{% endblock %}

@@ -24,10 +24,6 @@ class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = ['full_name', 'racket', 'handedness', 'backhand']
-        widgets = {
-            'handedness': forms.RadioSelect,
-            'backhand': forms.RadioSelect,
-        }
 
 class PlayerLinkRequestForm(forms.ModelForm):
     class Meta:
