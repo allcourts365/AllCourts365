@@ -41,7 +41,12 @@
         
         body {
             background-color: var(--bg-color);
-            {% if site_config.background_image %}
+            {% if club_context and club_context.background_image %}
+            background-image: url('{{ club_context.background_image.url }}');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            {% elif site_config.background_image %}
             background-image: url('{{ site_config.background_image.url }}');
             background-size: cover;
             background-position: center;
@@ -83,6 +88,47 @@
         .glass-nav .btn-highlight:hover {
             box-shadow: 0 4px 15px var(--global-highlight-color) !important;
         }
+
+        /* Toasts Globais */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast-message {
+            padding: 15px 25px;
+            border-radius: 12px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            animation: slideInRight 0.4s ease-out forwards;
+            opacity: 0;
+            transform: translateX(100%);
+            max-width: 350px;
+            font-weight: 500;
+        }
+
+        .toast-success { background: rgba(16, 185, 129, 0.85); border: 1px solid rgba(16,185,129,1); }
+        .toast-error { background: rgba(239, 68, 68, 0.85); border: 1px solid rgba(239,68,68,1); }
+        .toast-info { background: rgba(59, 130, 246, 0.85); border: 1px solid rgba(59,130,246,1); }
+
+        @keyframes slideInRight {
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes fadeOutRight {
+            to { opacity: 0; transform: translateX(100%); }
+        }
+
     </style>
     {% block extra_head %}{% endblock %}
 </head>
@@ -97,6 +143,18 @@
     {% endif %}
     {% endblock %}
 
+    <!-- Container de Toasts (Mensagens do Django) -->
+    {% if messages %}
+    <div class="toast-container" id="toast-container">
+        {% for message in messages %}
+        <div class="toast-message {% if message.tags == 'error' %}toast-error{% elif message.tags == 'success' %}toast-success{% else %}toast-info{% endif %}">
+            <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'success' %}fa-check-circle{% else %}fa-info-circle{% endif %}"></i>
+            <div>{{ message }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <!-- Navegação -->
     <nav class="glass-nav">
         <div class="container nav-content">
@@ -105,7 +163,9 @@
                 <a href="/">Home</a>
                 <a href="{% url 'clubs:list' %}">Clubes</a>
                 {% block admin_button %}
-                <a href="{% url 'admin:login' %}" target="_blank" class="btn-highlight"><i class="fas fa-lock"></i> Admin AllCourts365</a>
+                    {% if not club_context %}
+                    <a href="{% url 'admin:login' %}" target="_blank" class="btn-highlight"><i class="fas fa-lock"></i> Admin AllCourts365</a>
+                    {% endif %}
                 {% endblock %}
             </div>
         </div>
@@ -118,6 +178,17 @@
     </main>
 
     <script>
+        // Lógica para sumir com os toasts automaticamente após 5 segundos
+        document.addEventListener('DOMContentLoaded', function() {
+            const toasts = document.querySelectorAll('.toast-message');
+            toasts.forEach((toast, index) => {
+                setTimeout(() => {
+                    toast.style.animation = 'fadeOutRight 0.4s ease-out forwards';
+                    setTimeout(() => { toast.remove(); }, 400); // Remove do DOM após a animação
+                }, 5000 + (index * 500)); // Adiciona um atraso escadinha para múltiplos toasts
+            });
+        });
+
         {% block extra_scripts %}
         {% endblock %}
     </script>

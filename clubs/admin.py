@@ -1,5 +1,5 @@
 from django.contrib import admin, messages
-from .models import Club, Player, Tournament, RankingTournament, KnockoutTournament, Category, CategoryPlayer, Match
+from .models import Club, Player, Tournament, RankingTournament, KnockoutTournament, Category, CategoryPlayer, Match, Court
 import openpyxl
 
 from django import forms
@@ -45,6 +45,12 @@ class ClubForm(forms.ModelForm):
             'highlight_color': forms.TextInput(attrs={'type': 'color'}),
             'title_color': forms.TextInput(attrs={'type': 'color'}),
             'subtitle_color': forms.TextInput(attrs={'type': 'color'}),
+            'weekday_open': forms.TimeInput(attrs={'type': 'time'}),
+            'weekday_close': forms.TimeInput(attrs={'type': 'time'}),
+            'saturday_open': forms.TimeInput(attrs={'type': 'time'}),
+            'saturday_close': forms.TimeInput(attrs={'type': 'time'}),
+            'sunday_open': forms.TimeInput(attrs={'type': 'time'}),
+            'sunday_close': forms.TimeInput(attrs={'type': 'time'}),
         }
 
 class ClubAdministratorsInline(admin.TabularInline):
@@ -58,7 +64,7 @@ class ClubAdministratorsInline(admin.TabularInline):
     def editar_usuario(self, instance):
         from django.utils.html import format_html
         if instance and instance.user_id:
-            return format_html(f'<a href="/admin/auth/user/{instance.user_id}/change/" target="_blank">Abrir cadastro de {instance.user.username}</a>')
+            return format_html('<a href="/admin/auth/user/{}/change/" target="_blank">Abrir cadastro de {}</a>', instance.user_id, instance.user.username)
         return "Salve para ver opções"
     editar_usuario.short_description = "Ajustar Senha"
 
@@ -68,6 +74,31 @@ class ClubAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     list_display = ('name', 'created_at')
     search_fields = ('name',)
     inlines = [ClubAdministratorsInline]
+    
+    fieldsets = (
+        ('Informações Básicas', {
+            'fields': ('name', 'website', 'logo', 'description', 'address')
+        }),
+        ('Horários de Funcionamento', {
+            'fields': (
+                ('weekday_open', 'weekday_close'),
+                ('saturday_open', 'saturday_close'),
+                ('sunday_open', 'sunday_close'),
+            )
+        }),
+        ('Configurações Visuais Globais', {
+            'fields': ('background_image', 'background_color', 'overlay_color', 'overlay_opacity', 'highlight_color', 'title_color', 'subtitle_color')
+        }),
+        ('Marca d\'Água', {
+            'fields': ('watermark_image', 'watermark_position', 'watermark_opacity', 'watermark_size_percent')
+        }),
+    )
+
+@admin.register(Court)
+class CourtAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
+    list_display = ('name', 'club', 'is_ranking_court')
+    list_filter = ('club', 'is_ranking_court')
+    search_fields = ('name',)
 
 @admin.register(Player)
 class PlayerAdmin(ClubScopedAdminMixin, admin.ModelAdmin):

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django import forms
-from .models import SiteConfiguration
+from .models import SiteConfiguration, UserProfile, PlayerLinkRequest
 
 class SiteConfigurationForm(forms.ModelForm):
     class Meta:
@@ -17,13 +17,45 @@ class SiteConfigurationForm(forms.ModelForm):
 @admin.register(SiteConfiguration)
 class SiteConfigurationAdmin(admin.ModelAdmin):
     form = SiteConfigurationForm
+    list_display = ['__str__', 'background_color', 'highlight_color']
     
-    # Previne a adição de múltiplos registros
     def has_add_permission(self, request):
         if self.model.objects.exists():
             return False
         return True
 
-    # Previne a deleção do único registro
     def has_delete_permission(self, request, obj=None):
         return False
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'full_name', 'racket', 'handedness', 'backhand')
+    search_fields = ('user__username', 'user__email', 'full_name')
+
+@admin.register(PlayerLinkRequest)
+class PlayerLinkRequestAdmin(admin.ModelAdmin):
+    list_display = ('user', 'club', 'player', 'status', 'created_at')
+    list_filter = ('status', 'club')
+    search_fields = ('user__username', 'user__email', 'player__name')
+    actions = ['approve_requests', 'reject_requests']
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(club__administrators=request.user)
+
+    @admin.action(description='Aprovar solicitações selecionadas')
+    def approve_requests(self, request, queryset):
+        for req in queryset.filter(status='pending'):
+            req.status = 'approved'
+            req.save()
+            # Efetua o vínculo
+            req.player.user = req.user
+            req.player.save()
+        self.message_user(request, "Solicitações aprovadas e usuários vinculados aos atletas com sucesso.")
+
+    @admin.action(description='Rejeitar solicitações selecionadas')
+    def reject_requests(self, request, queryset):
+        queryset.filter(status='pending').update(status='rejected')
+        self.message_user(request, "Solicitações rejeitadas.")

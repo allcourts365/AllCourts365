@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load account %}
+
+{% block title %}Confirmar E-mail - AllCourts365{% endblock %}
+
+{% block admin_button %}
+    {% if club_context %}
+    <a href="#" class="btn-admin" style="visibility: hidden;">
+        <i class="fas fa-lock"></i> Admin AllCourts365
+    </a>
+    {% else %}
+    {{ block.super }}
+    {% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .login-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 70vh;
+    }
+    .login-card {
+        width: 100%;
+        max-width: 500px;
+        padding: 40px;
+        text-align: center;
+        position: relative;
+    }
+    .btn-login {
+        width: 100%;
+        padding: 12px;
+        background: var(--highlight-color, #22c55e);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-top: 20px;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+    }
+    .icon-wrapper {
+        width: 80px;
+        height: 80px;
+        background: rgba(34, 197, 94, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px auto;
+        color: var(--highlight-color, #22c55e);
+        font-size: 2.5rem;
+    }
+    .icon-wrapper-error {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="glass-card login-card">
+        
+        {% if confirmation %}
+            {% user_display confirmation.email_address.user as user_display %}
+            <div class="icon-wrapper">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            
+            <h2 style="font-size: 2rem; color: #fff; margin-bottom: 15px; font-weight: 800;">Confirmar E-mail</h2>
+            
+            <p style="color: var(--subtitle-color, #ccc); margin-bottom: 30px; font-size: 1.1rem; line-height: 1.5;">
+                Por favor, confirme que <strong><a href="mailto:{{ confirmation.email_address.email }}" style="color: var(--highlight-color, #3b82f6); text-decoration: none;">{{ confirmation.email_address.email }}</a></strong> é um endereço de e-mail válido para o usuário <strong>{{ user_display }}</strong>.
+            </p>
+            
+            <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-login">
+                    <i class="fas fa-check"></i> Confirmar E-mail
+                </button>
+            </form>
+        {% else %}
+            <div class="icon-wrapper icon-wrapper-error">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            
+            <h2 style="font-size: 2rem; color: #fff; margin-bottom: 15px; font-weight: 800;">Link Inválido</h2>
+            
+            <p style="color: var(--subtitle-color, #ccc); margin-bottom: 30px; font-size: 1.1rem; line-height: 1.5;">
+                Este link de confirmação de e-mail expirou ou é inválido. Por favor, <a href="{% url 'account_email' %}" style="color: var(--highlight-color, #3b82f6); text-decoration: none;">solicite um novo e-mail de confirmação</a>.
+            </p>
+            
+            <a href="{% url 'account_login' %}" class="btn-login" style="background: rgba(255,255,255,0.1);">
+                Voltar para o Login
+            </a>
+        {% endif %}
+        
+    </div>
+</div>
+{% endblock %}

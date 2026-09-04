@@ -1,3 +1,7 @@
 Django==5.1.1
 Pillow==10.4.0
 openpyxl==3.1.5
+django-allauth>=0.63.0
+django-crispy-forms>=2.1
+crispy-bootstrap5>=2024.2
+requests>=2.31.0

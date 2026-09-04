@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load account socialaccount %}
+{% load crispy_forms_tags %}
+
+{% block title %}Entrar - AllCourts365{% endblock %}
+
+{% block admin_button %}
+    {% if club_context %}
+    <a href="#" class="btn-highlight" style="visibility: hidden; pointer-events: none;"><i class="fas fa-lock"></i> Admin AllCourts365</a>
+    {% else %}
+    <a href="{% url 'admin:login' %}" target="_blank" class="btn-highlight"><i class="fas fa-lock"></i> Admin AllCourts365</a>
+    {% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .login-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 70vh;
+    }
+    .login-card {
+        width: 100%;
+        max-width: 400px;
+        padding: 40px;
+        text-align: center;
+    }
+    .btn-login {
+        width: 100%;
+        padding: 12px;
+        background: var(--highlight-color, #00BFFF);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-top: 10px;
+    }
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 191, 255, 0.4);
+    }
+    .btn-google {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: 12px;
+        background: #fff;
+        color: #333;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-top: 15px;
+        text-decoration: none;
+    }
+    .btn-google:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+        color: #333;
+    }
+    .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 20px 0;
+        color: var(--subtitle-color, #ccc);
+    }
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .divider:not(:empty)::before {
+        margin-right: .25em;
+    }
+    .divider:not(:empty)::after {
+        margin-left: .25em;
+    }
+    .auth-links a {
+        color: var(--highlight-color, #00BFFF);
+        text-decoration: none;
+    }
+    .auth-links a:hover {
+        text-decoration: underline;
+    }
+    /* Estilos dos campos */
+    .input-field {
+        width: 100%;
+        padding: 12px 15px;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        color: #fff;
+        font-family: 'Outfit', sans-serif;
+        box-sizing: border-box;
+        transition: border-color 0.2s;
+    }
+    .input-field:focus {
+        border-color: var(--highlight-color, #00BFFF);
+        outline: none;
+    }
+    label {
+        color: var(--subtitle-color, #ccc);
+        text-align: left;
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+    .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+    }
+    .form-check {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        text-align: left;
+    }
+    .form-check-input {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--highlight-color, #00BFFF);
+        cursor: pointer;
+    }
+    .form-check-label {
+        margin-bottom: 0;
+        cursor: pointer;
+        font-size: 0.95rem;
+    }
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 5px 0 0 0;
+        color: #ff4d4d;
+        font-size: 0.85rem;
+        text-align: left;
+    }
+    .non-field-errors {
+        background: rgba(255, 77, 77, 0.1);
+        border: 1px solid rgba(255, 77, 77, 0.3);
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="glass-card login-card">
+        <h2 style="font-size: 2rem; color: #fff; margin-bottom: 10px; font-weight: 800;">Bem-vindo</h2>
+        <p style="color: var(--subtitle-color, #ccc); margin-bottom: 30px;">Faça login para acessar sua conta.</p>
+
+        <form class="login" method="POST" action="{% url 'account_login' %}{% if request.GET.club %}?club={{ request.GET.club }}{% endif %}">
+            {% csrf_token %}
+            
+            {% if request.GET.club %}
+            <input type="hidden" name="club" value="{{ request.GET.club }}">
+            {% endif %}
+            
+            {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+            {% endif %}
+
+            {% if form.non_field_errors %}
+            <div class="non-field-errors">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="{{ form.login.id_for_label }}">E-mail</label>
+                {{ form.login }}
+                {{ form.login.errors }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.password.id_for_label }}">Senha</label>
+                {{ form.password }}
+                {{ form.password.errors }}
+            </div>
+
+            {% if form.remember %}
+            <div class="form-check">
+                {{ form.remember }}
+                <label for="{{ form.remember.id_for_label }}" class="form-check-label">Lembrar de Mim</label>
+            </div>
+            {% endif %}
+            
+            <button class="btn-login" type="submit">Entrar</button>
+        </form>
+
+        <script>
+            // Adiciona as classes aos inputs gerados pelo django-allauth
+            document.querySelectorAll('.form-group input').forEach(input => {
+                if (input.type !== 'checkbox') {
+                    input.classList.add('input-field');
+                } else {
+                    input.classList.add('form-check-input');
+                }
+            });
+        </script>
+
+        <div class="divider">OU</div>
+
+        <a href="{% provider_login_url 'google' %}" class="btn-google">
+            <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google Logo" style="width: 20px; height: 20px;">
+            Entrar com Google
+        </a>
+
+        <div class="auth-links" style="margin-top: 25px; font-size: 0.9rem; color: var(--subtitle-color);">
+            <p>Ainda não tem uma conta? <a href="{% url 'account_signup' %}?club={{ request.GET.club }}">Cadastre-se</a></p>
+            <p><a href="{% url 'account_reset_password' %}">Esqueceu sua senha?</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

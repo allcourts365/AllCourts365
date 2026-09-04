@@ -39,6 +39,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'clubs',
+    
+    # 3rd party
+    'crispy_forms',
+    'crispy_bootstrap5',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
 
 MIDDLEWARE = [
@@ -49,6 +57,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'allcourts365.urls'
@@ -130,5 +139,42 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Login Configs
-LOGIN_URL = 'login'
+LOGIN_URL = 'account_login'
 LOGIN_REDIRECT_URL = 'login_redirect'
+LOGOUT_REDIRECT_URL = 'home'
+
+# Crispy Forms
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+# Allauth Settings
+SITE_ID = 1
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_LOGOUT_ON_GET = True
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        # Força o uso das credenciais pelas configurações, evitando erro de banco de dados
+        'APP': {
+            'client_id': 'COLOQUE_SEU_CLIENT_ID_AQUI',
+            'secret': 'COLOQUE_SEU_SECRET_AQUI',
+            'key': ''
+        }
+    }
+}
+
+# Email Configuration (Prod: SMTP)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'allcourts365@gmail.com'
+EMAIL_HOST_PASSWORD = 'ugfa ezbz zxbu uchj'
+DEFAULT_FROM_EMAIL = 'AllCourts365 <allcourts365@gmail.com>'

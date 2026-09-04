@@ -144,9 +144,22 @@
         <p style="font-size: 0.95rem; color: var(--highlight-color); margin-top: auto;">📍 {{ club.address|default:"Endereço não informado" }}</p>
     </div>
     <div class="btn-wrapper" style="display: flex; align-items: center; justify-content: flex-end;">
-        <a href="{% url 'login' %}" class="btn-highlight" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap;">
-            <i class="fas fa-sign-in-alt"></i> Entrar
-        </a>
+        {% if user.is_authenticated and not user.is_superuser %}
+            <a href="{% url 'login_redirect' %}?club={{ club.id }}" class="btn-highlight" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap;">
+                <i class="fas fa-sign-in-alt"></i> Entrar
+            </a>
+        {% else %}
+            {% if user.is_authenticated and user.is_superuser %}
+                <!-- Se for SuperAdmin, o botão força o logout para permitir o login de um atleta/adm do clube -->
+                <a href="{% url 'account_logout' %}?next=/accounts/login/?club={{ club.id }}" class="btn-highlight" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap;">
+                    <i class="fas fa-sign-in-alt"></i> Entrar
+                </a>
+            {% else %}
+                <a href="{% url 'account_login' %}?club={{ club.id }}" class="btn-highlight" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap;">
+                    <i class="fas fa-sign-in-alt"></i> Entrar
+                </a>
+            {% endif %}
+        {% endif %}
     </div>
 </div>
 

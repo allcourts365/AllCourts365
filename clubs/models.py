@@ -34,6 +34,14 @@ class Club(models.Model):
     watermark_opacity = models.FloatField(null=True, blank=True, verbose_name="Opacidade da Marca d'Água")
     watermark_size_percent = models.IntegerField(null=True, blank=True, verbose_name="Tamanho da Marca d'Água (%)")
     
+    # Horários de Expediente
+    weekday_open = models.TimeField(null=True, blank=True, verbose_name="Abertura (Dias de Semana)")
+    weekday_close = models.TimeField(null=True, blank=True, verbose_name="Fechamento (Dias de Semana)")
+    saturday_open = models.TimeField(null=True, blank=True, verbose_name="Abertura (Sábados)")
+    saturday_close = models.TimeField(null=True, blank=True, verbose_name="Fechamento (Sábados)")
+    sunday_open = models.TimeField(null=True, blank=True, verbose_name="Abertura (Domingos/Feriados)")
+    sunday_close = models.TimeField(null=True, blank=True, verbose_name="Fechamento (Domingos/Feriados)")
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -42,6 +50,18 @@ class Club(models.Model):
     class Meta:
         verbose_name = "Clube"
         verbose_name_plural = "Clubes"
+
+class Court(models.Model):
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='courts', verbose_name="Clube")
+    name = models.CharField(max_length=100, verbose_name="Nome da Quadra")
+    is_ranking_court = models.BooleanField(default=False, verbose_name="Usada para Jogos de Ranking?")
+
+    def __str__(self):
+        return f"{self.name} ({self.club.name})"
+
+    class Meta:
+        verbose_name = "Quadra"
+        verbose_name_plural = "Quadras"
 
 class Player(models.Model):
     user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='player_profile', verbose_name="Usuário do Sistema")
@@ -215,6 +235,9 @@ class Match(models.Model):
     set4_b = models.IntegerField(null=True, blank=True, verbose_name="Set 4 (B)")
     set5_a = models.IntegerField(null=True, blank=True, verbose_name="Set 5 (A)")
     set5_b = models.IntegerField(null=True, blank=True, verbose_name="Set 5 (B)")
+    
+    court = models.ForeignKey('clubs.Court', on_delete=models.SET_NULL, null=True, blank=True, related_name='matches', verbose_name="Quadra Reservada")
+    scheduled_datetime = models.DateTimeField(null=True, blank=True, verbose_name="Data e Hora Agendada")
     
     next_match = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='previous_matches')
     phase = models.CharField(max_length=50, blank=True, verbose_name="Fase")

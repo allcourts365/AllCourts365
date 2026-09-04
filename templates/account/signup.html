@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block title %}Cadastro - AllCourts365{% endblock %}
+
+{% block admin_button %}
+    {% if club_context %}
+    <a href="#" class="btn-highlight" style="visibility: hidden; pointer-events: none;"><i class="fas fa-lock"></i> Admin AllCourts365</a>
+    {% else %}
+    <a href="{% url 'admin:login' %}" target="_blank" class="btn-highlight"><i class="fas fa-lock"></i> Admin AllCourts365</a>
+    {% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .login-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 80vh;
+        padding: 40px 20px;
+    }
+    .login-card {
+        width: 100%;
+        max-width: 450px;
+        padding: 40px;
+        text-align: center;
+    }
+    .btn-login {
+        width: 100%;
+        padding: 12px;
+        background: var(--highlight-color, #00BFFF);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-top: 10px;
+    }
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 191, 255, 0.4);
+    }
+    .auth-links a {
+        color: var(--highlight-color, #00BFFF);
+        text-decoration: none;
+    }
+    .auth-links a:hover {
+        text-decoration: underline;
+    }
+    /* Estilos dos campos */
+    .input-field {
+        width: 100%;
+        padding: 12px 15px;
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        color: #fff;
+        font-family: 'Outfit', sans-serif;
+        box-sizing: border-box;
+        transition: border-color 0.2s;
+    }
+    .input-field:focus {
+        border-color: var(--highlight-color, #00BFFF);
+        outline: none;
+    }
+    label {
+        color: var(--subtitle-color, #ccc);
+        text-align: left;
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+    .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+    }
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 5px 0 0 0;
+        color: #ff4d4d;
+        font-size: 0.85rem;
+        text-align: left;
+    }
+    .non-field-errors {
+        background: rgba(255, 77, 77, 0.1);
+        border: 1px solid rgba(255, 77, 77, 0.3);
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .help-block, .form-text, .helptext {
+        text-align: left;
+        font-size: 0.85em;
+        color: var(--subtitle-color);
+        margin-top: 4px;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="glass-card login-card">
+        <h2 style="font-size: 2rem; color: #fff; margin-bottom: 10px; font-weight: 800;">Criar Conta</h2>
+        <p style="color: var(--subtitle-color, #ccc); margin-bottom: 30px;">Preencha os dados abaixo para se cadastrar.</p>
+
+        <form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}{% if request.GET.club %}?club={{ request.GET.club }}{% endif %}">
+            {% csrf_token %}
+            
+            {% if request.GET.club %}
+            <input type="hidden" name="club" value="{{ request.GET.club }}">
+            {% endif %}
+
+            {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+            {% endif %}
+            
+            {% if form.non_field_errors %}
+            <div class="non-field-errors">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                <span class="helptext">{{ field.help_text }}</span>
+                {% endif %}
+                {{ field.errors }}
+            </div>
+            {% endfor %}
+            
+            <button class="btn-login" type="submit">Cadastrar</button>
+        </form>
+
+        <script>
+            // Adiciona as classes aos inputs gerados pelo django-allauth
+            document.querySelectorAll('.form-group input').forEach(input => {
+                if (input.type !== 'checkbox' && input.type !== 'hidden') {
+                    input.classList.add('input-field');
+                }
+            });
+        </script>
+
+        <div class="auth-links" style="margin-top: 25px; font-size: 0.9rem; color: var(--subtitle-color);">
+            <p>Já possui uma conta? <a href="{% url 'account_login' %}?club={{ request.GET.club }}">Fazer Login</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

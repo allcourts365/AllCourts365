@@ -287,33 +287,41 @@
                     
                     <div style="border-top: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;"></div>
                     {% for m in matches %}
-                    <div class="match-card">
-                        <div class="match-player {% if m.winner == m.player_a %}winner{% endif %}" style="text-align: right;">
-                            {{ m.player_a.name }}
-                        </div>
-                        
-                        <div class="match-score">
-                            {% if m.status == 'completed' %}
-                                <div style="display: flex; flex-direction: column; align-items: center;">
-                                    <div>{{ m.sets_a }} <span style="color: var(--subtitle-color); font-size: 1rem; font-weight: 400;">x</span> {{ m.sets_b }}</div>
-                                    {% if m.set1_a is not None %}
-                                    <div style="font-size: 0.8rem; color: var(--subtitle-color); margin-top: 5px; display: flex; gap: 8px;">
-                                        <span>{{ m.set1_a }}-{{ m.set1_b }}</span>
-                                        {% if m.set2_a is not None %}<span>| {{ m.set2_a }}-{{ m.set2_b }}</span>{% endif %}
-                                        {% if m.set3_a is not None %}<span>| {{ m.set3_a }}-{{ m.set3_b }}</span>{% endif %}
-                                        {% if m.set4_a is not None %}<span>| {{ m.set4_a }}-{{ m.set4_b }}</span>{% endif %}
-                                        {% if m.set5_a is not None %}<span>| {{ m.set5_a }}-{{ m.set5_b }}</span>{% endif %}
+                    <div class="match-card" style="flex-direction: column; align-items: stretch; padding: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <div class="match-player {% if m.winner == m.player_a %}winner{% endif %}" style="text-align: right;">
+                                {{ m.player_a.name }}
+                            </div>
+                            
+                            <div class="match-score">
+                                {% if m.status == 'completed' %}
+                                    <div style="display: flex; flex-direction: column; align-items: center;">
+                                        <div>{{ m.sets_a }} <span style="color: var(--subtitle-color); font-size: 1rem; font-weight: 400;">x</span> {{ m.sets_b }}</div>
+                                        {% if m.set1_a is not None %}
+                                        <div style="font-size: 0.8rem; color: var(--subtitle-color); margin-top: 5px; display: flex; gap: 8px;">
+                                            <span>{{ m.set1_a }}-{{ m.set1_b }}</span>
+                                            {% if m.set2_a is not None %}<span>| {{ m.set2_a }}-{{ m.set2_b }}</span>{% endif %}
+                                            {% if m.set3_a is not None %}<span>| {{ m.set3_a }}-{{ m.set3_b }}</span>{% endif %}
+                                            {% if m.set4_a is not None %}<span>| {{ m.set4_a }}-{{ m.set4_b }}</span>{% endif %}
+                                            {% if m.set5_a is not None %}<span>| {{ m.set5_a }}-{{ m.set5_b }}</span>{% endif %}
+                                        </div>
+                                        {% endif %}
                                     </div>
-                                    {% endif %}
-                                </div>
-                            {% else %}
-                                <span style="font-size: 1rem; color: var(--subtitle-color);">VS</span>
-                            {% endif %}
+                                {% else %}
+                                    <span style="font-size: 1rem; color: var(--subtitle-color);">VS</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="match-player {% if m.winner == m.player_b %}winner{% endif %}">
+                                {{ m.player_b.name }}
+                            </div>
                         </div>
                         
-                        <div class="match-player {% if m.winner == m.player_b %}winner{% endif %}">
-                            {{ m.player_b.name }}
+                        {% if m.scheduled_datetime %}
+                        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); text-align: center; font-size: 0.95rem; color: var(--subtitle-color);">
+                            <i class="fas fa-calendar-check" style="color: var(--highlight-color);"></i> Marcado para <strong>{{ m.scheduled_datetime|date:"d/m/Y \à\s H:i" }}</strong> na <strong>{{ m.court.name }}</strong>
                         </div>
+                        {% endif %}
                     </div>
                     {% empty %}
                     <p>Nenhum jogo nesta rodada.</p>

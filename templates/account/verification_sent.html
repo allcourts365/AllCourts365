@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Verifique seu E-mail - AllCourts365{% endblock %}
+
+{% block admin_button %}
+    {% if club_context %}
+    <a href="{% url 'admin:index' %}" class="btn-admin" style="visibility: hidden;">
+        <i class="fas fa-lock"></i> Admin AllCourts365
+    </a>
+    {% else %}
+    {{ block.super }}
+    {% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .login-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 70vh;
+    }
+    .login-card {
+        width: 100%;
+        max-width: 500px;
+        padding: 40px;
+        text-align: center;
+        position: relative;
+    }
+    .btn-login {
+        width: 100%;
+        padding: 12px;
+        background: var(--highlight-color, #00BFFF);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-top: 10px;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 191, 255, 0.4);
+    }
+    .icon-wrapper {
+        width: 80px;
+        height: 80px;
+        background: rgba(59, 130, 246, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px auto;
+        color: var(--highlight-color, #3b82f6);
+        font-size: 2.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="glass-card login-card">
+        <div class="icon-wrapper">
+            <i class="fas fa-envelope-open-text"></i>
+        </div>
+        
+        <h2 style="font-size: 2rem; color: #fff; margin-bottom: 15px; font-weight: 800;">Verifique seu e-mail</h2>
+        
+        <p style="color: var(--subtitle-color, #ccc); margin-bottom: 20px; font-size: 1.1rem; line-height: 1.5;">
+            Enviamos um link de confirmação para o seu e-mail.
+        </p>
+        
+        <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 30px; text-align: left;">
+            <p style="color: #94a3b8; font-size: 0.95rem; margin-bottom: 8px;">
+                <i class="fas fa-info-circle" style="color: var(--highlight-color);"></i> <strong>Próximos passos:</strong>
+            </p>
+            <ol style="color: #94a3b8; font-size: 0.9rem; padding-left: 20px; margin-bottom: 0;">
+                <li style="margin-bottom: 5px;">Abra sua caixa de entrada principal ou a pasta de spam.</li>
+                <li>Clique no link fornecido para finalizar o seu cadastro.</li>
+            </ol>
+        </div>
+        
+        <a href="{% url 'account_login' %}{% if club_context %}?club={{ club_context.id }}{% endif %}" class="btn-login">
+            <i class="fas fa-sign-in-alt"></i> Voltar para o Login
+        </a>
+    </div>
+</div>
+{% endblock %}
