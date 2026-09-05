@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tournament.name }} - TC22A{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 class="home-title" style="font-size: 2.5rem; margin-bottom: 0.5rem;">{{ tournament.name }}</h1>
+    <p class="home-subtitle" style="color: var(--text-muted);">Acompanhe os resultados e o ranking interno.</p>
+</div>
+
+{% if tournament.is_finished %}
+<div class="card" style="margin-bottom: 2.5rem; text-align: center; padding: 2rem;">
+    <h2 style="font-size: 1.75rem; margin-bottom: 1.5rem; color: var(--text-main);">🏆 Ranking Encerrado 🏆</h2>
+    <div style="background-color: rgba(255, 255, 255, 0.03); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color); text-align: left;">
+        <h3 style="margin-top: 0; margin-bottom: 1rem; color: var(--text-main); text-align: center;">Resultados Finais</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center;">
+            {% for category in categories %}
+            <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; min-width: 200px; border: 1px solid var(--border-color);">
+                <h4 style="margin-top: 0; margin-bottom: 0.5rem; color: var(--primary); text-align: center;">{{ category.name }}</h4>
+                <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.95rem;">
+                    {% for cp in category.players.all|slice:":3" %}
+                    <li style="margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.5rem; color: var(--text-main);">
+                        {% if forloop.counter == 1 %}<span style="font-size: 1.2rem;">🥇</span>{% elif forloop.counter == 2 %}<span style="font-size: 1.2rem;">🥈</span>{% elif forloop.counter == 3 %}<span style="font-size: 1.2rem;">🥉</span>{% endif %} 
+                        <span>{{ cp.player.name }} <small style="color: var(--text-muted);">({{ cp.points }} pts)</small></span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% elif tournament.start_date and tournament.end_date %}
+<div class="card" style="margin-bottom: 2.5rem; text-align: center; padding: 2rem; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+    <h2 style="font-size: 1.75rem; margin-bottom: 0.5rem; color: var(--text-main);">Rodada Atual: {{ tournament.current_round }}</h2>
+    <p style="font-size: 1.1rem; margin-bottom: 1.5rem; color: var(--text-muted);">
+        <strong>De:</strong> {{ tournament.start_date|date:"d/m/Y" }} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Até:</strong> {{ tournament.end_date|date:"d/m/Y" }}
+    </p>
+    <div style="background-color: rgba(0, 210, 255, 0.05); padding: 1rem; border-radius: 8px; font-weight: 600; font-size: 1.1rem; border: 1px solid rgba(0, 210, 255, 0.2); color: var(--text-main); width: 100%;">
+        🎾 NÃO ESQUEÇAM DE COLOCAR NOS GRUPOS AS DATAS E HORÁRIOS DOS JOGOS, ASSIM COMO OS RESULTADOS 🎾
+    </div>
+</div>
+{% endif %}
+
+<h2 style="margin-bottom: 1.5rem; font-size: 1.5rem;">Categorias</h2>
+<div class="card-grid" style="margin-top: 0;">
+    {% for category in categories %}
+    <a href="{% url 'tournaments:category_detail' category.id %}" class="card" {% if category.is_finished %}style="background-color: rgba(39, 174, 96, 0.08); border-color: rgba(39, 174, 96, 0.3);"{% endif %}>
+        <h3>{{ category.name }}</h3>
+        {% if category.is_finished %}
+        <div style="margin-top: 0.5rem;">
+            <span style="display: inline-block; background: #27ae60; color: white; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">Encerrada</span>
+        </div>
+        {% endif %}
+        <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 1rem;">
+            Ver jogos e ranking &rarr;
+        </p>
+    </a>
+    {% empty %}
+    <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+        <p style="color: var(--text-muted);">Nenhuma categoria cadastrada.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

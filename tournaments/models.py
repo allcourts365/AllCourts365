@@ -1,0 +1,495 @@
+from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+class SiteConfiguration(models.Model):
+    background_color = models.CharField(max_length=20, default="#050B14", verbose_name="Cor de Fundo Principal", help_text="Ex: #050B14")
+    primary_color = models.CharField(max_length=20, default="#00d2ff", verbose_name="Cor Principal (Destaque)", help_text="Ex: #00d2ff")
+    title_color = models.CharField(max_length=20, default="#FFFFFF", verbose_name="Cor do Título", help_text="Cor do título principal nas páginas")
+    subtitle_color = models.CharField(max_length=20, default="#94A3B8", verbose_name="Cor do Subtítulo", help_text="Cor do texto abaixo do título principal")
+    overlay_color = models.CharField(max_length=20, default="#000000", verbose_name="Cor da Camada Fumê (Overlay)", help_text="Cor da camada que fica por cima da imagem de fundo")
+    overlay_opacity = models.IntegerField(default=60, verbose_name="Opacidade do Fumê (%)", help_text="0 (Totalmente transparente) a 100 (Totalmente sólido)")
+    background_image = models.ImageField(upload_to="backgrounds/", null=True, blank=True, verbose_name="Imagem de Fundo")
+    
+    watermark_image = models.ImageField(upload_to="backgrounds/", null=True, blank=True, verbose_name="Imagem de Marca d'Água", help_text="Imagem para ficar no canto inferior direito")
+    watermark_size = models.IntegerField(default=450, verbose_name="Tamanho da Marca d'Água (px)", help_text="Tamanho em pixels (padrão: 450)")
+    watermark_opacity = models.IntegerField(default=15, verbose_name="Opacidade da Marca d'Água (%)", help_text="0 (Invisível) a 100 (Totalmente opaca, padrão: 15)")
+    watermark_bottom = models.IntegerField(default=-20, verbose_name="Posição Vertical (px)", help_text="Distância do fundo da tela. Use números negativos (ex: -50) para empurrar a imagem mais para baixo caso os pés estejam 'voando'.")
+    watermark_right = models.IntegerField(default=-20, verbose_name="Posição Horizontal (px)", help_text="Distância da direita. Use números negativos para empurrar mais para a direita.")
+    watermark_rotation = models.IntegerField(default=-5, verbose_name="Rotação (graus)", help_text="Giro da imagem. Padrão: -5. Zero para deixar reto.")
+
+    class Meta:
+        verbose_name = "Configuração do Site"
+        verbose_name_plural = "Configuração do Site"
+
+    def __str__(self):
+        return "Configuração Visual do Site"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
+
+class Tournament(models.Model):
+    TOURNAMENT_TYPES = [
+        ('ranking', 'Ranking'),
+        ('knockout', 'Torneio Eliminatório'),
+    ]
+    COMPETITION_TYPES = [
+        ('simples', 'Simples'),
+        ('duplas', 'Duplas'),
+    ]
+    SET_FORMATS = [
+        ('3_normal', 'Melhor de 3 Sets Normal'),
+        ('3_super', 'Melhor de 3 Sets (3º Set é Super Tiebreak)'),
+        ('5_normal', 'Melhor de 5 Sets Normal'),
+    ]
+
+    name = models.CharField(max_length=200, verbose_name="Nome do Torneio/Ranking")
+    tournament_type = models.CharField(max_length=20, choices=TOURNAMENT_TYPES, default='ranking', verbose_name="Tipo")
+    competition_type = models.CharField(max_length=20, choices=COMPETITION_TYPES, default='simples', verbose_name="Competição")
+    set_format = models.CharField(max_length=20, choices=SET_FORMATS, default='3_normal', verbose_name="Formato de Sets")
+    
+    current_round = models.IntegerField(verbose_name="Rodada Atual", default=1)
+    start_date = models.DateField(verbose_name="Data de Início", null=True, blank=True)
+    end_date = models.DateField(verbose_name="Data de Fim", null=True, blank=True)
+    number_of_brackets = models.IntegerField(default=1, verbose_name="Número de Chaves (Eliminatório)", help_text="Apenas para Torneios Eliminatórios: O número de chaves paralelas (ex: 2 para dividir 32 atletas em 2 chaves de 16).")
+    is_active = models.BooleanField(default=True, verbose_name="Ativo (Exibir no site)")
+    is_finished = models.BooleanField(default=False, verbose_name="Encerrado", help_text="Marque esta opção quando o torneio/ranking chegar ao fim.")
+    
+    # Configurações de Pontuação para Ranking
+    points_winner_2x0 = models.IntegerField(default=3, verbose_name="Pontos (Vitória 2x0)", help_text="Pontos recebidos pelo vencedor de um jogo 2x0.")
+    points_winner_2x1 = models.IntegerField(default=2, verbose_name="Pontos (Vitória 2x1)", help_text="Pontos recebidos pelo vencedor de um jogo 2x1.")
+    points_loser_2x1 = models.IntegerField(default=1, verbose_name="Pontos (Derrota 2x1)", help_text="Pontos recebidos pelo perdedor de um jogo 2x1.")
+    points_loser_2x0 = models.IntegerField(default=0, verbose_name="Pontos (Derrota 2x0)", help_text="Pontos recebidos pelo perdedor de um jogo 2x0.")
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._initial_is_finished = self.is_finished
+
+    def __str__(self):
+        return self.name
+        
+    class Meta:
+        verbose_name = "Torneio/Ranking Base"
+        verbose_name_plural = "Torneios/Rankings Base"
+
+class RankingTournament(Tournament):
+    class Meta:
+        proxy = True
+        verbose_name = "Ranking"
+        verbose_name_plural = "Rankings"
+
+class KnockoutTournament(Tournament):
+    class Meta:
+        proxy = True
+        verbose_name = "Torneio Eliminatório"
+        verbose_name_plural = "Torneios Eliminatórios"
+
+class Category(models.Model):
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='categories', null=True, blank=True)
+    name = models.CharField(max_length=100, verbose_name="Nome da Categoria")
+    is_finished = models.BooleanField(default=False, verbose_name="Encerrada", help_text="Se todas as categorias forem encerradas, o ranking também será.")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._initial_is_finished = self.is_finished
+
+    def __str__(self):
+        if self.tournament:
+            return f"{self.tournament.name} - {self.name}"
+        return f"S/ Ranking - {self.name}"
+
+    class Meta:
+        unique_together = ('tournament', 'name')
+        verbose_name = "Categoria"
+        verbose_name_plural = "Categorias"
+
+class Player(models.Model):
+    name = models.CharField(max_length=200, unique=True, verbose_name="Nome do Atleta")
+
+    def __str__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name = "Atleta"
+        verbose_name_plural = "Atletas"
+
+class CategoryPlayer(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='players')
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    points = models.IntegerField(default=0, verbose_name="Pontos")
+    matches_played = models.IntegerField(default=0, verbose_name="Jogos")
+    wins = models.IntegerField(default=0, verbose_name="Vitórias")
+    losses = models.IntegerField(default=0, verbose_name="Derrotas")
+
+    def __str__(self):
+        return f"{self.player.name} - {self.category.name}"
+
+    class Meta:
+        unique_together = ('category', 'player')
+        verbose_name = "Classificação"
+        verbose_name_plural = "Classificações"
+        ordering = ['-points', '-wins', 'matches_played'] # Basic tiebreakers
+
+class Match(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pendente'),
+        ('completed', 'Finalizado'),
+        ('cancelled', 'Não Ocorreu (Cancelado)'),
+    ]
+
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='matches', null=True, blank=True)
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='all_matches', null=True, blank=True)
+    round_number = models.IntegerField(verbose_name="Rodada")
+    player_a = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='matches_as_a', null=True, blank=True)
+    player_b = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='matches_as_b', null=True, blank=True)
+    
+    # Results
+    # General Results
+    sets_a = models.IntegerField(null=True, blank=True, verbose_name="Sets Ganhos (A)")
+    sets_b = models.IntegerField(null=True, blank=True, verbose_name="Sets Ganhos (B)")
+    
+    # Games per Set
+    set1_a = models.IntegerField(null=True, blank=True, verbose_name="Set 1 - A")
+    set1_b = models.IntegerField(null=True, blank=True, verbose_name="Set 1 - B")
+    set2_a = models.IntegerField(null=True, blank=True, verbose_name="Set 2 - A")
+    set2_b = models.IntegerField(null=True, blank=True, verbose_name="Set 2 - B")
+    set3_a = models.IntegerField(null=True, blank=True, verbose_name="Set 3 - A")
+    set3_b = models.IntegerField(null=True, blank=True, verbose_name="Set 3 - B")
+    set4_a = models.IntegerField(null=True, blank=True, verbose_name="Set 4 - A")
+    set4_b = models.IntegerField(null=True, blank=True, verbose_name="Set 4 - B")
+    set5_a = models.IntegerField(null=True, blank=True, verbose_name="Set 5 - A")
+    set5_b = models.IntegerField(null=True, blank=True, verbose_name="Set 5 - B")
+    
+    # Knockout specific
+    next_match = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='previous_matches')
+    phase = models.CharField(max_length=50, blank=True, verbose_name="Fase")
+    position_in_bracket = models.IntegerField(null=True, blank=True)
+    winner = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True, blank=True, related_name='won_matches')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    youtube_link = models.URLField(verbose_name="Link do Jogo no YouTube", blank=True, null=True)
+
+    def get_match_number(self):
+        if getattr(self, '_match_number_cache', None) is not None:
+            return self._match_number_cache
+        if not self.tournament:
+            return "?"
+        matches = list(Match.objects.filter(tournament=self.tournament).order_by('round_number', 'position_in_bracket').values_list('id', flat=True))
+        try:
+            self._match_number_cache = matches.index(self.id) + 1
+            return self._match_number_cache
+        except ValueError:
+            return "?"
+
+    def __str__(self):
+        if self.tournament and self.tournament.tournament_type == 'knockout':
+            prev_a = None
+            prev_b = None
+            if not self.player_a or not self.player_b:
+                for prev in self.previous_matches.all():
+                    if prev.position_in_bracket % 2 != 0:
+                        prev_a = prev
+                    else:
+                        prev_b = prev
+            
+            if self.player_a:
+                a_name = self.player_a.name
+            elif prev_a:
+                a_name = f"Vencedor do Jogo {prev_a.get_match_number()}"
+            else:
+                a_name = "Bye"
+                
+            if self.player_b:
+                b_name = self.player_b.name
+            elif prev_b:
+                b_name = f"Vencedor do Jogo {prev_b.get_match_number()}"
+            else:
+                b_name = "Bye"
+                
+            return f"Rodada {self.round_number}: {a_name} vs {b_name}"
+            
+        a_name = self.player_a.name if self.player_a else "Bye"
+        b_name = self.player_b.name if self.player_b else "Bye"
+        return f"Rodada {self.round_number}: {a_name} vs {b_name}"
+    
+    @property
+    def is_bye(self):
+        return self.player_a is None or self.player_b is None
+
+    class Meta:
+        verbose_name = "Jogo"
+        verbose_name_plural = "Jogos"
+        ordering = ['round_number', 'id']
+
+from django.db.models.signals import post_save, pre_save
+
+@receiver(pre_save, sender=Match)
+def reset_match_if_pending(sender, instance, **kwargs):
+    if not instance.pk:
+        return
+        
+    try:
+        old_instance = Match.objects.get(pk=instance.pk)
+    except Match.DoesNotExist:
+        return
+        
+    # Se o admin mudou o status manualmente de volta para pendente, reseta os placares
+    if old_instance.status != 'pending' and instance.status == 'pending':
+        instance.sets_a = None
+        instance.sets_b = None
+        instance.winner = None
+        for i in range(1, 6):
+            setattr(instance, f'set{i}_a', None)
+            setattr(instance, f'set{i}_b', None)
+
+def check_and_update_tournament_status(tournament):
+    if not tournament:
+        return
+        
+    if tournament.tournament_type == 'knockout':
+        finals = Match.objects.filter(tournament=tournament, next_match__isnull=True)
+        if finals.exists():
+            all_completed = True
+            for f in finals:
+                if f.status not in ['completed', 'cancelled']:
+                    all_completed = False
+                    break
+            
+            if all_completed and not tournament.is_finished:
+                tournament.is_finished = True
+                tournament.save(update_fields=['is_finished'])
+            elif not all_completed and tournament.is_finished:
+                tournament.is_finished = False
+                tournament.save(update_fields=['is_finished'])
+                
+    elif tournament.tournament_type == 'ranking':
+        matches = Match.objects.filter(category__tournament=tournament)
+        if matches.exists():
+            all_completed = True
+            for m in matches:
+                if m.status not in ['completed', 'cancelled'] and not m.is_bye:
+                    all_completed = False
+                    break
+                    
+            if all_completed and not tournament.is_finished:
+                tournament.is_finished = True
+                tournament.save(update_fields=['is_finished'])
+            elif not all_completed and tournament.is_finished:
+                tournament.is_finished = False
+                tournament.save(update_fields=['is_finished'])
+
+# Signal to calculate points when a match is saved
+@receiver(post_save, sender=Match)
+def update_rankings(sender, instance, created, **kwargs):
+    fields_to_update = []
+    
+    if instance.status != 'cancelled':
+        calc_a, calc_b = 0, 0
+        games_filled = False
+        
+        for i in range(1, 6):
+            sa = getattr(instance, f'set{i}_a')
+            sb = getattr(instance, f'set{i}_b')
+            if sa is not None and sb is not None:
+                games_filled = True
+                if sa > sb: calc_a += 1
+                elif sb > sa: calc_b += 1
+                
+        # Se os games indicam que alguém ganhou sets (calculados via games)
+        if games_filled and (calc_a > 0 or calc_b > 0):
+            if instance.sets_a != calc_a or instance.sets_b != calc_b:
+                instance.sets_a = calc_a
+                instance.sets_b = calc_b
+                fields_to_update.extend(['sets_a', 'sets_b'])
+        
+        # Se tem sets_a ou sets_b preenchidos, então deve estar completed
+        if not instance.is_bye:
+            if (instance.sets_a or 0) > 0 or (instance.sets_b or 0) > 0:
+                if instance.status != 'completed':
+                    instance.status = 'completed'
+                    fields_to_update.append('status')
+            elif instance.status == 'completed':
+                instance.status = 'pending'
+                fields_to_update.append('status')
+        else:
+            if (instance.sets_a or 0) > 0 or (instance.sets_b or 0) > 0:
+                if instance.status != 'completed':
+                    instance.status = 'completed'
+                    fields_to_update.append('status')
+                
+    # Sempre calcula o vencedor automaticamente se finalizado
+    if instance.status == 'completed':
+        calculated_winner = None
+        if (instance.sets_a or 0) > (instance.sets_b or 0):
+            calculated_winner = instance.player_a
+        elif (instance.sets_b or 0) > (instance.sets_a or 0):
+            calculated_winner = instance.player_b
+            
+        if not instance.is_bye:
+            if instance.winner != calculated_winner:
+                instance.winner = calculated_winner
+                if 'winner' not in fields_to_update:
+                    fields_to_update.append('winner')
+                
+    elif instance.status == 'pending' and instance.winner is not None:
+        instance.winner = None
+        if 'winner' not in fields_to_update:
+            fields_to_update.append('winner')
+            
+    if fields_to_update:
+        post_save.disconnect(update_rankings, sender=Match)
+        instance.save(update_fields=fields_to_update)
+        post_save.connect(update_rankings, sender=Match)
+
+    # Se for jogo de Torneio Eliminatório, não calcula pontuação de Ranking
+    if instance.tournament and instance.tournament.tournament_type == 'knockout':
+        if instance.next_match:
+            nm = instance.next_match
+            new_player = instance.winner if instance.status == 'completed' else None
+            changed = False
+            if instance.position_in_bracket % 2 != 0:
+                if nm.player_a != new_player:
+                    nm.player_a = new_player
+                    changed = True
+            else:
+                if nm.player_b != new_player:
+                    nm.player_b = new_player
+                    changed = True
+                    
+            if changed:
+                if new_player is None:
+                    nm.status = 'pending'
+                    nm.sets_a = None
+                    nm.sets_b = None
+                    nm.winner = None
+                    for i in range(1, 6):
+                        setattr(nm, f'set{i}_a', None)
+                        setattr(nm, f'set{i}_b', None)
+                nm.save()
+        check_and_update_tournament_status(instance.tournament)
+        return
+
+    if not instance.category:
+        return
+        
+    # Recalculate everything for this category to ensure consistency
+    category = instance.category
+    
+    # Reset all stats for players in this category
+    for cp in category.players.all():
+        cp.points = 0
+        cp.matches_played = 0
+        cp.wins = 0
+        cp.losses = 0
+        cp.save()
+
+    # Recalculate
+    completed_matches = Match.objects.filter(category=category, status__in=['completed', 'cancelled'])
+    
+    tournament = category.tournament
+    pts_w_2x0 = tournament.points_winner_2x0 if tournament else 3
+    pts_w_2x1 = tournament.points_winner_2x1 if tournament else 2
+    pts_l_2x1 = tournament.points_loser_2x1 if tournament else 1
+    pts_l_2x0 = tournament.points_loser_2x0 if tournament else 0
+
+    for match in completed_matches:
+        cp_a = CategoryPlayer.objects.filter(category=category, player=match.player_a).first() if match.player_a else None
+        cp_b = CategoryPlayer.objects.filter(category=category, player=match.player_b).first() if match.player_b else None
+        
+        if match.is_bye:
+            cp_real = cp_a if cp_a else cp_b
+            if cp_real and match.status == 'completed':
+                cp_real.matches_played += 1
+                if (cp_real == cp_a and match.sets_a == 2) or (cp_real == cp_b and match.sets_b == 2):
+                    cp_real.points += pts_w_2x0
+                    cp_real.wins += 1
+                cp_real.save()
+            continue
+            
+        if not cp_a or not cp_b:
+            continue
+            
+        if match.status == 'cancelled':
+            cp_a.matches_played += 1
+            cp_b.matches_played += 1
+            # 0 points for both
+            cp_a.save()
+            cp_b.save()
+            continue
+            
+        # Match completed normally
+        cp_a.matches_played += 1
+        cp_b.matches_played += 1
+        
+        # Determine points
+        if match.sets_a == 2 and match.sets_b == 0:
+            cp_a.points += pts_w_2x0
+            cp_b.points += pts_l_2x0
+            cp_a.wins += 1
+            cp_b.losses += 1
+            match.winner = match.player_a
+        elif match.sets_a == 2 and match.sets_b == 1:
+            cp_a.points += pts_w_2x1
+            cp_b.points += pts_l_2x1
+            cp_a.wins += 1
+            cp_b.losses += 1
+            match.winner = match.player_a
+        elif match.sets_b == 2 and match.sets_a == 0:
+            cp_b.points += pts_w_2x0
+            cp_a.points += pts_l_2x0
+            cp_b.wins += 1
+            cp_a.losses += 1
+            match.winner = match.player_b
+        elif match.sets_b == 2 and match.sets_a == 1:
+            cp_b.points += pts_w_2x1
+            cp_a.points += pts_l_2x1
+            cp_b.wins += 1
+            cp_a.losses += 1
+            match.winner = match.player_b
+            
+        cp_a.save()
+        cp_b.save()
+        
+        # Disconnect signal temporarily to save winner without recursion
+        post_save.disconnect(update_rankings, sender=Match)
+        match.save(update_fields=['winner'])
+        post_save.connect(update_rankings, sender=Match)
+        
+    check_and_update_tournament_status(instance.category.tournament if instance.category else None)
+
+@receiver(post_save, sender=Tournament)
+@receiver(post_save, sender=RankingTournament)
+@receiver(post_save, sender=KnockoutTournament)
+def sync_tournament_finished_state(sender, instance, **kwargs):
+    if hasattr(instance, '_initial_is_finished') and instance.is_finished != instance._initial_is_finished:
+        if instance.is_finished:
+            instance.categories.filter(is_finished=False).update(is_finished=True)
+        else:
+            instance.categories.filter(is_finished=True).update(is_finished=False)
+        instance._initial_is_finished = instance.is_finished
+
+@receiver(post_save, sender=Category)
+def sync_category_finished_state(sender, instance, **kwargs):
+    if not instance.tournament:
+        return
+        
+    if hasattr(instance, '_initial_is_finished') and instance.is_finished != instance._initial_is_finished:
+        tournament = instance.tournament
+        if instance.is_finished:
+            all_finished = not tournament.categories.filter(is_finished=False).exists()
+            if all_finished and not tournament.is_finished:
+                Tournament.objects.filter(id=tournament.id).update(is_finished=True)
+                tournament.is_finished = True
+                tournament._initial_is_finished = True
+        else:
+            if tournament.is_finished:
+                Tournament.objects.filter(id=tournament.id).update(is_finished=False)
+                tournament.is_finished = False
+                tournament._initial_is_finished = False
+                
+        instance._initial_is_finished = instance.is_finished

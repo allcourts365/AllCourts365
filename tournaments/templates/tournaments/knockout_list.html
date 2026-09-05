@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+{% block logo_text %}TC22A<span>.</span>Torneio{% endblock %}
+
+{% block content %}
+<style>
+@keyframes spin-bolinha {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.bolinha-spin {
+    animation: spin-bolinha 2s linear infinite;
+}
+.bolinha-icon {
+    width: 12px;
+    height: 12px;
+    margin-right: 4px;
+    vertical-align: middle;
+    margin-bottom: 2px;
+}
+</style>
+<h1 class="home-title">Bem-vindo aos Torneios de Tenis do Clube 22 de
+    Agosto</h1>
+<p class="home-subtitle">Acompanhe as chaves e resultados das
+    competições no formato mata-mata.</p>
+
+<div class="card-grid">
+    {% for tournament in tournaments %}
+    <div class="card">
+        <div>
+            {% if tournament.is_finished %}
+            <span class="badge badge-completed"><img src="{% static 'bolinha.png' %}" class="bolinha-icon" alt="bolinha">Encerrado</span>
+            {% else %}
+            <span class="badge badge-active"><img src="{% static 'bolinha.png' %}" class="bolinha-icon bolinha-spin" alt="bolinha">Em andamento - Rodada {{ tournament.current_round }}</span>
+            {% endif %}
+        </div>
+        <h3>{{ tournament.name }}</h3>
+        {% if tournament.start_date and tournament.end_date %}
+        <p class="card-date" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+            {{ tournament.start_date|date:"d/m/Y" }} a {{ tournament.end_date|date:"d/m/Y" }}
+        </p>
+        {% endif %}
+        <div style="display: flex; gap: 10px; margin-top: auto;">
+            <a href="{% url 'tournaments:knockout_detail' tournament.id %}" style="flex: 1; text-align: center; background: rgba(0, 210, 255, 0.1); color: var(--primary); padding: 0.6rem; border-radius: 8px; text-decoration: none; font-size: 0.9rem; font-weight: 600; border: 1px solid rgba(0, 210, 255, 0.2); transition: all 0.2s;">
+                Ver Chave &rarr;
+            </a>
+            <a href="{% url 'tournaments:tournament_schedule_pdf' tournament.id %}" target="_blank" style="flex: 1; text-align: center; background: var(--danger-bg); color: var(--danger); padding: 0.6rem; border-radius: 8px; text-decoration: none; font-size: 0.9rem; font-weight: 600; border: 1px solid rgba(239, 68, 68, 0.2); transition: all 0.2s;">
+                📄 Chamada PDF
+            </a>
+        </div>
+    </div>
+    {% empty %}
+    <div class="card" style="grid-column: 1 / -1; text-align: center; justify-content: center; align-items: center; min-height: 200px;">
+        <p style="color: var(--text-muted); font-size: 1.1rem;">Nenhum Torneio Eliminatório ativo no momento.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KG76VJ7KNC"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-KG76VJ7KNC');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TC22A - Tenis Clube 22 de Agosto{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{% static 'bolinha.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v={{ request.resolver_match.view_name|default:'3' }}">
+    {% if site_config %}
+    <style>
+        :root {
+            {% if site_config.background_color %}--bg-main: {{ site_config.background_color }};{% endif %}
+            {% if site_config.primary_color %}
+            --primary: {{ site_config.primary_color }};
+            --primary-gradient: linear-gradient(135deg, {{ site_config.primary_color }} 0%, #3a7bd5 100%);
+            {% endif %}
+        }
+        {% if site_config.background_image %}
+        body {
+            background-image: linear-gradient(
+                color-mix(in srgb, {{ site_config.overlay_color|default:'#000000' }} {{ site_config.overlay_opacity|default:'60' }}%, transparent), 
+                color-mix(in srgb, {{ site_config.overlay_color|default:'#000000' }} {{ site_config.overlay_opacity|default:'60' }}%, transparent)
+            ), url("{{ site_config.background_image.url }}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        {% endif %}
+        {% if site_config.title_color %}
+        h1.home-title {
+            background: none !important;
+            -webkit-text-fill-color: initial !important;
+            color: {{ site_config.title_color }} !important;
+        }
+        {% endif %}
+        {% if site_config.subtitle_color %}
+        p.home-subtitle {
+            color: {{ site_config.subtitle_color }} !important;
+        }
+        {% endif %}
+        {% if site_config.watermark_image %}
+        /* Marca d'água do Tenista */
+        .bg-watermark {
+            position: fixed;
+            bottom: {{ site_config.watermark_bottom|default:-20 }}px;
+            right: {{ site_config.watermark_right|default:-20 }}px;
+            width: {{ site_config.watermark_size|default:450 }}px;
+            opacity: {{ site_config.watermark_opacity|default:15 }}%;
+            z-index: 0;
+            pointer-events: none;
+            mix-blend-mode: screen;
+            transform: rotate({{ site_config.watermark_rotation|default:-5 }}deg);
+            filter: grayscale(100%);
+        }
+
+        @media (max-width: 768px) {
+            .bg-watermark {
+                width: calc({{ site_config.watermark_size|default:450 }}px * 0.66);
+                bottom: calc({{ site_config.watermark_bottom|default:-20 }}px + 10px);
+                right: calc({{ site_config.watermark_right|default:-20 }}px + 10px);
+            }
+        }
+        {% endif %}
+</style>
+    {% endif %}
+</head>
+
+<body>
+    {% if site_config and site_config.watermark_image %}
+    <img src="{{ site_config.watermark_image.url }}" class="bg-watermark" alt="Marca d'água">
+    {% endif %}
+    <header>
+        <div class="container header-content">
+            <a href="{% url 'tournaments:home' %}" class="logo">{% block logo_text %}TC22A<span>.</span>Ranking{% endblock %}</a>
+            <nav class="header-nav">
+                <a href="{% url 'tournaments:home' %}" class="nav-link">Ranking</a>
+                <span class="nav-divider">|</span>
+                <a href="{% url 'tournaments:knockout_list' %}" class="nav-link">Torneios</a>
+                <span class="nav-divider">|</span>
+                <a href="{% static 'Regulamento_Ranking_Interno_Tenis.pdf' %}" target="_blank" rel="noopener noreferrer"
+                    class="nav-link">Regulamento</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; {% now "Y" %} Tenis Clube 22 de Agosto. Desenvolvido para gerenciar a emoção do esporte.</p>
+        </div>
+    </footer>
+    <!-- Cookie Banner -->
+    <div id="cookie-banner" class="cookie-banner">
+        <div class="cookie-banner-text">
+            <strong>Privacidade e Cookies:</strong> Nós utilizamos cookies (como o Google Analytics) para analisar o tráfego e melhorar sua experiência. Ao continuar navegando, você concorda com o uso de cookies.
+        </div>
+        <button id="accept-cookies" class="cookie-banner-btn">Entendi</button>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (!localStorage.getItem("cookie_consent_tc22a")) {
+                setTimeout(function() {
+                    document.getElementById("cookie-banner").classList.add("show");
+                }, 1000); // Aparece 1 segundo após carregar
+            }
+
+            document.getElementById("accept-cookies").addEventListener("click", function() {
+                localStorage.setItem("cookie_consent_tc22a", "true");
+                document.getElementById("cookie-banner").classList.remove("show");
+            });
+        });
+    </script>
+</body>
+
+</html>

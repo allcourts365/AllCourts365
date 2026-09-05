@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} - TC22A{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1 class="home-title" style="font-size: 2.2rem; margin-bottom: 0.25rem;">{{ category.name }}</h1>
+        <p class="home-subtitle" style="margin-bottom: 0;">Acompanhe os resultados deste Ranking.</p>
+    </div>
+    <div class="header-actions">
+        <a href="{% url 'tournaments:tournament_detail' category.tournament.id %}" class="back-link">&larr; Voltar para
+            Ranking</a>
+    </div>
+</div>
+
+<div class="tabs">
+    <a href="{% url 'tournaments:category_detail' category.id %}" class="tab active">Jogos</a>
+    <a href="{% url 'tournaments:category_ranking' category.id %}" class="tab">Ranking Oficial</a>
+</div>
+
+{% if rounds %}
+<div class="filter-section" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+    <label for="round-filter" style="font-weight: 600; color: var(--text-muted);">Escolha a rodada que deseja visualizar:</label>
+    <select id="round-filter"
+        style="padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); background-color: rgba(15,23,42,0.8); color: var(--text-main); font-family: inherit; min-width: 200px; backdrop-filter: blur(10px); outline: none;">
+        <option value="all" style="background-color: #0F172A;">Todas as Rodadas</option>
+        {% for round_num in rounds.keys %}
+        <option value="{{ round_num }}" style="background-color: #0F172A;" {% if round_num == category.tournament.current_round %}selected{% endif %}>
+            Rodada {{ round_num }} {% if round_num == category.tournament.current_round %}(Rodada Atual){% endif %}
+        </option>
+        {% endfor %}
+    </select>
+</div>
+{% endif %}
+
+{% for round_num, matches in rounds.items %}
+<div class="round-block" data-round="{{ round_num }}">
+    <h2 class="round-title">
+        Rodada {{ round_num }}
+        {% if round_num == category.tournament.current_round %}
+        <span style="font-size: 0.85rem; color: var(--primary); background: rgba(0,210,255,0.1); padding: 0.25rem 0.75rem; border-radius: 9999px; font-weight: 600; margin-left: 0.75rem; border: 1px solid rgba(0,210,255,0.2); vertical-align: middle;">Rodada Atual</span>
+        {% endif %}
+    </h2>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Atleta A</th>
+                    <th>Placar</th>
+                    <th>Atleta B</th>
+                    <th>Status</th>
+                    <th style="text-align: center; width: 1%; white-space: nowrap;">Vídeo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for match in matches %}
+                <tr>
+                    <td
+                        style="{% if match.winner == match.player_a %}font-weight: 600; color: var(--success);{% endif %}">
+                        {% if match.player_a %}{{ match.player_a.name }}{% else %}Bye (Folga){% endif %}
+                    </td>
+                    <td style="font-weight: 600; letter-spacing: 2px;">
+                        {% if match.status == 'completed' %}
+                            {% if match.sets_a != None and match.sets_b != None %}
+                                {{ match.sets_a }} x {{ match.sets_b }}
+                            {% elif not match.player_a or not match.player_b %}
+                                BYE
+                            {% else %}
+                                W.O.
+                            {% endif %}
+                        {% elif match.status == 'cancelled' %}
+                        N/O
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td
+                        style="{% if match.winner == match.player_b %}font-weight: 600; color: var(--success);{% endif %}">
+                        {% if match.player_b %}{{ match.player_b.name }}{% else %}Bye (Folga){% endif %}
+                    </td>
+                    <td>
+                        {% if match.status == 'completed' %}
+                        <span class="badge badge-completed">Finalizado</span>
+                        {% elif match.status == 'cancelled' %}
+                        <span class="badge badge-cancelled">Cancelado</span>
+                        {% else %}
+                        <span class="badge badge-pending">Pendente</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">
+                        {% if match.youtube_link %}
+                        <a href="{{ match.youtube_link }}" target="_blank" title="Assistir jogo no YouTube" style="color: #ff0000; display: inline-flex; align-items: center; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.052-.074 1.964l-.027.365c-.048.519-.119 1.023-.22 1.402a2.007 2.007 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.007 2.007 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31.4 31.4 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.007 2.007 0 0 1 1.415-1.42c1.16-.312 5.569-.334 6.18-.335h.142c.309 0 1.587.006 2.927.052l.17.006.087.004.171.007.171.007c1.11.049 2.167.128 2.654.26zM5.525 10.536 11.53 7.68 5.525 4.824v5.712z"/>
+                            </svg>
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% empty %}
+<div class="card" style="text-align: center; justify-content: center; align-items: center; min-height: 200px;">
+    <p style="color: var(--text-muted); font-size: 1.1rem;">Nenhum jogo cadastrado para esta categoria.</p>
+</div>
+{% endfor %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const filterSelect = document.getElementById('round-filter');
+        
+        function applyFilter() {
+            if (!filterSelect) return;
+            const selectedRound = filterSelect.value;
+            const roundBlocks = document.querySelectorAll('.round-block');
+
+            roundBlocks.forEach(block => {
+                if (selectedRound === 'all' || block.getAttribute('data-round') === selectedRound) {
+                    block.style.display = 'block';
+                } else {
+                    block.style.display = 'none';
+                }
+            });
+        }
+
+        if (filterSelect) {
+            filterSelect.addEventListener('change', applyFilter);
+            // Aplica o filtro imediatamente ao carregar a página
+            applyFilter();
+        }
+    });
+</script>
+
+{% endblock %}

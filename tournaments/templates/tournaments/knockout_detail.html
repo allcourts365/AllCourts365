@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block logo_text %}TC22A<span>.</span>Torneio{% endblock %}
+
+{% block content %}
+<style>
+    .bracket-container {
+        display: flex;
+        flex-direction: row;
+        padding: 2rem;
+        gap: 3rem;
+        align-items: stretch;
+    }
+
+    .round {
+        display: flex;
+        flex-direction: column;
+        min-width: 280px;
+    }
+    
+    .round:last-child {
+        margin-right: 2rem;
+    }
+    
+    .matches-container {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+    }
+
+    .round-header {
+        text-align: center;
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 1rem;
+        background: var(--bg-card);
+        padding: 0.6rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0, 210, 255, 0.1);
+    }
+
+    .matchup {
+        background: var(--bg-card);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        position: relative;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .matchup:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 210, 255, 0.2);
+        border-color: rgba(0, 210, 255, 0.3);
+    }
+
+    .matchup-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+        padding: 0.75rem 0;
+        gap: 0.3rem;
+    }
+
+    /* Conectores da árvore do chaveamento */
+    .round:not(:last-child) div.matchup-wrapper:nth-of-type(odd)::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: -1.5rem;
+        width: 1.5rem;
+        height: 50%;
+        border-top: 2px solid rgba(255, 255, 255, 0.4);
+        border-right: 2px solid rgba(255, 255, 255, 0.4);
+        border-top-right-radius: 8px;
+        z-index: 10;
+    }
+
+    .round:not(:last-child) div.matchup-wrapper:nth-of-type(even)::after {
+        content: '';
+        position: absolute;
+        bottom: 50%;
+        right: -1.5rem;
+        width: 1.5rem;
+        height: 50%;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.4);
+        border-right: 2px solid rgba(255, 255, 255, 0.4);
+        border-bottom-right-radius: 8px;
+        z-index: 10;
+    }
+
+    .round:not(:first-child) div.matchup-wrapper::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: -1.5rem;
+        width: 1.5rem;
+        border-top: 2px solid rgba(255, 255, 255, 0.4);
+        z-index: 10;
+    }
+
+    .team {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        position: relative;
+    }
+
+    .team:first-child {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .team:first-child {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    }
+
+    .team.winner {
+        font-weight: bold;
+        background: rgba(0, 210, 255, 0.05);
+    }
+    
+    .team.winner .team-name {
+        color: var(--primary);
+    }
+
+    .team.winner::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--primary);
+    }
+
+    .team-name {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-grow: 1;
+        padding-right: 1rem;
+    }
+
+    .team-score {
+        font-family: 'Inter', monospace;
+        display: flex;
+        gap: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .team-score span {
+        width: 1.5rem;
+        text-align: center;
+    }
+
+    .match-status {
+        font-size: 0.7rem;
+        text-align: center;
+        padding: 0.25rem;
+        background: rgba(0,0,0,0.03);
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .match-status {
+            background: rgba(255,255,255,0.03);
+        }
+    }
+
+    /* Ajuste para usar o máximo da tela e não cortar as chaves finais apenas no corpo, preservando o header */
+    main .container {
+        max-width: 98% !important;
+        padding: 0 1rem;
+    }
+
+    /* Faz o fundo do site inteiro (body/header) esticar horizontalmente acompanhando a árvore */
+    body, html {
+        min-width: min-content;
+        min-width: -moz-min-content;
+        min-width: -webkit-min-content;
+    }
+    
+    header {
+        position: sticky;
+        left: 0;
+        width: 100vw;
+        z-index: 1000;
+    }
+    
+    footer {
+        position: sticky;
+        left: 0;
+        width: 100vw;
+    }
+    @media print {
+        @page {
+            size: landscape;
+            margin: 1cm;
+        }
+        body {
+            background: white !important;
+            color: black !important;
+            /* Adjust scale for better fit on paper */
+            zoom: 0.8;
+        }
+        header, footer, .back-link, .print-button {
+            display: none !important;
+        }
+        .matchup {
+            border: 1px solid #ddd !important;
+            box-shadow: none !important;
+            background: white !important;
+        }
+        .matchup-wrapper::before,
+        .matchup-wrapper::after,
+        .matchup::before,
+        .matchup::after {
+            border-color: #999 !important;
+        }
+        .team.winner {
+            background: #f8f9fa !important;
+        }
+        .team.winner .team-name {
+            color: black !important;
+            font-weight: 800 !important;
+        }
+        .team.winner::before {
+            background: #555 !important;
+        }
+        .home-title {
+            color: black !important;
+            padding-right: 0 !important;
+            text-align: center;
+        }
+        .print-cover {
+            height: 100vh !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+            page-break-after: always !important;
+            break-after: always !important;
+            margin: 0 !important;
+        }
+        .bracket-container {
+            padding: 0 !important;
+            gap: 2rem !important;
+            page-break-inside: avoid;
+        }
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+    }
+</style>
+
+<div class="print-cover" style="margin-bottom: 2rem; position: relative;">
+    <a href="{% url 'tournaments:knockout_list' %}" class="back-link">&larr; Voltar para Torneios</a>
+    
+    <button onclick="window.open(window.location.pathname + '?print=true', '_blank')" class="print-button" style="position: absolute; right: 0; top: 0; background: var(--primary-gradient); color: #050B14; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 0.5rem; transition: transform 0.2s; box-shadow: 0 0 10px rgba(0,210,255,0.3);" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+        Gerar PDF
+    </button>
+
+    <h1 class="home-title" style="margin-top: 1rem; padding-right: 120px; font-size: 2.2rem; margin-bottom: 0.25rem;">{{ tournament.name }}</h1>
+    <p class="home-subtitle" style="margin-bottom: 0;">
+        Chave Eliminatória &bull; {{ tournament.get_competition_type_display }} &bull; {{ tournament.get_set_format_display }}
+    </p>
+</div>
+
+{% if not brackets %}
+<div class="card" style="text-align: center; justify-content: center; align-items: center; min-height: 200px;">
+    <p style="color: var(--text-muted); font-size: 1.1rem;">A chave deste torneio ainda não foi gerada.</p>
+</div>
+{% else %}
+    {% for bracket in brackets %}
+        {% if brackets|length > 1 %}
+            <h2 style="margin-top: 3rem; margin-bottom: 1rem; color: var(--primary); font-size: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">{{ bracket.name }}</h2>
+        {% endif %}
+        <div class="bracket-container">
+            {% for round_num, matches in bracket.rounds.items %}
+            <div class="round">
+                <div class="round-header">{{ matches.0.phase }}</div>
+                
+                <div class="matches-container">
+                {% for match in matches %}
+                <div class="matchup-wrapper">
+                    {% if match.bracket_label %}
+                        <div style="text-align: left; color: var(--primary); font-weight: 800; font-size: 1.1rem; margin-bottom: 0.8rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--primary); padding-bottom: 0.3rem; margin-left: 0.5rem;">
+                            {{ match.bracket_label }}
+                        </div>
+                    {% endif %}
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-left: 0.5rem; font-weight: bold; text-transform: uppercase; display: flex; align-items: center; gap: 0.3rem;">
+                        <span>Jogo {{ match.match_number }}{% if match.youtube_link %} -{% endif %}</span>
+                        {% if match.youtube_link %}
+                        <a href="{{ match.youtube_link }}" target="_blank" title="Assistir jogo no YouTube" style="color: #ff0000; display: inline-flex; align-items: center; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.052-.074 1.964l-.027.365c-.048.519-.119 1.023-.22 1.402a2.007 2.007 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.007 2.007 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31.4 31.4 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.007 2.007 0 0 1 1.415-1.42c1.16-.312 5.569-.334 6.18-.335h.142c.309 0 1.587.006 2.927.052l.17.006.087.004.171.007.171.007c1.11.049 2.167.128 2.654.26zM5.525 10.536 11.53 7.68 5.525 4.824v5.712z"/>
+                            </svg>
+                        </a>
+                        {% endif %}
+                    </div>
+                    <div class="matchup">
+                    <div class="team {% if match.winner and match.winner == match.player_a %}winner{% endif %}">
+                        <span class="team-name">{% if match.player_a %}{{ match.player_a.name }}{% elif match.round_number == 1 %}BYE{% elif match.prev_match_a %}<span style="font-size: 0.85em; font-style: italic; color: var(--text-muted);">Venc. Jogo {{ match.prev_match_a.match_number }}</span>{% else %}A definir{% endif %}</span>
+                        <span class="team-score">
+                            {% if match.set1_a != None %}
+                                <span>{{ match.set1_a }}</span>
+                                {% if match.set2_a != None %}<span>{{ match.set2_a }}</span>{% endif %}
+                                {% if match.set3_a != None %}<span>{{ match.set3_a }}</span>{% endif %}
+                                {% if match.set4_a != None %}<span>{{ match.set4_a }}</span>{% endif %}
+                                {% if match.set5_a != None %}<span>{{ match.set5_a }}</span>{% endif %}
+                            {% elif match.status == 'completed' and match.sets_a != None %}
+                                <span style="font-weight: 800;" title="Placar Visão Geral">{{ match.sets_a }}</span>
+                            {% elif match.status == 'completed' and match.winner and match.winner == match.player_a and not match.is_bye and match.player_b and match.player_b.name|lower != 'bye' and match.player_b.name|lower != 'folga' %}
+                                <span style="font-size: 0.8em; font-weight: bold; color: var(--success);">W.O.</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="team {% if match.winner and match.winner == match.player_b %}winner{% endif %}">
+                        <span class="team-name">{% if match.player_b %}{{ match.player_b.name }}{% elif match.round_number == 1 %}BYE{% elif match.prev_match_b %}<span style="font-size: 0.85em; font-style: italic; color: var(--text-muted);">Venc. Jogo {{ match.prev_match_b.match_number }}</span>{% else %}A definir{% endif %}</span>
+                        <span class="team-score">
+                            {% if match.set1_b != None %}
+                                <span>{{ match.set1_b }}</span>
+                                {% if match.set2_b != None %}<span>{{ match.set2_b }}</span>{% endif %}
+                                {% if match.set3_b != None %}<span>{{ match.set3_b }}</span>{% endif %}
+                                {% if match.set4_b != None %}<span>{{ match.set4_b }}</span>{% endif %}
+                                {% if match.set5_b != None %}<span>{{ match.set5_b }}</span>{% endif %}
+                            {% elif match.status == 'completed' and match.sets_b != None %}
+                                <span style="font-weight: 800;" title="Placar Visão Geral">{{ match.sets_b }}</span>
+                            {% elif match.status == 'completed' and match.winner and match.winner == match.player_b and not match.is_bye and match.player_a and match.player_a.name|lower != 'bye' and match.player_a.name|lower != 'folga' %}
+                                <span style="font-size: 0.8em; font-weight: bold; color: var(--success);">W.O.</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    {% if match.status == 'pending' %}
+                    <div class="match-status">Aguardando</div>
+                    {% elif match.status == 'cancelled' %}
+                    <div class="match-status">Cancelado</div>
+                    {% else %}
+                    <div class="match-status">Finalizado</div>
+                    {% endif %}
+                </div>
+                </div>
+                {% endfor %}
+                </div>
+                
+            </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<script>
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('print') === 'true') {
+            // Remove o parâmetro para não imprimir de novo se a pessoa der F5 na nova aba
+            window.history.replaceState({}, document.title, window.location.pathname);
+            setTimeout(() => {
+                window.print();
+            }, 500);
+        }
+    }
+</script>
+{% endblock %}

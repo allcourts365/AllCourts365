@@ -557,16 +557,14 @@
                 <h2 style="font-size: 2rem; color: #fff; margin: 0; font-weight: 800;">
                     Meus Jogos
                 </h2>
-                <button id="btn-back-tournaments" onclick="showTournamentsList()" style="display: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 15px; border-radius: 20px; cursor: pointer; font-size: 0.9rem;">
-                    <i class="fas fa-arrow-left"></i> Voltar aos Torneios
-                </button>
+                <a id="btn-back-tournaments" onclick="showTournamentsList(); return false;" href="#" style="display: none; color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600; cursor: pointer;">&larr; Voltar aos Torneios</a>
             </div>
             
             {% if not my_tournaments %}
                 <p style="color: var(--subtitle-color); text-align: center; font-size: 1.1rem;">Você ainda não possui jogos gerados em nenhum torneio ou ranking.</p>
             {% else %}
                 <!-- VIEW 1: Lista de Torneios -->
-                <div id="view-tournaments" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                <div id="view-tournaments" style="display: flex; flex-direction: column; gap: 15px;">
                     {% for t in my_tournaments %}
                     <div onclick="showTournamentMatches({{ t.id }}, {{ t.current_round|default:1 }})" class="glass-card tournament-card" style="position: relative; padding: 25px; cursor: pointer; transition: transform 0.2s, background 0.2s;">
                         {% if t.status == 'completed' %}
@@ -587,7 +585,7 @@
                         </h3>
                         <p style="margin-bottom: 5px; color: #ccc;"><strong>Competição:</strong> Simples</p>
                         <p style="margin-bottom: 20px; color: #ccc;"><strong>Rodada Atual:</strong> {{ t.current_round|default:1 }}</p>
-                        <div style="color: var(--subtitle-color); font-size: 1.1rem; font-weight: 500; margin-top: 10px;">
+                        <div style="color: var(--highlight-color); font-size: 1.1rem; font-weight: 600; margin-top: 10px;">
                             Ver jogos e ranking &rarr;
                         </div>
                     </div>
@@ -714,18 +712,44 @@
         <div class="glass-card" style="padding: 40px; border-radius: 16px;">
             <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 20px; font-weight: 900; text-align: center;">Mensagens</h2>
             
-            <form method="GET" action="{% url 'athlete_dashboard' %}" style="display: flex; gap: 10px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap;">
-                <input type="hidden" name="tab" value="mensagens">
-                <input type="date" name="msg_date" value="{{ request.GET.msg_date }}" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; padding: 10px; max-width: 200px;">
-                <button type="submit" class="btn-highlight" style="padding: 10px 20px;">Filtrar</button>
-                {% if request.GET.msg_date %}
-                <a href="{% url 'athlete_dashboard' %}?tab=mensagens" class="btn-highlight" style="background: rgba(255,255,255,0.2); color: #fff; padding: 10px 20px; text-decoration: none;">Limpar</a>
-                {% endif %}
-            </form>
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 15px; margin-bottom: 30px; flex-wrap: wrap;">
+                <span style="color: var(--subtitle-color); font-size: 0.95rem;">Filtrar por data:</span>
+                <form method="GET" action="{% url 'athlete_dashboard' %}" style="display: flex; align-items: center; gap: 10px;">
+                    <input type="hidden" name="tab" value="mensagens">
+                    <input type="date" name="msg_date" value="{{ request.GET.msg_date }}"
+                        onchange="this.form.submit()"
+                        style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 8px; outline: none; font-weight: bold; min-width: 180px; cursor: pointer;">
+                    {% if request.GET.msg_date %}
+                    <a href="{% url 'athlete_dashboard' %}?tab=mensagens" style="color: var(--highlight-color); text-decoration: none; font-size: 0.9rem; font-weight: 600;">Limpar</a>
+                    {% endif %}
+                </form>
+            </div>
 
             {% if not athlete_messages %}
                 <p style="color: var(--subtitle-color); text-align: center; font-size: 1.1rem;">Nenhuma mensagem encontrada.</p>
             {% else %}
+
+                <!-- Paginação TOPO -->
+                {% if athlete_messages.has_other_pages %}
+                <div style="display: flex; justify-content: center; align-items: center; gap: 6px; margin-bottom: 20px; font-size: 1rem; font-weight: 700; user-select: none;">
+                    {% if athlete_messages.has_previous %}
+                        <a href="?tab=mensagens&page=1{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&laquo;</a>
+                        <a href="?tab=mensagens&page={{ athlete_messages.previous_page_number }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&lsaquo;</a>
+                    {% else %}
+                        <span style="color: rgba(255,255,255,0.2); padding: 4px 8px;">&laquo;</span>
+                        <span style="color: rgba(255,255,255,0.2); padding: 4px 8px;">&lsaquo;</span>
+                    {% endif %}
+                    <span style="color: #fff; padding: 4px 12px;">{{ athlete_messages.number }}/{{ athlete_messages.paginator.num_pages }}</span>
+                    {% if athlete_messages.has_next %}
+                        <a href="?tab=mensagens&page={{ athlete_messages.next_page_number }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&rsaquo;</a>
+                        <a href="?tab=mensagens&page={{ athlete_messages.paginator.num_pages }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&raquo;</a>
+                    {% else %}
+                        <span style="color: rgba(255,255,255,0.2); padding: 4px 8px;">&rsaquo;</span>
+                        <span style="color: rgba(255,255,255,0.2); padding: 4px 8px;">&raquo;</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+
                 <div style="display: flex; flex-direction: column; gap: 15px;">
                     {% for msg in athlete_messages %}
                     <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 20px; border-left: 4px solid {% if not msg.is_read %}var(--highlight-color){% else %}rgba(255,255,255,0.2){% endif %};">
@@ -813,16 +837,23 @@
                     {% endfor %}
                 </div>
 
+                <!-- Paginação RODAPÉ -->
                 {% if athlete_messages.has_other_pages %}
-                <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 30px;">
+                <div style="display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 30px; font-size: 1rem; font-weight: 700; user-select: none;">
                     {% if athlete_messages.has_previous %}
-                    <a href="?tab=mensagens&page={{ athlete_messages.previous_page_number }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" class="btn-highlight" style="padding: 8px 15px; font-size: 0.9rem; text-decoration: none;">Anterior</a>
+                        <a href="?tab=mensagens&page=1{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&laquo;</a>
+                        <a href="?tab=mensagens&page={{ athlete_messages.previous_page_number }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&lsaquo;</a>
+                    {% else %}
+                        <span style="color: rgba(255,255,255,0.2); padding: 4px 8px;">&laquo;</span>
+                        <span style="color: rgba(255,255,255,0.2); padding: 4px 8px;">&lsaquo;</span>
                     {% endif %}
-                    
-                    <span style="color: #fff; padding: 8px 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">Página {{ athlete_messages.number }} de {{ athlete_messages.paginator.num_pages }}</span>
-                    
+                    <span style="color: #fff; padding: 4px 12px;">{{ athlete_messages.number }}/{{ athlete_messages.paginator.num_pages }}</span>
                     {% if athlete_messages.has_next %}
-                    <a href="?tab=mensagens&page={{ athlete_messages.next_page_number }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" class="btn-highlight" style="padding: 8px 15px; font-size: 0.9rem; text-decoration: none;">Próxima</a>
+                        <a href="?tab=mensagens&page={{ athlete_messages.next_page_number }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&rsaquo;</a>
+                        <a href="?tab=mensagens&page={{ athlete_messages.paginator.num_pages }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&raquo;</a>
+                    {% else %}
+                        <span style="color: rgba(255,255,255,0.2); padding: 4px 8px;">&rsaquo;</span>
+                        <span style="color: rgba(255,255,255,0.2); padding: 4px 8px;">&raquo;</span>
                     {% endif %}
                 </div>
                 {% endif %}

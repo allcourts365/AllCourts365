@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ tournament.name }} - {{ club.name }}{% endblock %}
+
+{% block admin_button %}
+<a href="#" class="btn-highlight" style="visibility: hidden; pointer-events: none;"><i class="fas fa-lock"></i> Admin AllCourts365</a>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root {
+        {% if club.background_color %}--bg-color: {{ club.background_color }};{% endif %}
+        {% if club.overlay_color %}--overlay-color: {{ club.overlay_color }};{% endif %}
+        {% if club.overlay_opacity %}--overlay-opacity: {{ club.overlay_opacity|stringformat:"s" }};{% endif %}
+        {% if club.highlight_color %}--highlight-color: {{ club.highlight_color }};{% endif %}
+        {% if club.title_color %}--title-color: {{ club.title_color }};{% endif %}
+        {% if club.subtitle_color %}--subtitle-color: {{ club.subtitle_color }};{% endif %}
+    }
+    {% if club.background_image %}
+    body {
+        background-image: url('{{ club.background_image.url }}') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-attachment: fixed !important;
+    }
+    {% endif %}
+    {% if club.watermark_image %}
+    .club-watermark {
+        position: fixed;
+        z-index: 1000;
+        opacity: {{ club.watermark_opacity|default:"0.8"|stringformat:"s" }};
+        width: {{ club.watermark_size_percent|default:"15"|stringformat:"s" }}%;
+        pointer-events: none;
+        {% if club.watermark_position == 'top-left' %} top: 20px; left: 20px;
+        {% elif club.watermark_position == 'top-right' %} top: 20px; right: 20px;
+        {% elif club.watermark_position == 'bottom-left' %} bottom: 20px; left: 20px;
+        {% elif club.watermark_position == 'bottom-right' %} bottom: 20px; right: 20px;
+        {% elif club.watermark_position == 'center' %} top: 50%; left: 50%; transform: translate(-50%, -50%);
+        {% else %} bottom: 20px; left: 20px; {% endif %}
+    }
+    {% endif %}
+
+    .ko-category-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-top: 30px;
+    }
+    @media (max-width: 900px) { .ko-category-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .ko-category-grid { grid-template-columns: 1fr; } }
+
+    .ko-category-card {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 16px;
+        padding: 28px 24px;
+        transition: background 0.2s, transform 0.2s;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        text-decoration: none;
+    }
+    .ko-category-card:hover {
+        background: rgba(255,255,255,0.09);
+        transform: translateY(-3px);
+    }
+    .ko-category-card h3 {
+        color: #fff;
+        font-size: 1.2rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin: 0;
+    }
+    .ko-card-link {
+        color: var(--highlight-color);
+        font-size: 1rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block watermark %}
+    {% if club.watermark_image %}
+        <img src="{{ club.watermark_image.url }}" alt="Watermark" class="club-watermark">
+    {% elif site_config.watermark_image %}
+        <img src="{{ site_config.watermark_image.url }}" alt="Watermark" class="watermark">
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+
+<div style="margin-top: 20px; margin-bottom: 15px;">
+    <a href="{% url 'clubs:detail' club.id %}" style="color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600;">&larr; Voltar para o Clube</a>
+</div>
+
+<div style="margin-bottom: 40px;">
+    <h1 style="font-size: 2.8rem; font-weight: 800; color: var(--title-color); text-transform: uppercase; margin-bottom: 10px; letter-spacing: -0.5px;">{{ tournament.name }}</h1>
+    <p style="font-size: 1.1rem; color: var(--subtitle-color); margin: 0;">
+        Torneio Eliminatório
+        {% if tournament.start_date %} &bull; {{ tournament.start_date|date:"d/m/Y" }}{% if tournament.end_date %} a {{ tournament.end_date|date:"d/m/Y" }}{% endif %}{% endif %}
+    </p>
+</div>
+
+{% if not categories %}
+    <div class="glass-card" style="padding: 40px; text-align: center;">
+        <p style="color: var(--subtitle-color); font-size: 1.1rem;">Nenhuma categoria cadastrada neste torneio ainda.</p>
+    </div>
+{% else %}
+    <h2 style="font-size: 1.4rem; font-weight: 700; color: var(--title-color); margin-bottom: 5px;">Categorias</h2>
+    <div class="ko-category-grid">
+        {% for cat in categories %}
+        <a href="{% url 'clubs:knockout_bracket' club.id tournament.id cat.id %}" class="ko-category-card glass-card">
+            <h3>{{ cat.name }}</h3>
+            <span class="ko-card-link">Ver Chave &rarr;</span>
+        </a>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% endblock %}

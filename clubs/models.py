@@ -104,10 +104,27 @@ class Tournament(models.Model):
     is_active = models.BooleanField(default=True, verbose_name="Ativo (Exibir no site)")
     is_finished = models.BooleanField(default=False, verbose_name="Encerrado")
     
-    points_winner_2x0 = models.IntegerField(default=3, verbose_name="Pontos (Vitória 2x0)")
-    points_winner_2x1 = models.IntegerField(default=2, verbose_name="Pontos (Vitória 2x1)")
-    points_loser_2x1 = models.IntegerField(default=1, verbose_name="Pontos (Derrota 2x1)")
-    points_loser_2x0 = models.IntegerField(default=0, verbose_name="Pontos (Derrota 2x0)")
+    points_winner_2x0 = models.IntegerField(null=True, blank=True, default=3, verbose_name="Pontos (Vitória 2x0)")
+    points_winner_2x1 = models.IntegerField(null=True, blank=True, default=2, verbose_name="Pontos (Vitória 2x1)")
+    points_loser_2x1  = models.IntegerField(null=True, blank=True, default=1, verbose_name="Pontos (Derrota 2x1)")
+    points_loser_2x0  = models.IntegerField(null=True, blank=True, default=0, verbose_name="Pontos (Derrota 2x0)")
+
+    # Pontuação por Fase (Torneio Eliminatório — opcional, deixe em branco para não usar)
+    pts_round64_participant = models.IntegerField(null=True, blank=True, verbose_name="Round 64 — Pts por Participação")
+    pts_round64_winner      = models.IntegerField(null=True, blank=True, verbose_name="Round 64 — Pts por Vitória")
+    pts_round32_participant = models.IntegerField(null=True, blank=True, verbose_name="Round 32 — Pts por Participação")
+    pts_round32_winner      = models.IntegerField(null=True, blank=True, verbose_name="Round 32 — Pts por Vitória")
+    pts_round16_participant = models.IntegerField(null=True, blank=True, verbose_name="Round 16 — Pts por Participação")
+    pts_round16_winner      = models.IntegerField(null=True, blank=True, verbose_name="Round 16 — Pts por Vitória")
+    pts_oitavas_participant = models.IntegerField(null=True, blank=True, verbose_name="Oitavas — Pts por Participação")
+    pts_oitavas_winner      = models.IntegerField(null=True, blank=True, verbose_name="Oitavas — Pts por Vitória")
+    pts_quartas_participant = models.IntegerField(null=True, blank=True, verbose_name="Quartas — Pts por Participação")
+    pts_quartas_winner      = models.IntegerField(null=True, blank=True, verbose_name="Quartas — Pts por Vitória")
+    pts_semi_participant    = models.IntegerField(null=True, blank=True, verbose_name="Semifinal — Pts por Participação")
+    pts_semi_winner         = models.IntegerField(null=True, blank=True, verbose_name="Semifinal — Pts por Vitória")
+    pts_final_participant   = models.IntegerField(null=True, blank=True, verbose_name="Final — Pts por Participação (Vice)")
+    pts_final_winner        = models.IntegerField(null=True, blank=True, verbose_name="Final — Pts por Vitória (Campeão)")
+    pts_campeon             = models.IntegerField(null=True, blank=True, verbose_name="Campeão — Pts Extras")
 
     def __str__(self):
         return f"{self.name} - {self.club.name}"
@@ -199,14 +216,16 @@ class CategoryPlayer(models.Model):
     matches_played = models.IntegerField(default=0, verbose_name="Jogos")
     wins = models.IntegerField(default=0, verbose_name="Vitórias")
     losses = models.IntegerField(default=0, verbose_name="Derrotas")
+    is_seed = models.BooleanField(default=False, verbose_name="Cabeça de Chave")
+    seed_number = models.IntegerField(null=True, blank=True, verbose_name="Nº Cabeça de Chave")
 
     def __str__(self):
         return f"{self.player.name} - {self.category.name}"
 
     class Meta:
         unique_together = ('category', 'player')
-        verbose_name = "Classificação"
-        verbose_name_plural = "Classificações"
+        verbose_name = "Inscrição na Competição"
+        verbose_name_plural = "Inscrições nas Competições"
         ordering = ['-points', '-wins', 'matches_played']
 
 class Match(models.Model):
@@ -263,6 +282,7 @@ class Match(models.Model):
     next_match = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='previous_matches')
     phase = models.CharField(max_length=50, blank=True, verbose_name="Fase")
     position_in_bracket = models.IntegerField(null=True, blank=True)
+    is_bye = models.BooleanField(default=False, verbose_name="Jogo BYE (Avanço Automático)")
     winner = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True, blank=True, related_name='won_matches')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
 
@@ -301,7 +321,7 @@ class Match(models.Model):
             self.sets_b = sb
             
         # Lógica Automática de Status e Vencedor baseada no Formato do Torneio
-        if self.tournament:
+        if self.tournament and not self.is_bye:
             sets_to_win = 3 if self.tournament.set_format == '5_normal' else 2
             
             if sa >= sets_to_win or sb >= sets_to_win:
@@ -318,5 +338,21 @@ from django.db.models.signals import post_delete
 @receiver(post_save, sender=Match)
 @receiver(post_delete, sender=Match)
 def update_category_points(sender, instance, **kwargs):
-    if getattr(instance, 'category', None):
-        instance.category.recalculate_points()
+    try:
+        if getattr(instance, 'category_id', None):
+            instance.category.recalculate_points()
+    except Exception:
+        pass
+
+@receiver(post_save, sender=Match)
+def auto_advance_bracket_winner(sender, instance, created, **kwargs):
+    """Quando um jogo do bracket é finalizado, avança o vencedor para a próxima fase automaticamente."""
+    if instance.status == 'completed' and instance.winner and instance.next_match and instance.position_in_bracket is not None:
+        next_m = instance.next_match
+        pos = instance.position_in_bracket
+        if pos % 2 != 0:  # Ímpar vai para player_a
+            if next_m.player_a_id != instance.winner_id:
+                Match.objects.filter(pk=next_m.pk).update(player_a=instance.winner)
+        else:             # Par vai para player_b
+            if next_m.player_b_id != instance.winner_id:
+                Match.objects.filter(pk=next_m.pk).update(player_b=instance.winner)

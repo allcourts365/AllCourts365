@@ -170,15 +170,28 @@
         box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         border-color: rgba(255,255,255,0.1) !important;
     }
+
+    /* FORÇAR largura total no detalhe da categoria */
+    #category-detail-view {
+        width: 100% !important;
+        max-width: none !important;
+        box-sizing: border-box !important;
+    }
+    #category-detail-view .glass-card {
+        width: 100% !important;
+        max-width: none !important;
+        box-sizing: border-box !important;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<a href="{% url 'clubs:detail' club.id %}" style="display: inline-block; margin-top: 20px; color: var(--subtitle-color); text-decoration: none; font-size: 0.95rem;">&larr; Voltar para o Clube</a>
+
 
 <div id="ranking-dashboard" style="margin-top: 20px;">
     <!-- Header Principal -->
     <div style="margin-bottom: 40px;">
+        <a href="{% url 'clubs:detail' club.id %}" style="display: inline-block; margin-bottom: 15px; color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600;">&larr; Voltar para o Clube</a>
         <h1 style="font-size: 2.8rem; font-weight: 800; color: #fff; text-transform: uppercase; margin-bottom: 10px; letter-spacing: -0.5px;">{{ ranking.name }}</h1>
         <p style="font-size: 1.1rem; color: var(--subtitle-color); margin: 0;">Acompanhe os resultados e o ranking interno.</p>
     </div>
@@ -190,7 +203,7 @@
             De: {{ ranking.start_date|date:"d/m/Y"|default:"-" }} &nbsp;<span style="color: rgba(255,255,255,0.2);">|</span>&nbsp; Até: {{ ranking.end_date|date:"d/m/Y"|default:"-" }}
         </p>
         
-        <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); display: inline-block; width: 100%; max-width: 900px;">
+        <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; border: 1px solid var(--highlight-color); display: inline-block; width: 100%; max-width: 900px;">
             <p style="margin: 0; color: #fff; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
                 🎾 <span>Não esqueçam de colocar nos grupos as datas e horários dos jogos, assim como os resultados</span> 🎾
             </p>
@@ -199,7 +212,7 @@
 
     <!-- Categorias -->
     <h3 style="font-size: 1.6rem; color: #fff; margin-bottom: 20px; font-weight: 700;">Categorias</h3>
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+    <div class="desktop-3-cols" style="display: grid; gap: 20px;">
         {% for cat, info in data.items %}
         <div class="glass-card category-card" onclick="showCategory('cat-{{ cat.id }}', '{{ cat.name|escapejs }}')" style="position: relative; padding: 30px; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; display: flex; flex-direction: column; justify-content: space-between; min-height: 160px;">
             <h4 style="font-size: 1.4rem; color: #fff; margin: 0 0 20px 0; font-weight: 700; text-transform: uppercase; display: flex; align-items: center; gap: 10px;">
@@ -210,7 +223,7 @@
                     <img src="{% static 'bolinha.png' %}" class="ball-spinning" style="width: 12px; height: 12px;" alt="Em andamento">
                 {% endif %}
             </h4>
-            <div style="color: var(--subtitle-color); font-size: 0.95rem; display: flex; align-items: center; gap: 5px;">
+            <div style="color: var(--highlight-color); font-size: 0.95rem; display: flex; align-items: center; gap: 5px; font-weight: 600;">
                 Ver jogos e ranking &rarr;
             </div>
         </div>
@@ -221,15 +234,13 @@
 </div>
 
 <!-- View de Detalhes da Categoria -->
-<div id="category-detail-view" style="display: none; margin-top: 20px;">
-    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 30px;">
-        <button onclick="showDashboard()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); color: #fff; cursor: pointer; font-size: 1rem; padding: 8px 16px; border-radius: 8px; display: flex; align-items: center; gap: 8px; font-weight: 500; transition: background 0.2s;">
-            &larr; Voltar
-        </button>
+<div id="category-detail-view" style="display: none; margin-top: 20px; width: 100%;">
+    <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 30px;">
+        <a onclick="showDashboard(); return false;" href="#" style="color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600; cursor: pointer;">&larr; Voltar para o Ranking</a>
         <h2 id="active-category-title" style="font-size: 2rem; font-weight: 800; color: #fff; margin: 0; text-transform: uppercase;"></h2>
     </div>
 
-    <div class="glass-card" style="padding: 25px;">
+    <div class="glass-card" style="padding: 25px; width: 100%; box-sizing: border-box;">
         <!-- Conteúdo das Categorias -->
         {% for cat, info in data.items %}
         <div id="cat-{{ cat.id }}" class="category-content" style="display: none;">
