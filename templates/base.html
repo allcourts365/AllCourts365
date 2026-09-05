@@ -186,7 +186,7 @@
 
     <!-- Rodapé (Footer) -->
     {% if site_config.footer_show %}
-    <footer style="margin-top: auto; margin-left: auto; margin-right: auto; width: {{ site_config.footer_width|default:'100%' }}; max-width: 100%; padding: 40px 20px; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); text-align: center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+    <footer style="margin-top: auto; margin-left: auto; margin-right: auto; width: {{ site_config.footer_width|default:'100%' }}; max-width: 100%; padding: {{ site_config.footer_padding|default:'40px 20px' }}; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); text-align: center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
         <div class="container" style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
             {% if site_config.footer_text %}
             <div style="color: var(--subtitle-color); font-size: 0.95rem; margin: 0; line-height: 1.6;">{{ site_config.footer_text|linebreaksbr }}</div>

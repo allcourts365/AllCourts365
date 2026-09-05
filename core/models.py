@@ -34,6 +34,7 @@ class SiteConfiguration(models.Model):
     footer_show = models.BooleanField(default=True, verbose_name="Exibir Rodapé (Footer)")
     footer_text = models.TextField(blank=True, verbose_name="Texto/Copyright do Rodapé")
     footer_width = models.CharField(max_length=20, default='100%', verbose_name="Largura do Rodapé", help_text="Ex: 100%, 1200px, 80vw")
+    footer_padding = models.CharField(max_length=20, default='40px 20px', verbose_name="Espessura (Padding) do Rodapé", help_text="Ex: 40px 20px (40px em cima/baixo, 20px nas laterais) ou 10px")
     footer_instagram = models.URLField(blank=True, verbose_name="Link do Instagram")
     footer_facebook = models.URLField(blank=True, verbose_name="Link do Facebook")
     footer_whatsapp = models.CharField(max_length=50, blank=True, verbose_name="Número do WhatsApp", help_text="Apenas números, com DDD (ex: 5511999999999)")
