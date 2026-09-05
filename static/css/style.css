@@ -152,6 +152,7 @@ main {
     color: #fff;
     border-color: var(--highlight-color);
     box-shadow: 0 4px 15px var(--highlight-color);
+    backdrop-filter: none;
 }
 
 .tab-content {
