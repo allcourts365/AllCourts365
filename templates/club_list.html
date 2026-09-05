@@ -9,7 +9,7 @@
     <p style="font-size: 1.2rem;">Encontre o seu clube e acesse rankings e torneios.</p>
 </div>
 
-<div class="clubs-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px;">
+<div class="clubs-grid desktop-3-cols" style="display: grid; gap: 30px;">
     {% for club in clubs %}
     <a href="{% url 'clubs:detail' club.id %}" style="text-decoration: none;">
         <div class="glass-card" style="text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center;">
