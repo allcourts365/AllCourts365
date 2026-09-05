@@ -93,6 +93,30 @@
             flex-direction: column;
             align-items: flex-start;
         }
+        .tournament-title {
+            padding-right: 0 !important;
+            margin-top: 35px !important;
+        }
+        .round-filter-wrap {
+            flex-direction: column;
+            align-items: flex-start !important;
+            width: 100%;
+        }
+        .round-filter-wrap select {
+            width: 100%;
+            min-width: 0 !important;
+        }
+        .match-card-header {
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .match-card-header > div {
+            width: 100%;
+        }
+        .tournament-badge {
+            display: inline-block;
+            margin-bottom: 5px;
+        }
     }
 
     /* Status Badge */
@@ -106,6 +130,34 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+    }
+    .tournament-card .status-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+    }
+    
+    .tournament-title {
+        margin-bottom: 10px; 
+        color: var(--highlight-color); 
+        font-size: 1.4rem; 
+        font-weight: 900; 
+        text-transform: uppercase; 
+        letter-spacing: -0.5px; 
+        padding-right: 120px;
+    }
+    
+    .round-filter-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .match-card-header {
+        display: flex; 
+        justify-content: space-between; 
+        align-items: flex-start; 
+        margin-bottom: 15px;
     }
     .status-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
     .status-approved { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
@@ -530,7 +582,7 @@
                                 <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Pendente"> Pendente
                             </div>
                         {% endif %}
-                        <h3 style="margin-bottom: 10px; color: var(--highlight-color); font-size: 1.4rem; font-weight: 900; text-transform: uppercase; letter-spacing: -0.5px; padding-right: 120px;">
+                        <h3 class="tournament-title">
                             {{ t.name }}
                         </h3>
                         <p style="margin-bottom: 5px; color: #ccc;"><strong>Competição:</strong> Simples</p>
@@ -549,7 +601,7 @@
                             <div style="width: 4px; height: 30px; background: var(--highlight-color); border-radius: 2px;"></div>
                             <h3 id="matches-round-title" style="color: #fff; font-size: 1.6rem; font-weight: 900; margin: 0; letter-spacing: -0.5px;">Rodada X</h3>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 10px;">
+                        <div class="round-filter-wrap">
                             <span style="color: var(--subtitle-color); font-size: 0.95rem;">Escolha a rodada que deseja visualizar:</span>
                             <select id="round-filter" onchange="applyMatchesFilter()" style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 8px; outline: none; font-weight: bold; min-width: 200px;">
                                 <!-- preenchido via JS -->
@@ -559,9 +611,9 @@
 
                     {% for match in my_matches %}
                     <div class="match-card-item" data-tournament-id="{{ match.tournament.id }}" data-round="{{ match.round_number }}" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; display: none;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                        <div class="match-card-header">
                             <div>
-                                <span style="background: var(--highlight-color); color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">{{ match.tournament.name }}</span>
+                                <span class="tournament-badge" style="background: var(--highlight-color); color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">{{ match.tournament.name }}</span>
                                 <span style="color: var(--subtitle-color); font-size: 0.9rem; margin-left: 10px;">Rodada {{ match.round_number }}</span>
                             </div>
                             <div>
