@@ -410,8 +410,24 @@ def athlete_dashboard(request):
 
     # Busca Mensagens
     from core.models import Message
+    from django.core.paginator import Paginator
+    from datetime import datetime
+    
     user_messages = Message.objects.filter(recipient=user).order_by('-created_at')
-    unread_messages_count = user_messages.filter(is_read=False).count()
+    
+    msg_date = request.GET.get('msg_date')
+    if msg_date:
+        try:
+            filter_date = datetime.strptime(msg_date, '%Y-%m-%d').date()
+            user_messages = user_messages.filter(created_at__date=filter_date)
+        except ValueError:
+            pass
+            
+    unread_messages_count = Message.objects.filter(recipient=user, is_read=False).count()
+    
+    paginator = Paginator(user_messages, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
         'linked_club': linked_club,
@@ -424,8 +440,8 @@ def athlete_dashboard(request):
         'my_matches': my_matches,
         'my_tournaments': my_tournaments,
         'courts': courts,
-        'user_messages': user_messages,
-        'athlete_messages': user_messages,
+        'user_messages': page_obj,
+        'athlete_messages': page_obj,
         'unread_messages_count': unread_messages_count,
         'my_player_profile': user.player_profile if hasattr(user, 'player_profile') else None,
     }

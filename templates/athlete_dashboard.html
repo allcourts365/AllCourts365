@@ -712,9 +712,19 @@
     <!-- Aba: Mensagens -->
     <div id="mensagens" class="tab-content">
         <div class="glass-card" style="padding: 40px; border-radius: 16px;">
-            <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 30px; font-weight: 900; text-align: center;">Mensagens</h2>
+            <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 20px; font-weight: 900; text-align: center;">Mensagens</h2>
+            
+            <form method="GET" action="{% url 'athlete_dashboard' %}" style="display: flex; gap: 10px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap;">
+                <input type="hidden" name="tab" value="mensagens">
+                <input type="date" name="msg_date" value="{{ request.GET.msg_date }}" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; padding: 10px; max-width: 200px;">
+                <button type="submit" class="btn-highlight" style="padding: 10px 20px;">Filtrar</button>
+                {% if request.GET.msg_date %}
+                <a href="{% url 'athlete_dashboard' %}?tab=mensagens" class="btn-highlight" style="background: rgba(255,255,255,0.2); color: #fff; padding: 10px 20px; text-decoration: none;">Limpar</a>
+                {% endif %}
+            </form>
+
             {% if not athlete_messages %}
-                <p style="color: var(--subtitle-color); text-align: center; font-size: 1.1rem;">Nenhuma mensagem recebida.</p>
+                <p style="color: var(--subtitle-color); text-align: center; font-size: 1.1rem;">Nenhuma mensagem encontrada.</p>
             {% else %}
                 <div style="display: flex; flex-direction: column; gap: 15px;">
                     {% for msg in athlete_messages %}
@@ -802,6 +812,20 @@
                     </div>
                     {% endfor %}
                 </div>
+
+                {% if athlete_messages.has_other_pages %}
+                <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 30px;">
+                    {% if athlete_messages.has_previous %}
+                    <a href="?tab=mensagens&page={{ athlete_messages.previous_page_number }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" class="btn-highlight" style="padding: 8px 15px; font-size: 0.9rem; text-decoration: none;">Anterior</a>
+                    {% endif %}
+                    
+                    <span style="color: #fff; padding: 8px 15px; background: rgba(255,255,255,0.1); border-radius: 8px;">Página {{ athlete_messages.number }} de {{ athlete_messages.paginator.num_pages }}</span>
+                    
+                    {% if athlete_messages.has_next %}
+                    <a href="?tab=mensagens&page={{ athlete_messages.next_page_number }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" class="btn-highlight" style="padding: 8px 15px; font-size: 0.9rem; text-decoration: none;">Próxima</a>
+                    {% endif %}
+                </div>
+                {% endif %}
             {% endif %}
         </div>
     </div>
