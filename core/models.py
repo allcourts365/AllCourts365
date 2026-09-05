@@ -35,7 +35,13 @@ class SiteConfiguration(models.Model):
     footer_text = models.TextField(blank=True, verbose_name="Texto/Copyright do Rodapé")
     footer_instagram = models.URLField(blank=True, verbose_name="Link do Instagram")
     footer_facebook = models.URLField(blank=True, verbose_name="Link do Facebook")
-    footer_whatsapp = models.URLField(blank=True, verbose_name="Link do WhatsApp")
+    footer_whatsapp = models.CharField(max_length=50, blank=True, verbose_name="Número do WhatsApp", help_text="Apenas números, com DDD (ex: 5511999999999)")
+
+    @property
+    def clean_whatsapp(self):
+        if self.footer_whatsapp:
+            return ''.join(filter(str.isdigit, self.footer_whatsapp))
+        return ''
 
     class Meta:
         verbose_name = "Configuração do Site"
