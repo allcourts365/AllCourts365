@@ -397,21 +397,20 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
                 
                 # Assume first valid row is headers
                 if not headers:
+                    temp_headers = {}
                     for col_idx, cell_value in enumerate(row):
                         if cell_value:
                             val = str(cell_value).strip().lower()
                             # Normaliza nomes comuns
                             if val in ['nome', 'atleta', 'nome do atleta', 'jogador']:
-                                val = 'nome'
+                                temp_headers['nome'] = col_idx
                             elif val in ['categoria', 'cat']:
-                                val = 'categoria'
+                                temp_headers['categoria'] = col_idx
                             elif val in ['cabeça de chave', 'cabeca de chave', 'seed']:
-                                val = 'cabeça de chave'
-                            headers[val] = col_idx
+                                temp_headers['cabeça de chave'] = col_idx
                     
-                    if 'nome' not in headers:
-                        messages.error(request, "A coluna 'Nome' ou 'Atleta' é obrigatória na planilha (linha 1).")
-                        return
+                    if 'nome' in temp_headers:
+                        headers = temp_headers
                     continue
 
                 # Data rows
@@ -440,6 +439,10 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
                     cname = "Sem Categoria"
 
                 entries.append((pname, cname, is_seed))
+
+            if not headers:
+                messages.error(request, "A coluna 'Nome' ou 'Atleta' não foi encontrada em nenhuma linha da planilha.")
+                return
 
             if not entries:
                 messages.warning(request, 'Nenhum atleta encontrado na planilha.')
