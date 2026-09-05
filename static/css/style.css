@@ -75,6 +75,13 @@ body {
     color: var(--title-color);
 }
 
+button, .btn-highlight, .tab-btn, .btn-save, select {
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent;
+}
+
 .btn-highlight {
     background: var(--highlight-color);
     color: #fff !important;
