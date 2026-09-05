@@ -174,22 +174,30 @@
 
     <!-- Aba: Rankings -->
     <div id="rankings" class="tab-content active">
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+        <div class="desktop-3-cols" style="display: grid; gap: 20px;">
             {% for t in rankings %}
-            <div class="glass-card" style="position: relative;">
-                {% if t.is_finished %}
-                    <div class="status-badge status-finished">
-                        <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Encerrado"> Encerrado
-                    </div>
-                {% else %}
-                    <div class="status-badge status-active">
-                        <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Em andamento"> Em andamento
-                    </div>
+            <div class="glass-card" style="padding: 25px; border-radius: 12px; display: flex; flex-direction: column;">
+                <div>
+                    {% if t.is_finished %}
+                        <div style="display: inline-block; padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); margin-bottom: 15px; letter-spacing: 0.5px;">
+                            <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Encerrado"> ENCERRADO
+                        </div>
+                    {% else %}
+                        <div style="display: inline-block; padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); margin-bottom: 15px; letter-spacing: 0.5px;">
+                            <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Em andamento"> EM ANDAMENTO - RODADA {{ t.current_round }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <h3 style="margin-bottom: 15px; font-size: 1.4rem; font-weight: 800; color: #fff; text-transform: uppercase;">{{ t.name }}</h3>
+                
+                {% if t.start_date and t.end_date %}
+                    <p style="margin-bottom: 20px; color: #fff; font-size: 1.05rem;">{{ t.start_date|date:"d/m/Y" }} a {{ t.end_date|date:"d/m/Y" }}</p>
                 {% endif %}
-                <h3 style="margin-bottom: 10px; color: var(--highlight-color); padding-right: 120px;">{{ t.name }}</h3>
-                <p style="margin-bottom: 5px;"><strong>Competição:</strong> {{ t.get_competition_type_display }}</p>
-                <p style="margin-bottom: 20px;"><strong>Rodada Atual:</strong> {{ t.current_round }}</p>
-                <a href="{% url 'clubs:ranking_detail' club.id t.id %}" style="text-decoration: none; display: inline-flex; align-items: center; gap: 5px; color: var(--subtitle-color); font-size: 1.1rem; font-weight: 500; margin-top: 10px;">Ver jogos e ranking &rarr;</a>
+                
+                <div style="margin-top: auto; padding-top: 10px;">
+                    <a href="{% url 'clubs:ranking_detail' club.id t.id %}" style="text-decoration: none; display: inline-flex; align-items: center; gap: 5px; color: var(--highlight-color); font-size: 1.05rem; font-weight: 700;">Ver Ranking &rarr;</a>
+                </div>
             </div>
             {% empty %}
             <p style="text-align: center; grid-column: 1 / -1;">Nenhum ranking ativo no momento.</p>
@@ -199,22 +207,30 @@
     
     <!-- Aba: Torneios Eliminatórios -->
     <div id="knockouts" class="tab-content">
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+        <div class="desktop-3-cols" style="display: grid; gap: 20px;">
             {% for t in knockouts %}
-            <div class="glass-card" style="position: relative;">
-                {% if t.is_finished %}
-                    <div class="status-badge status-finished">
-                        <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Encerrado"> Encerrado
-                    </div>
-                {% else %}
-                    <div class="status-badge status-active">
-                        <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Em andamento"> Em andamento
-                    </div>
+            <div class="glass-card" style="padding: 25px; border-radius: 12px; display: flex; flex-direction: column;">
+                <div>
+                    {% if t.is_finished %}
+                        <div style="display: inline-block; padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); margin-bottom: 15px; letter-spacing: 0.5px;">
+                            <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Encerrado"> ENCERRADO
+                        </div>
+                    {% else %}
+                        <div style="display: inline-block; padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); margin-bottom: 15px; letter-spacing: 0.5px;">
+                            <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Em andamento"> EM ANDAMENTO - FASE {{ t.current_round }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <h3 style="margin-bottom: 15px; font-size: 1.4rem; font-weight: 800; color: #fff; text-transform: uppercase;">{{ t.name }}</h3>
+                
+                {% if t.start_date and t.end_date %}
+                    <p style="margin-bottom: 20px; color: #fff; font-size: 1.05rem;">{{ t.start_date|date:"d/m/Y" }} a {{ t.end_date|date:"d/m/Y" }}</p>
                 {% endif %}
-                <h3 style="margin-bottom: 10px; color: var(--highlight-color); padding-right: 120px;">{{ t.name }}</h3>
-                <p style="margin-bottom: 5px;"><strong>Competição:</strong> {{ t.get_competition_type_display }}</p>
-                <p style="margin-bottom: 20px;"><strong>Fase Atual:</strong> Rodada {{ t.current_round }}</p>
-                <a href="#" class="btn-highlight" style="text-decoration: none; display: inline-block; padding: 8px 15px; font-size: 0.9rem;">Ver Chaves</a>
+                
+                <div style="margin-top: auto; padding-top: 10px;">
+                    <a href="#" style="text-decoration: none; display: inline-flex; align-items: center; gap: 5px; color: var(--highlight-color); font-size: 1.05rem; font-weight: 700;">Ver Chaves &rarr;</a>
+                </div>
             </div>
             {% empty %}
             <p style="text-align: center; grid-column: 1 / -1;">Nenhum torneio eliminatório ativo no momento.</p>
