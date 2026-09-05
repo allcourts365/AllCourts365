@@ -30,6 +30,13 @@ class SiteConfiguration(models.Model):
     watermark_opacity = models.FloatField(default=0.8, verbose_name="Opacidade da Marca d'Água (0.0 a 1.0)")
     watermark_size_percent = models.IntegerField(default=15, verbose_name="Tamanho da Marca d'Água (%)", help_text="Porcentagem em relação à tela")
 
+    # Rodapé (Footer)
+    footer_show = models.BooleanField(default=True, verbose_name="Exibir Rodapé (Footer)")
+    footer_text = models.TextField(blank=True, verbose_name="Texto/Copyright do Rodapé")
+    footer_instagram = models.URLField(blank=True, verbose_name="Link do Instagram")
+    footer_facebook = models.URLField(blank=True, verbose_name="Link do Facebook")
+    footer_whatsapp = models.URLField(blank=True, verbose_name="Link do WhatsApp")
+
     class Meta:
         verbose_name = "Configuração do Site"
         verbose_name_plural = "Configuração do Site"
