@@ -133,7 +133,7 @@
         {% endif %}
     </div>
     <div style="display: flex; flex-direction: column; justify-content: center;">
-        <h1 style="font-size: 2.5rem; margin-bottom: 10px; line-height: 1.2;">
+        <h1 style="font-size: clamp(1.8rem, 5vw, 2.5rem); margin-bottom: 10px; line-height: 1.2;">
             {% if club.website %}
                 <a href="{{ club.website }}" target="_blank" style="color: var(--title-color); text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">{{ club.name }}</a>
             {% else %}
@@ -164,7 +164,7 @@
 </div>
 
 <div class="tournaments-section">
-    <h2 style="font-size: 2rem; margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px; text-align: center;">Bem-vindo ao Ranking interno e Torneios de Tenis do {{ club.name }}</h2>
+    <h2 style="font-size: clamp(1.5rem, 4vw, 2rem); margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px; text-align: center;">Bem-vindo ao Ranking interno e Torneios de Tenis do {{ club.name }}</h2>
     
     <!-- Menu Horizontal de Abas -->
     <div class="tabs-container">
@@ -174,7 +174,7 @@
 
     <!-- Aba: Rankings -->
     <div id="rankings" class="tab-content active">
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
             {% for t in rankings %}
             <div class="glass-card" style="position: relative;">
                 {% if t.is_finished %}
@@ -199,7 +199,7 @@
     
     <!-- Aba: Torneios Eliminatórios -->
     <div id="knockouts" class="tab-content">
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
             {% for t in knockouts %}
             <div class="glass-card" style="position: relative;">
                 {% if t.is_finished %}

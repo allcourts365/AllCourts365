@@ -51,6 +51,26 @@
         margin-bottom: 40px;
         min-height: 180px;
     }
+    
+    /* Responsividade específica do Dashboard */
+    .match-players-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .match-meta-row {
+        background: rgba(255,255,255,0.05);
+        padding: 15px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+    }
+    
     @media (max-width: 768px) {
         .club-header-grid {
             grid-template-columns: 1fr;
@@ -60,6 +80,18 @@
         .club-header-grid .btn-wrapper {
             justify-content: center !important;
             width: 100%;
+        }
+        .match-players-row {
+            flex-direction: column;
+            gap: 10px;
+            text-align: center;
+        }
+        .match-players-row > div {
+            text-align: center !important;
+        }
+        .match-meta-row {
+            flex-direction: column;
+            align-items: flex-start;
         }
     }
 
@@ -543,7 +575,7 @@
                             </div>
                         </div>
                         
-                        <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px;">
+                        <div class="match-players-row">
                             <div style="text-align: right; flex: 1;">
                                 <h4 style="color: {% if match.status == 'completed' and match.winner == match.player_a %}#34d399{% else %}#fff{% endif %}; font-size: 1.2rem; margin: 0;">
                                     {% if match.status == 'completed' and match.winner == match.player_a %}<i class="fas fa-trophy" style="font-size: 0.9rem; margin-right: 5px;"></i>{% endif %}
@@ -560,7 +592,7 @@
                                     </div>
                                     
                                     {% if match.set1_a is not None or match.set2_a is not None %}
-                                    <div style="display: flex; gap: 10px; margin-top: 8px; font-size: 0.8rem; color: #aaa; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 12px;">
+                                    <div style="display: flex; gap: 10px; margin-top: 8px; font-size: 0.8rem; color: #aaa; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 12px; flex-wrap: wrap; justify-content: center;">
                                         {% if match.set1_a is not None %}<span>1º: {{ match.set1_a }}-{{ match.set1_b }}</span>{% endif %}
                                         {% if match.set2_a is not None %}<span>2º: {{ match.set2_a }}-{{ match.set2_b }}</span>{% endif %}
                                         {% if match.set3_a is not None %}<span>3º: {{ match.set3_a }}-{{ match.set3_b }}</span>{% endif %}
@@ -581,7 +613,7 @@
                             </div>
                         </div>
 
-                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <div class="match-meta-row">
                             <div>
                                 <p style="color: var(--subtitle-color); margin: 0; font-size: 0.95rem;">
                                     <i class="fas fa-calendar-day"></i> 

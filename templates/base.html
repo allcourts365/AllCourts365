@@ -165,7 +165,12 @@
     <nav class="glass-nav">
         <div class="container nav-content">
             <a href="/" class="brand">AllCourts<span>365</span></a>
-            <div class="nav-links">
+            
+            <button class="hamburger" id="hamburger-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <div class="nav-links" id="nav-links">
                 <a href="/">Home</a>
                 <a href="{% url 'clubs:list' %}">Clubes</a>
                 {% block admin_button %}
@@ -193,6 +198,39 @@
                     setTimeout(() => { toast.remove(); }, 400); // Remove do DOM após a animação
                 }, 5000 + (index * 500)); // Adiciona um atraso escadinha para múltiplos toasts
             });
+            
+            // Lógica do Menu Hamburger
+            const hamburgerBtn = document.getElementById('hamburger-btn');
+            const navLinks = document.getElementById('nav-links');
+            const body = document.body;
+            
+            if (hamburgerBtn && navLinks) {
+                hamburgerBtn.addEventListener('click', () => {
+                    navLinks.classList.toggle('active');
+                    const icon = hamburgerBtn.querySelector('i');
+                    if (navLinks.classList.contains('active')) {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-times');
+                        body.style.overflow = 'hidden'; // Impede o scroll de fundo
+                    } else {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                        body.style.overflow = 'auto'; // Libera o scroll
+                    }
+                });
+                
+                // Fecha o menu ao clicar em um link
+                const links = navLinks.querySelectorAll('a');
+                links.forEach(link => {
+                    link.addEventListener('click', () => {
+                        navLinks.classList.remove('active');
+                        const icon = hamburgerBtn.querySelector('i');
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                        body.style.overflow = 'auto';
+                    });
+                });
+            }
         });
 
         {% block extra_scripts %}

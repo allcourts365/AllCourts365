@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="home-container" style="text-align: center; margin-top: 10vh;">
-    <h1 style="font-size: 4rem; font-weight: 800; margin-bottom: 20px;">Bem-vindo ao AllCourts<span style="color: var(--highlight-color);">365</span></h1>
-    <p style="font-size: 1.5rem; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
+<div class="home-container" style="text-align: center; margin-top: clamp(5vh, 10vh, 15vh);">
+    <h1 style="font-size: clamp(2.5rem, 8vw, 4rem); font-weight: 800; margin-bottom: 20px;">Bem-vindo ao AllCourts<span style="color: var(--highlight-color);">365</span></h1>
+    <p style="font-size: clamp(1rem, 4vw, 1.5rem); margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
         A central definitiva para gestão de Clubes de Tênis, Rankings e Torneios.
     </p>
     
     <div style="display: flex; justify-content: center; gap: 20px;">
-        <a href="{% url 'clubs:list' %}" class="btn-highlight" style="font-size: 1.2rem; padding: 15px 40px; text-decoration: none; display: inline-block;">Encontrar meu Clube</a>
+        <a href="{% url 'clubs:list' %}" class="btn-highlight" style="font-size: 1.1rem; padding: 12px 30px; text-decoration: none; display: inline-block;">Encontrar meu Clube</a>
     </div>
 
     <!-- Seção de demonstração de design premium com cards glassmorphism -->

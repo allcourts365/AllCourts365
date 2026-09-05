@@ -96,6 +96,19 @@
         color: #fff;
     }
     
+    @media (max-width: 768px) {
+        .match-card > div:first-child {
+            flex-direction: column;
+            gap: 15px;
+        }
+        .match-card .match-player {
+            text-align: center !important;
+        }
+        .match-card .match-score {
+            margin: 10px 0;
+        }
+    }
+    
     .round-filter-container {
         display: flex;
         align-items: center;
