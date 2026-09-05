@@ -258,6 +258,10 @@ input, select, textarea, button {
 @media (min-width: 768px) {
     .mobile-only { display: none !important; }
     .desktop-only { display: block !important; }
+    
+    .desktop-3-cols {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
 }
 
 @media (max-width: 767px) {
