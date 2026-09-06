@@ -48,8 +48,8 @@ class Club(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = "Clube"
-        verbose_name_plural = "Clubes"
+        verbose_name = "Clube / Liga"
+        verbose_name_plural = "Clubes / Ligas"
 
 class Court(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='courts', verbose_name="Clube")
@@ -64,7 +64,7 @@ class Court(models.Model):
         verbose_name_plural = "Quadras"
 
 class Player(models.Model):
-    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='player_profile', verbose_name="Usuário do Sistema")
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='player_profiles', verbose_name="Usuário do Sistema")
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='players', verbose_name="Clube")
     name = models.CharField(max_length=200, verbose_name="Nome do Atleta")
 

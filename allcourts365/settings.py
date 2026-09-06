@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -58,6 +61,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'core.middleware.AutoLogoutMiddleware',
 ]
 
 ROOT_URLCONF = 'allcourts365.urls'
@@ -159,12 +163,14 @@ ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_LOGOUT_ON_GET = True
 
+import os
+# ... (os was imported at the top, I will just use os.environ.get directly)
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         # Força o uso das credenciais pelas configurações, evitando erro de banco de dados
         'APP': {
-            'client_id': 'COLOQUE_SEU_CLIENT_ID_AQUI',
-            'secret': 'COLOQUE_SEU_SECRET_AQUI',
+            'client_id': os.environ.get('GOOGLE_OAUTH_CLIENT_ID', ''),
+            'secret': os.environ.get('GOOGLE_OAUTH_CLIENT_SECRET', ''),
             'key': ''
         }
     }
@@ -175,6 +181,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'allcourts365@gmail.com'
-EMAIL_HOST_PASSWORD = 'ugfa ezbz zxbu uchj'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = 'AllCourts365 <allcourts365@gmail.com>'

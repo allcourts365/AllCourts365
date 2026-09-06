@@ -316,7 +316,7 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
             label="Upload Planilha de Atletas",
             help_text=mark_safe(
                 'Formato .xlsx — Col A: Nome do Atleta, Col B: Categoria, Col C: Cabeça de Chave (marque com "x").'
-                '<br><a href="/clubs/download/modelo-torneio/" download>📥 Baixar planilha modelo</a>'
+                '<br><a href="/clubes/download/modelo-torneio/" download>📥 Baixar planilha modelo</a>'
             )
         )
         # Pontuação por resultado — todos opcionais no torneio eliminatório

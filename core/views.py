@@ -34,11 +34,41 @@ def login_redirect(request):
 def athlete_dashboard(request):
     user = request.user
     profile = user.profile
+    
+    # 1. Determinar o Clube Ativo e o Perfil de Atleta (Player) correspondente
+    club_id_str = request.GET.get('club') or request.POST.get('active_club_id') or request.session.get('active_club_id')
+    club_id = None
+    if club_id_str:
+        try:
+            club_id = int(club_id_str)
+        except ValueError:
+            pass
+            
+    my_profiles = user.player_profiles.all()
+    active_profile = None
     linked_club = None
     
-    # 1. Tentar pegar o clube do jogador vinculado
-    if hasattr(user, 'player_profile'):
-        linked_club = user.player_profile.club
+    if club_id:
+        active_profile = my_profiles.filter(club_id=club_id).first()
+        if not active_profile:
+            try:
+                linked_club = Club.objects.get(id=club_id)
+            except Club.DoesNotExist:
+                pass
+                
+    if not club_id and not active_profile and my_profiles.exists():
+        active_profile = my_profiles.first()
+        
+    print(f'DEBUG: club_id={club_id}, active_profile={active_profile}, linked_club={linked_club}')
+    if active_profile:
+        linked_club = active_profile.club
+        request.session['active_club_id'] = linked_club.id
+    elif linked_club:
+        request.session['active_club_id'] = linked_club.id
+        
+    user_form = UserForm(instance=user)
+    profile_form = UserProfileForm(instance=profile)
+    link_form = PlayerLinkRequestForm()
     
     if request.method == 'POST':
         if 'update_profile' in request.POST:
@@ -70,7 +100,7 @@ def athlete_dashboard(request):
                 court = Court.objects.get(id=court_id)
                 
                 # Checa se o usuário é realmente um dos jogadores
-                if user.player_profile not in [match.player_a, match.player_b]:
+                if active_profile not in [match.player_a, match.player_b]:
                     messages.error(request, 'Você não tem permissão para agendar este jogo.')
                     return redirect('athlete_dashboard')
                     
@@ -127,19 +157,19 @@ def athlete_dashboard(request):
                     match.proposed_court = court
                     match.proposed_datetime = scheduled_dt
                     match.schedule_status = 'aguardando_adversario'
-                    match.proposed_by = user.player_profile
+                    match.proposed_by = active_profile
                     match.save()
                     
                     # Notify opponent
-                    opponent = match.player_b if match.player_a == user.player_profile else match.player_a
+                    opponent = match.player_b if match.player_a == active_profile else match.player_a
                     if opponent and opponent.user:
                         from core.models import Message
                         if is_reschedule:
                             subject = "Reagendamento Proposto"
-                            body = f"{user.player_profile.name} está propondo um REAGENDAMENTO do jogo {match.tournament.name} (Rodada {match.round_number}). Nova proposta: {scheduled_dt.strftime('%d/%m/%Y às %H:%M')} na quadra {court.name}. O agendamento anterior foi cancelado. Acesse a aba Mensagens para aceitar ou recusar."
+                            body = f"{active_profile.name} está propondo um REAGENDAMENTO do jogo {match.tournament.name} (Rodada {match.round_number}). Nova proposta: {scheduled_dt.strftime('%d/%m/%Y às %H:%M')} na quadra {court.name}. O agendamento anterior foi cancelado. Acesse a aba Mensagens para aceitar ou recusar."
                         else:
                             subject = "Proposta de Agendamento"
-                            body = f"{user.player_profile.name} propôs agendar o jogo {match.tournament.name} (Rodada {match.round_number}) para o dia {scheduled_dt.strftime('%d/%m/%Y às %H:%M')} na quadra {court.name}. Acesse a aba Mensagens para aceitar ou recusar."
+                            body = f"{active_profile.name} propôs agendar o jogo {match.tournament.name} (Rodada {match.round_number}) para o dia {scheduled_dt.strftime('%d/%m/%Y às %H:%M')} na quadra {court.name}. Acesse a aba Mensagens para aceitar ou recusar."
                         Message.objects.create(
                             sender=user,
                             recipient=opponent.user,
@@ -162,7 +192,7 @@ def athlete_dashboard(request):
             try:
                 match = Match.objects.get(id=match_id)
                 # Verifica se a pessoa logada é realmente do jogo
-                if user.player_profile not in [match.player_a, match.player_b]:
+                if active_profile not in [match.player_a, match.player_b]:
                     messages.error(request, 'Permissão negada.')
                     return redirect('athlete_dashboard')
                     
@@ -194,7 +224,7 @@ def athlete_dashboard(request):
                             sender=user,
                             recipient=match.proposed_by.user,
                             subject="Agendamento Aceito!",
-                            body=f"{user.player_profile.name} aceitou sua proposta! O jogo foi marcado para {local_dt.strftime('%d/%m/%Y às %H:%M')} na quadra {match.court.name}.",
+                            body=f"{active_profile.name} aceitou sua proposta! O jogo foi marcado para {local_dt.strftime('%d/%m/%Y às %H:%M')} na quadra {match.court.name}.",
                             related_match=match
                         )
                     messages.success(request, 'Agendamento confirmado com sucesso!')
@@ -210,7 +240,7 @@ def athlete_dashboard(request):
                 from core.models import Message
                 Message.objects.filter(related_match=match, recipient=user, is_read=False).update(is_read=True)
                 
-                if user.player_profile not in [match.player_a, match.player_b]:
+                if active_profile not in [match.player_a, match.player_b]:
                     messages.error(request, 'Permissão negada.')
                     return redirect('athlete_dashboard')
                     
@@ -228,7 +258,7 @@ def athlete_dashboard(request):
                         sender=user,
                         recipient=proposer.user,
                         subject="Proposta Recusada - Aguardando Contraproposta",
-                        body=f"{user.player_profile.name} recusou sua proposta de agendamento e vai sugerir um novo horário.",
+                        body=f"{active_profile.name} recusou sua proposta de agendamento e vai sugerir um novo horário.",
                         related_match=match
                     )
                 messages.success(request, 'Proposta recusada. A agenda está aberta para você sugerir um novo horário!')
@@ -236,7 +266,7 @@ def athlete_dashboard(request):
                 messages.error(request, f'Erro: {str(e)}')
                 return redirect('athlete_dashboard')
             # Redireciona de volta abrindo automaticamente a agenda para contraproposta
-            club_id = user.player_profile.club.id if hasattr(user, 'player_profile') and user.player_profile.club else ''
+            club_id = active_profile.club.id if active_profile and active_profile.club else ''
             base_url = reverse('athlete_dashboard')
             return redirect(f'{base_url}?open_schedule={match_id}&club={club_id}')
                 
@@ -244,19 +274,19 @@ def athlete_dashboard(request):
             match_id = request.POST.get('match_id')
             try:
                 match = Match.objects.get(id=match_id)
-                if user.player_profile not in [match.player_a, match.player_b]:
+                if active_profile not in [match.player_a, match.player_b]:
                     messages.error(request, 'Permissão negada.')
                     return redirect('athlete_dashboard')
                 
                 # Avisar o outro jogador que o agendamento foi apagado
-                opponent = match.player_b if match.player_a == user.player_profile else match.player_a
+                opponent = match.player_b if match.player_a == active_profile else match.player_a
                 if opponent and opponent.user and (match.schedule_status == 'agendado' or match.schedule_status == 'aguardando_adversario'):
                     from core.models import Message
                     Message.objects.create(
                         sender=user,
                         recipient=opponent.user,
                         subject="Agendamento Cancelado",
-                        body=f"{user.player_profile.name} excluiu o agendamento atual do jogo. Vocês precisam combinar e marcar um novo horário.",
+                        body=f"{active_profile.name} excluiu o agendamento atual do jogo. Vocês precisam combinar e marcar um novo horário.",
                         related_match=match
                     )
                     
@@ -279,7 +309,7 @@ def athlete_dashboard(request):
             try:
                 match = Match.objects.get(id=match_id)
                 # Verifica se o usuário é um dos jogadores e se o jogo está pendente
-                if user.player_profile not in [match.player_a, match.player_b] or match.status != 'pending':
+                if active_profile not in [match.player_a, match.player_b] or match.status != 'pending':
                     messages.error(request, 'Não é possível lançar resultado para este jogo.')
                     return redirect('athlete_dashboard')
                 
@@ -299,18 +329,18 @@ def athlete_dashboard(request):
                     
                 match.proposed_result_json = proposed
                 match.result_status = 'pending_approval'
-                match.reported_by = user.player_profile
+                match.reported_by = active_profile
                 match.save()
                 
                 # Envia mensagem para o adversário
-                opponent = match.player_b if match.player_a == user.player_profile else match.player_a
+                opponent = match.player_b if match.player_a == active_profile else match.player_a
                 if opponent and opponent.user:
                     from core.models import Message
                     Message.objects.create(
                         sender=user,
                         recipient=opponent.user,
                         subject="Novo Resultado Lançado",
-                        body=f"{user.player_profile.name} propôs o resultado do jogo {match.tournament.name} (Rodada {match.round_number}). Por favor, avalie esta proposta abaixo (Aceitar ou Recusar e Propor Novo).",
+                        body=f"{active_profile.name} propôs o resultado do jogo {match.tournament.name} (Rodada {match.round_number}). Por favor, avalie esta proposta abaixo (Aceitar ou Recusar e Propor Novo).",
                         related_match=match
                     )
                 
@@ -327,7 +357,7 @@ def athlete_dashboard(request):
                 from core.models import Message
                 Message.objects.filter(related_match=match, recipient=user, is_read=False).update(is_read=True)
                 
-                if user.player_profile not in [match.player_a, match.player_b] or match.result_status != 'pending_approval' or match.reported_by == user.player_profile:
+                if active_profile not in [match.player_a, match.player_b] or match.result_status != 'pending_approval' or match.reported_by == active_profile:
                     messages.error(request, 'Você não pode aceitar este resultado.')
                     return redirect('athlete_dashboard')
                 
@@ -357,7 +387,7 @@ def athlete_dashboard(request):
                         sender=user,
                         recipient=match.reported_by.user,
                         subject="Resultado Aceito",
-                        body=f"{user.player_profile.name} aceitou o resultado do jogo {match.tournament.name} (Rodada {match.round_number}). O jogo foi finalizado e os pontos computados.",
+                        body=f"{active_profile.name} aceitou o resultado do jogo {match.tournament.name} (Rodada {match.round_number}). O jogo foi finalizado e os pontos computados.",
                         related_match=match
                     )
                     
@@ -377,13 +407,15 @@ def athlete_dashboard(request):
                 pass
             return redirect(reverse('athlete_dashboard') + '?tab=mensagens')
     
-    else:
-        user_form = UserForm(instance=user)
-        profile_form = UserProfileForm(instance=profile)
-        link_form = PlayerLinkRequestForm()
 
-    # Busca requisições pendentes do usuário
-    pending_request = PlayerLinkRequest.objects.filter(user=user, status='pending').first()
+
+    # Busca requisições pendentes do usuário focando no clube atual, se houver
+    if linked_club:
+        pending_request = PlayerLinkRequest.objects.filter(user=user, club=linked_club, status='pending').first()
+    else:
+        pending_request = PlayerLinkRequest.objects.filter(user=user, status='pending').first()
+        
+    all_pending_requests = PlayerLinkRequest.objects.filter(user=user, status='pending').select_related('club')
 
     # Prepara dados para o select encadeado (Clube -> Atleta)
     clubs = Club.objects.all().order_by('name')
@@ -396,8 +428,9 @@ def athlete_dashboard(request):
     my_matches = []
     my_tournaments = []
     courts = []
-    if hasattr(user, 'player_profile'):
-        p = user.player_profile
+    print(f'DEBUG: club_id={club_id}, active_profile={active_profile}, linked_club={linked_club}')
+    if active_profile:
+        p = active_profile
         my_matches = Match.objects.filter(Q(player_a=p) | Q(player_b=p)).select_related('tournament', 'player_a', 'player_b', 'court').order_by('-tournament__current_round', 'round_number')
         
         seen_t = set()
@@ -435,6 +468,7 @@ def athlete_dashboard(request):
         'profile_form': profile_form,
         'link_form': link_form,
         'pending_request': pending_request,
+        'all_pending_requests': all_pending_requests,
         'clubs': clubs,
         'players_json': json.dumps(players_data),
         'my_matches': my_matches,
@@ -443,7 +477,8 @@ def athlete_dashboard(request):
         'user_messages': page_obj,
         'athlete_messages': page_obj,
         'unread_messages_count': unread_messages_count,
-        'my_player_profile': user.player_profile if hasattr(user, 'player_profile') else None,
+        'my_player_profile': active_profile,
+        'my_profiles': my_profiles,
     }
     
     return render(request, 'athlete_dashboard.html', context)

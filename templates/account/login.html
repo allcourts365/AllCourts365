@@ -215,10 +215,18 @@
 
         <div class="divider">OU</div>
 
-        <a href="{% provider_login_url 'google' %}" class="btn-google">
-            <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google Logo" style="width: 20px; height: 20px;">
-            Entrar com Google
-        </a>
+        <form action="{% provider_login_url 'google' %}" method="post" style="width: 100%;">
+            {% csrf_token %}
+            {% if request.GET.next %}
+                <input type="hidden" name="next" value="{{ request.GET.next }}">
+            {% elif request.GET.club %}
+                <input type="hidden" name="next" value="/redirecionar/?club={{ request.GET.club }}">
+            {% endif %}
+            <button type="submit" class="btn-google">
+                <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google Logo" style="width: 20px; height: 20px;">
+                Entrar com Google
+            </button>
+        </form>
 
         <div class="auth-links" style="margin-top: 25px; font-size: 0.9rem; color: var(--subtitle-color);">
             <p>Ainda não tem uma conta? <a href="{% url 'account_signup' %}?club={{ request.GET.club }}">Cadastre-se</a></p>

@@ -376,7 +376,34 @@
 {% endif %}
 
 <div class="tournaments-section">
-    <h2 style="font-size: 2rem; margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px; text-align: center;">Bem vindo ao Painel Administrativo de Atleta</h2>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 15px; margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
+        <h2 style="font-size: 2rem; margin: 0; text-align: center;">Bem vindo ao Painel Administrativo de Atleta</h2>
+        
+        {% if my_profiles or all_pending_requests %}
+        <div style="display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 8px 15px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);">
+            <i class="fas fa-exchange-alt" style="color: var(--highlight-color);"></i>
+            <label for="club-switcher" style="color: var(--subtitle-color); font-weight: 600; margin: 0;">Alternar Clube:</label>
+            <select id="club-switcher" onchange="window.location.href='?club='+this.value" style="background: transparent; color: #fff; border: none; font-size: 1.05rem; font-weight: bold; cursor: pointer; outline: none; appearance: none; padding-right: 15px;">
+                {% for req in all_pending_requests %}
+                <option value="{{ req.club.id }}" style="background: #1e293b; color: #fff;" {% if linked_club and req.club.id == linked_club.id %}selected{% endif %}>
+                    {{ req.club.name }} (Em Análise...)
+                </option>
+                {% endfor %}
+
+                {% if linked_club and not my_player_profile and not pending_request %}
+                <option value="{{ linked_club.id }}" style="background: #1e293b; color: #fff;" selected>
+                    {{ linked_club.name }} (Novo Vínculo)
+                </option>
+                {% endif %}
+                {% for profile in my_profiles %}
+                <option value="{{ profile.club.id }}" style="background: #1e293b; color: #fff;" {% if linked_club and profile.club.id == linked_club.id %}selected{% endif %}>
+                    {{ profile.club.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+    </div>
     
     <!-- Menu Horizontal de Abas -->
     <div class="tabs-container">
@@ -393,7 +420,7 @@
                 Vínculo com Clube
             </h2>
 
-            {% if linked_club %}
+            {% if my_player_profile %}
                 <!-- Usuário já vinculado a um clube -->
                 <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
                     <div style="width: 120px; height: 120px; background: rgba(16, 185, 129, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; border: 2px solid rgba(16,185,129,0.3);">
@@ -406,7 +433,7 @@
                     
                     <div style="background: rgba(0,0,0,0.3); padding: 15px 30px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);">
                         <span style="color: var(--subtitle-color); font-size: 1.1rem;">Perfil Atleta:</span>
-                        <strong style="color: #fff; font-size: 1.2rem; margin-left: 8px;">{{ user.player_profile.name }}</strong>
+                        <strong style="color: #fff; font-size: 1.2rem; margin-left: 8px;">{{ my_player_profile.name }}</strong>
                     </div>
                     
                     <div style="margin-top: 50px;">
