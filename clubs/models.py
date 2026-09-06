@@ -104,6 +104,9 @@ class Tournament(models.Model):
     is_active = models.BooleanField(default=True, verbose_name="Ativo (Exibir no site)")
     is_finished = models.BooleanField(default=False, verbose_name="Encerrado")
     
+    allow_player_scheduling = models.BooleanField(default=True, verbose_name="Atleta pode gerenciar agendamento?")
+    allow_player_results = models.BooleanField(default=True, verbose_name="Atleta pode lançar resultados?")
+
     points_winner_2x0 = models.IntegerField(null=True, blank=True, default=3, verbose_name="Pontos (Vitória 2x0)")
     points_winner_2x1 = models.IntegerField(null=True, blank=True, default=2, verbose_name="Pontos (Vitória 2x1)")
     points_loser_2x1  = models.IntegerField(null=True, blank=True, default=1, verbose_name="Pontos (Derrota 2x1)")

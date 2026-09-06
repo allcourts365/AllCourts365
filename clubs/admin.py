@@ -149,6 +149,36 @@ class RankingTournamentForm(forms.ModelForm):
 class RankingTournamentAdmin(TournamentAdmin):
     form = RankingTournamentForm
 
+    fieldsets = (
+        ('Informações do Ranking', {
+            'fields': ('club', 'name', 'competition_type', 'set_format',
+                       'start_date', 'end_date', 'number_of_brackets',
+                       'allow_player_scheduling', 'allow_player_results',
+                       'is_active', 'is_finished')
+        }),
+        ('Upload de Atletas (Gera as rodadas Automaticamente)', {
+            'fields': ('excel_file', 'history_file'),
+        }),
+        ('Escolha o Modelo de Pontuação', {
+            'description': (
+                'Deixe EM BRANCO os campos abaixo para não usar sistema de pontuação personalizado.'
+            ),
+            'classes': ('collapse',),
+            'fields': (
+                ('points_winner_2x0', 'points_winner_2x1'),
+                ('points_loser_2x1', 'points_loser_2x0'),
+                ('pts_round64_participant', 'pts_round64_winner'),
+                ('pts_round32_participant', 'pts_round32_winner'),
+                ('pts_round16_participant', 'pts_round16_winner'),
+                ('pts_oitavas_participant', 'pts_oitavas_winner'),
+                ('pts_quartas_participant', 'pts_quartas_winner'),
+                ('pts_semi_participant',    'pts_semi_winner'),
+                ('pts_final_participant',   'pts_final_winner'),
+                'pts_campeon',
+            ),
+        }),
+    )
+
     def get_queryset(self, request):
         return super().get_queryset(request).filter(tournament_type='ranking')
         
@@ -346,6 +376,7 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
         ('Informações do Torneio', {
             'fields': ('club', 'name', 'competition_type', 'set_format',
                        'start_date', 'end_date', 'number_of_brackets',
+                       'allow_player_scheduling', 'allow_player_results',
                        'is_active', 'is_finished')
         }),
         ('Upload de Atletas (Gera as Chaves Automaticamente)', {
@@ -577,9 +608,33 @@ class CategoryPlayerAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
 
 @admin.register(Match)
 class MatchAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
-    list_display = ('__str__', 'round_number', 'phase', 'tournament', 'category', 'status', 'winner', 'scheduled_datetime')
+    
+    def match_name(self, obj):
+        from django.utils.html import format_html
+        return format_html('<span style="white-space: nowrap;">{}</span>', str(obj))
+    match_name.short_description = 'Match'
+
+    list_display = ('match_name', 'round_number', 'phase', 'tournament', 'category', 'status', 'winner', 'scheduled_datetime')
     list_filter = ('tournament__club', 'tournament', 'category', 'round_number', 'status')
     search_fields = ('player_a__name', 'player_b__name')
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "court":
+            match_id = request.resolver_match.kwargs.get('object_id')
+            if match_id:
+                try:
+                    from .models import Court, Match
+                    match_obj = Match.objects.get(pk=match_id)
+                    courts = Court.objects.filter(club=match_obj.tournament.club)
+                    if match_obj.tournament.tournament_type == 'ranking':
+                        courts = courts.filter(is_ranking_court=True)
+                    kwargs["queryset"] = courts
+                except Match.DoesNotExist:
+                    pass
+            elif not request.user.is_superuser:
+                from .models import Court
+                kwargs["queryset"] = Court.objects.filter(club__administrators=request.user)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     fieldsets = (
         ('Informações da Partida', {

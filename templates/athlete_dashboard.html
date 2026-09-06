@@ -706,24 +706,28 @@
                             
                             {% if match.status == 'pending' and match.round_number == match.tournament.current_round and match.player_a and match.player_b %}
                                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                    {% if match.schedule_status == 'unagendado' %}
-                                    <button onclick="openScheduleModal('{{ match.id }}', '{{ match.player_a.name }} vs {{ match.player_b.name }}')" style="padding: 8px 16px; background: #fff; color: #000; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
-                                        <i class="fas fa-calendar-plus"></i> Agendar
-                                    </button>
-                                    {% else %}
-                                    <button onclick="openScheduleModal('{{ match.id }}', '{{ match.player_a.name }} vs {{ match.player_b.name }}')" style="padding: 8px 16px; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.5); border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
-                                        <i class="fas fa-calendar-alt"></i> Reagendar
-                                    </button>
+                                    {% if match.tournament.allow_player_scheduling %}
+                                        {% if match.schedule_status == 'unagendado' %}
+                                        <button onclick="openScheduleModal('{{ match.id }}', '{{ match.player_a.name }} vs {{ match.player_b.name }}')" style="padding: 8px 16px; background: #fff; color: #000; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
+                                            <i class="fas fa-calendar-plus"></i> Agendar
+                                        </button>
+                                        {% else %}
+                                        <button onclick="openScheduleModal('{{ match.id }}', '{{ match.player_a.name }} vs {{ match.player_b.name }}')" style="padding: 8px 16px; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.5); border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
+                                            <i class="fas fa-calendar-alt"></i> Reagendar
+                                        </button>
+                                        {% endif %}
                                     {% endif %}
                                     
-                                    {% if match.result_status != 'pending_approval' %}
-                                        <button onclick="openSubmitResultModal('{{ match.id }}', '{{ match.player_a.name }} vs {{ match.player_b.name }}')" style="padding: 8px 16px; background: var(--highlight-color); color: #fff; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
-                                            <i class="fas fa-trophy"></i> Lançar Resultado
-                                        </button>
-                                    {% elif match.result_status == 'pending_approval' %}
-                                        <button disabled style="padding: 8px 16px; background: rgba(255,165,0,0.2); color: orange; border: 1px solid rgba(255,165,0,0.5); border-radius: 20px; font-weight: bold; cursor: not-allowed; font-size: 0.9rem;">
-                                            <i class="fas fa-clock"></i> Aguardando Confirmação
-                                        </button>
+                                    {% if match.tournament.allow_player_results %}
+                                        {% if match.result_status != 'pending_approval' %}
+                                            <button onclick="openSubmitResultModal('{{ match.id }}', '{{ match.player_a.name }} vs {{ match.player_b.name }}')" style="padding: 8px 16px; background: var(--highlight-color); color: #fff; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
+                                                <i class="fas fa-trophy"></i> Lançar Resultado
+                                            </button>
+                                        {% elif match.result_status == 'pending_approval' %}
+                                            <button disabled style="padding: 8px 16px; background: rgba(255,165,0,0.2); color: orange; border: 1px solid rgba(255,165,0,0.5); border-radius: 20px; font-weight: bold; cursor: not-allowed; font-size: 0.9rem;">
+                                                <i class="fas fa-clock"></i> Aguardando Confirmação
+                                            </button>
+                                        {% endif %}
                                     {% endif %}
                                 </div>
                             {% endif %}
