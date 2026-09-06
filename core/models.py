@@ -111,12 +111,12 @@ class PlayerLinkRequest(models.Model):
         super().save(*args, **kwargs)
         # Quando a solicitação for aprovada, vinculamos de fato o Atleta ao Usuário
         if self.status == 'approved':
-            if not self.player.user:
-                self.player.user = self.user
+            self.player.user = self.user
+            self.player.save()
+        elif self.status in ['pending', 'rejected']:
+            if self.player.user == self.user:
+                self.player.user = None
                 self.player.save()
-            
-            # Se houver outras solicitações pendentes para este mesmo player ou para este mesmo user, podemos rejeitar as outras
-            # mas por enquanto vamos manter simples e só garantir o vínculo.
 
 class Message(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages', null=True, blank=True, verbose_name="Remetente")
@@ -134,3 +134,19 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.subject} - para {self.recipient.username}"
+
+from allauth.account.models import EmailAddress
+
+
+@receiver(post_save, sender=User)
+def auto_verify_admin_email(sender, instance, created, **kwargs):
+    if instance.is_staff or instance.is_superuser:
+        if instance.email:
+            email_address, email_created = EmailAddress.objects.get_or_create(
+                user=instance,
+                email=instance.email,
+                defaults={'verified': True, 'primary': True}
+            )
+            if not email_created and not email_address.verified:
+                email_address.verified = True
+                email_address.save()

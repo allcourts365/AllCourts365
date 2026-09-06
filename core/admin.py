@@ -2,21 +2,100 @@ from django.contrib import admin
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
+from allauth.account.models import EmailAddress
 from .models import SiteConfiguration, UserProfile, PlayerLinkRequest
+from django.contrib.auth.forms import UserChangeForm, AdminUserCreationForm
+from clubs.models import Club
+from clubs.admin import ClubScopedAdminMixin
+
+class CustomUserForm(UserChangeForm):
+    managed_club = forms.ModelChoiceField(
+        queryset=Club.objects.all(),
+        required=False,
+        label="Clube/Liga que irá administrar",
+        empty_label="Nenhum"
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            first_club = self.instance.managed_clubs.first()
+            if first_club:
+                self.initial['managed_club'] = first_club
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+        if user.pk:
+            club = self.cleaned_data.get('managed_club')
+            if club:
+                user.managed_clubs.set([club])
+            else:
+                user.managed_clubs.clear()
+        return user
+
+class CustomUserAddForm(AdminUserCreationForm):
+    managed_club = forms.ModelChoiceField(
+        queryset=Club.objects.all(),
+        required=False,
+        label="Clube/Liga que irá administrar",
+        empty_label="Nenhum"
+    )
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+        if user.pk:
+            club = self.cleaned_data.get('managed_club')
+            if club:
+                user.managed_clubs.set([club])
+            else:
+                user.managed_clubs.clear()
+        return user
+
 
 admin.site.unregister(User)
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
+    form = CustomUserForm
+    add_form = CustomUserAddForm
+    
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        ('Gestão de Clube/Liga', {'fields': ('managed_club',)}),
+    )
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if not request.user.is_superuser:
             return qs.filter(is_superuser=False)
         return qs
+        
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if obj.email:
+            email_address, created = EmailAddress.objects.get_or_create(
+                user=obj,
+                email=obj.email,
+                defaults={'verified': True, 'primary': True}
+            )
+            if not created and not email_address.verified:
+                email_address.verified = True
+                email_address.save()
 
     def get_fieldsets(self, request, obj=None):
-        fieldsets = super().get_fieldsets(request, obj)
-        if not request.user.is_superuser:
+        if not obj:
+            fieldsets = list(self.add_fieldsets)
+            if not request.user.is_superuser:
+                fieldsets = [f for f in fieldsets if f[0] != 'Gestão de Clube/Liga']
+            return fieldsets
+
+        fieldsets = list(super(UserAdmin, self).get_fieldsets(request, obj))
+        if request.user.is_superuser:
+            fieldsets.append(('Gestão de Clube/Liga', {'fields': ('managed_club',)}))
+            return fieldsets
+        else:
             new_fieldsets = []
             for name, opts in fieldsets:
                 # Copiamos o dicionário para não alterar o original da classe
@@ -30,7 +109,6 @@ class CustomUserAdmin(UserAdmin):
                 
                 new_fieldsets.append((name, new_opts))
             return new_fieldsets
-        return fieldsets
 
 class SiteConfigurationForm(forms.ModelForm):
     class Meta:
@@ -63,17 +141,11 @@ class UserProfileAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'user__email', 'full_name')
 
 @admin.register(PlayerLinkRequest)
-class PlayerLinkRequestAdmin(admin.ModelAdmin):
+class PlayerLinkRequestAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     list_display = ('user', 'club', 'player', 'status', 'created_at')
-    list_filter = ('status', 'club')
+    list_filter = ('status', ('club', admin.RelatedOnlyFieldListFilter))
     search_fields = ('user__username', 'user__email', 'player__name')
     actions = ['approve_requests', 'reject_requests']
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        return qs.filter(club__administrators=request.user)
 
     @admin.action(description='Aprovar solicitações selecionadas')
     def approve_requests(self, request, queryset):
@@ -87,5 +159,7 @@ class PlayerLinkRequestAdmin(admin.ModelAdmin):
 
     @admin.action(description='Rejeitar solicitações selecionadas')
     def reject_requests(self, request, queryset):
-        queryset.filter(status='pending').update(status='rejected')
-        self.message_user(request, "Solicitações rejeitadas.")
+        for req in queryset.filter(status='pending'):
+            req.status = 'rejected'
+            req.save()
+        self.message_user(request, "Solicitações rejeitadas e vínculos desfeitos (se aplicável).")

@@ -14,16 +14,26 @@ def home(request):
     return render(request, 'home.html')
 
 from django.contrib.auth import logout
+from django.shortcuts import redirect
+
+def logout_and_redirect(request):
+    next_url = request.GET.get('next', '/')
+    logout(request)
+    return redirect(next_url)
 
 @login_required
 def login_redirect(request):
     user = request.user
     
-    # 1. Se for administrador de algum clube, vai pro Admin do clube
+    # 1. Se for membro da equipe ou superuser, vai para o painel admin do django
+    if user.is_staff or user.is_superuser:
+        return redirect('/admin/')
+    
+    # 2. Se for administrador de algum clube, vai pro Admin do clube
     if user.managed_clubs.exists():
         return render(request, 'admin_redirect.html')
         
-    # 2. Atletas, Usuários Novos e SuperAdmins vão pro Dashboard de Atleta
+    # 3. Atletas, Usuários Novos vão pro Dashboard de Atleta
     club_id = request.GET.get('club')
     url = reverse('athlete_dashboard')
     if club_id:
@@ -85,9 +95,27 @@ def athlete_dashboard(request):
             if link_form.is_valid():
                 req = link_form.save(commit=False)
                 req.user = user
-                req.save()
-                messages.success(request, 'Solicitação enviada! Aguarde a aprovação do clube.')
+                
+                # Verifica se já existe uma solicitação pendente ou se já está vinculado
+                if PlayerLinkRequest.objects.filter(user=user, club=req.club, status='pending').exists():
+                    messages.warning(request, 'Você já tem uma solicitação de vínculo em análise para este clube!')
+                elif Player.objects.filter(user=user, club=req.club).exists():
+                    messages.warning(request, 'Você já possui um vínculo com este clube!')
+                else:
+                    req.save()
+                    messages.success(request, 'Solicitação enviada! Aguarde a aprovação do clube.')
                 return redirect('athlete_dashboard')
+        elif 'resubmit_link_request' in request.POST:
+            req_id = request.POST.get('request_id')
+            try:
+                req = PlayerLinkRequest.objects.get(id=req_id, user=user)
+                if req.status == 'rejected':
+                    req.status = 'pending'
+                    req.save()
+                    messages.success(request, 'Solicitação enviada novamente! Aguarde a aprovação do clube.')
+            except PlayerLinkRequest.DoesNotExist:
+                messages.error(request, 'Solicitação não encontrada.')
+            return redirect('athlete_dashboard')
                 
         elif 'schedule_match' in request.POST:
             match_id = request.POST.get('match_id')
@@ -415,7 +443,7 @@ def athlete_dashboard(request):
     else:
         pending_request = PlayerLinkRequest.objects.filter(user=user, status='pending').first()
         
-    all_pending_requests = PlayerLinkRequest.objects.filter(user=user, status='pending').select_related('club')
+    all_link_requests = PlayerLinkRequest.objects.filter(user=user, status__in=['pending', 'rejected']).select_related('club', 'player')
 
     # Prepara dados para o select encadeado (Clube -> Atleta)
     clubs = Club.objects.all().order_by('name')
@@ -426,6 +454,8 @@ def athlete_dashboard(request):
 
     # Prepara os Jogos do Atleta
     my_matches = []
+    my_rankings = []
+    my_knockouts = []
     my_tournaments = []
     courts = []
     print(f'DEBUG: club_id={club_id}, active_profile={active_profile}, linked_club={linked_club}')
@@ -438,6 +468,10 @@ def athlete_dashboard(request):
             if m.tournament and m.tournament.id not in seen_t:
                 seen_t.add(m.tournament.id)
                 my_tournaments.append(m.tournament)
+                if m.tournament.tournament_type == 'ranking':
+                    my_rankings.append(m.tournament)
+                elif m.tournament.tournament_type == 'knockout':
+                    my_knockouts.append(m.tournament)
                 
         courts = Court.objects.filter(club=linked_club, is_ranking_court=True)
 
@@ -456,6 +490,13 @@ def athlete_dashboard(request):
         except ValueError:
             pass
             
+    msg_club_id = request.GET.get('msg_club_id')
+    if msg_club_id:
+        try:
+            user_messages = user_messages.filter(related_match__tournament__club_id=msg_club_id)
+        except ValueError:
+            pass
+            
     unread_messages_count = Message.objects.filter(recipient=user, is_read=False).count()
     
     paginator = Paginator(user_messages, 10)
@@ -468,11 +509,13 @@ def athlete_dashboard(request):
         'profile_form': profile_form,
         'link_form': link_form,
         'pending_request': pending_request,
-        'all_pending_requests': all_pending_requests,
+        'all_link_requests': all_link_requests,
         'clubs': clubs,
         'players_json': json.dumps(players_data),
         'my_matches': my_matches,
         'my_tournaments': my_tournaments,
+        'my_rankings': my_rankings,
+        'my_knockouts': my_knockouts,
         'courts': courts,
         'user_messages': page_obj,
         'athlete_messages': page_obj,

@@ -92,7 +92,7 @@
 
     .club-header-grid {
         display: grid;
-        grid-template-columns: 150px 1fr auto;
+        grid-template-columns: 150px 1fr;
         gap: 30px;
         align-items: center;
         margin-top: 40px;
@@ -143,21 +143,6 @@
         </h1>
         <p style="margin-bottom: 10px; font-size: 1.1rem; line-height: 1.4;">{{ club.description|default:"Sem descrição." }}</p>
         <p style="font-size: 0.95rem; color: var(--highlight-color); margin-top: auto;">📍 {{ club.address|default:"Endereço não informado" }}</p>
-    </div>
-    <div class="btn-wrapper" style="display: flex; align-items: center; justify-content: flex-end;">
-        {% if user.is_authenticated and user.managed_clubs.all %}
-            <a href="{% url 'login_redirect' %}?club={{ club.id }}" class="btn-highlight" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap;">
-                <i class="fas fa-sign-in-alt"></i> Meu Painel (Admin)
-            </a>
-        {% elif user.is_authenticated and user.is_superuser %}
-            <a href="{% url 'account_logout' %}?next=/accounts/login/?club={{ club.id }}" class="btn-highlight" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap;">
-                <i class="fas fa-sign-in-alt"></i> Entrar
-            </a>
-        {% else %}
-            <a href="{% url 'account_login' %}?club={{ club.id }}" class="btn-highlight" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap;">
-                <i class="fas fa-sign-in-alt"></i> Entrar
-            </a>
-        {% endif %}
     </div>
 </div>
 

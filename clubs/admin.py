@@ -14,13 +14,28 @@ class ClubScopedAdminMixin:
         model_name = self.model.__name__
         if model_name == 'Club':
             return qs.filter(administrators=request.user).distinct()
-        elif model_name in ['Player', 'Tournament', 'RankingTournament', 'KnockoutTournament']:
+        elif model_name in ['Player', 'Tournament', 'RankingTournament', 'KnockoutTournament', 'PlayerLinkRequest', 'Court']:
             return qs.filter(club__administrators=request.user).distinct()
         elif model_name in ['Category', 'Match']:
             return qs.filter(tournament__club__administrators=request.user).distinct()
         elif model_name == 'CategoryPlayer':
             return qs.filter(category__tournament__club__administrators=request.user).distinct()
         return qs
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser or request.user.is_staff
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser or request.user.is_staff
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser or request.user.is_staff
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser or request.user.is_staff
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser or request.user.is_staff
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if not request.user.is_superuser:
@@ -97,14 +112,14 @@ class ClubAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
 @admin.register(Court)
 class CourtAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     list_display = ('name', 'club', 'is_ranking_court')
-    list_filter = ('club', 'is_ranking_court')
+    list_filter = (('club', admin.RelatedOnlyFieldListFilter), 'is_ranking_court')
     search_fields = ('name',)
 
 @admin.register(Player)
 class PlayerAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     list_display = ('name', 'club', 'competitions')
     search_fields = ('name',)
-    list_filter = ('club', 'categoryplayer__category__tournament')
+    list_filter = (('club', admin.RelatedOnlyFieldListFilter), ('categoryplayer__category__tournament', admin.RelatedOnlyFieldListFilter))
     
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -124,7 +139,7 @@ class CategoryInline(admin.TabularInline):
 @admin.register(Tournament)
 class TournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     list_display = ('name', 'club', 'tournament_type', 'is_active', 'is_finished')
-    list_filter = ('club', 'tournament_type', 'is_active')
+    list_filter = (('club', admin.RelatedOnlyFieldListFilter), 'tournament_type', 'is_active')
     search_fields = ('name',)
     inlines = [CategoryInline]
 
@@ -152,7 +167,7 @@ class RankingTournamentAdmin(TournamentAdmin):
     fieldsets = (
         ('Informações do Ranking', {
             'fields': ('club', 'name', 'competition_type', 'set_format',
-                       'start_date', 'end_date', 'number_of_brackets',
+                       'current_round', 'start_date', 'end_date', 'number_of_brackets',
                        'allow_player_scheduling', 'allow_player_results',
                        'is_active', 'is_finished')
         }),
@@ -603,7 +618,7 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
 @admin.register(CategoryPlayer)
 class CategoryPlayerAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     list_display = ('player', 'category', 'points', 'matches_played', 'wins', 'losses', 'is_seed', 'seed_number')
-    list_filter = ('category__tournament__club', 'category', 'is_seed')
+    list_filter = (('category__tournament__club', admin.RelatedOnlyFieldListFilter), ('category', admin.RelatedOnlyFieldListFilter), 'is_seed')
     search_fields = ('player__name',)
 
 @admin.register(Match)
@@ -615,7 +630,7 @@ class MatchAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     match_name.short_description = 'Match'
 
     list_display = ('match_name', 'round_number', 'phase', 'tournament', 'category', 'status', 'winner', 'scheduled_datetime')
-    list_filter = ('tournament__club', 'tournament', 'category', 'round_number', 'status')
+    list_filter = (('tournament__club', admin.RelatedOnlyFieldListFilter), ('tournament', admin.RelatedOnlyFieldListFilter), ('category', admin.RelatedOnlyFieldListFilter), 'round_number', 'status')
     search_fields = ('player_a__name', 'player_b__name')
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):

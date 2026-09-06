@@ -407,100 +407,92 @@
     
     <!-- Menu Horizontal de Abas -->
     <div class="tabs-container">
-        <button class="tab-btn {% if not linked_club %}active{% endif %}" onclick="openTab('meu-clube', this)"><i class="fas fa-link"></i> Meu Clube</button>
+        <button class="tab-btn {% if not linked_club %}active{% endif %}" onclick="openTab('meu-clube', this)"><i class="fas fa-link"></i> Meu(s) Clube(s) / Liga(s)</button>
         <button class="tab-btn {% if linked_club %}active{% endif %}" onclick="openTab('meu-perfil', this)"><i class="fas fa-user-edit"></i> Meu Perfil</button>
         <button class="tab-btn" onclick="openTab('meus-jogos', this)"><i class="fas fa-calendar-alt"></i> Meus Jogos</button>
         <button class="tab-btn" onclick="openTab('mensagens', this)"><i class="fas fa-envelope"></i> Mensagens {% if unread_messages_count %}<span style="background: red; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.8rem; margin-left: 5px;">{{ unread_messages_count }}</span>{% endif %}</button>
     </div>
 
-    <!-- Aba: Meu Clube -->
+    <!-- Aba: Meu(s) Clube(s) / Liga(s) -->
     <div id="meu-clube" class="tab-content {% if not linked_club %}active{% endif %}">
-        <div class="glass-card" style="padding: 40px; border-radius: 16px; text-align: center; min-height: 450px; display: flex; flex-direction: column; justify-content: center;">
-            <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 30px; font-weight: 900;">
-                Vínculo com Clube
+        <div class="glass-card" style="padding: 40px; border-radius: 16px; min-height: 450px;">
+            <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 30px; font-weight: 900; text-align: center;">
+                Meus Vínculos
             </h2>
 
-            {% if my_player_profile %}
-                <!-- Usuário já vinculado a um clube -->
-                <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                    <div style="width: 120px; height: 120px; background: rgba(16, 185, 129, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; border: 2px solid rgba(16,185,129,0.3);">
-                        <i class="fas fa-check-circle" style="font-size: 4.5rem; color: #34d399;"></i>
-                    </div>
-                    
-                    <h3 style="color: #fff; font-size: 1.8rem; font-weight: 800; margin-bottom: 15px;">Vínculo Ativo</h3>
-                    <p style="color: var(--subtitle-color); font-size: 1.1rem; margin-bottom: 5px;">Você está oficialmente vinculado ao clube:</p>
-                    <h4 style="color: var(--highlight-color); font-size: 2.5rem; margin-bottom: 20px; font-weight: 900; letter-spacing: -0.5px;">{{ linked_club.name }}</h4>
-                    
-                    <div style="background: rgba(0,0,0,0.3); padding: 15px 30px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);">
-                        <span style="color: var(--subtitle-color); font-size: 1.1rem;">Perfil Atleta:</span>
-                        <strong style="color: #fff; font-size: 1.2rem; margin-left: 8px;">{{ my_player_profile.name }}</strong>
-                    </div>
-                    
-                    <div style="margin-top: 50px;">
-                        <a href="{% url 'clubs:detail' linked_club.id %}" class="btn-save">
-                            <i class="fas fa-arrow-right"></i> Acessar Página do Clube
+            {% if my_profiles %}
+                <h3 style="color: #fff; font-size: 1.5rem; font-weight: 700; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">Vínculos Ativos</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-bottom: 40px;">
+                    {% for profile in my_profiles %}
+                    <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 20px; border-radius: 12px; display: flex; flex-direction: column;">
+                        <h4 style="color: #34d399; font-size: 1.4rem; margin-bottom: 10px; font-weight: 800;">{{ profile.club.name }}</h4>
+                        <span style="color: var(--subtitle-color); font-size: 1rem; margin-bottom: 15px;">Perfil: <strong style="color: #fff;">{{ profile.name }}</strong></span>
+                        <a href="{% url 'logout_redirect' %}?next={% url 'clubs:detail' profile.club.id %}" class="btn-save" style="margin-top: auto; text-align: center; font-size: 0.9rem; padding: 10px;">
+                            <i class="fas fa-arrow-right"></i> Acessar Página
                         </a>
                     </div>
+                    {% endfor %}
                 </div>
-            {% elif pending_request %}
-                <!-- Solicitação pendente -->
-                <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                    <div style="width: 120px; height: 120px; background: rgba(245, 158, 11, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 25px; border: 2px solid rgba(245,158,11,0.3);">
-                        <i class="fas fa-clock" style="font-size: 4.5rem; color: #fbbf24;"></i>
-                    </div>
-                    
-                    <h3 style="color: #fff; font-size: 1.8rem; font-weight: 800; margin-bottom: 15px;">Solicitação em Análise</h3>
-                    <p style="color: var(--subtitle-color); font-size: 1.2rem; max-width: 500px; line-height: 1.6;">
-                        Você solicitou vínculo com o clube <strong style="color: #fff;">{{ pending_request.club.name }}</strong> para assumir o perfil de atleta <strong style="color: #fff;">{{ pending_request.player.name }}</strong>.
-                    </p>
-                    
-                    <div style="margin-top: 40px;">
-                        <span class="status-badge status-pending">
-                            <i class="fas fa-hourglass-half"></i> Aguardando Aprovação do Administrador
-                        </span>
-                    </div>
-                </div>
-            {% else %}
-                <!-- Formulário para solicitar vínculo -->
-                <p style="color: var(--subtitle-color); font-size: 1.2rem; margin-bottom: 40px; line-height: 1.6; max-width: 600px; margin-left: auto; margin-right: auto;">
-                    Você ainda não está vinculado a nenhum clube no sistema. Escolha o seu clube abaixo e selecione o seu perfil de atleta para solicitar o acesso.
-                </p>
-                
-                <form method="post" action="{% url 'athlete_dashboard' %}" id="linkForm" style="max-width: 450px; margin: 0 auto; text-align: left; background: rgba(0,0,0,0.2); padding: 30px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
-                    {% csrf_token %}
-                    
-                    {% if club_context %}
-                        <div class="custom-form-group">
-                            <label><i class="fas fa-map-marker-alt" style="color: var(--highlight-color); margin-right: 5px;"></i> 1. Clube Solicitado</label>
-                            <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 14px 18px; border-radius: 10px; color: #fff; font-size: 1.05rem; font-weight: 600;">
-                                {{ club_context.name }}
-                            </div>
-                            <input type="hidden" name="club" id="id_club" value="{{ club_context.id }}">
-                        </div>
-                    {% else %}
-                        <div class="custom-form-group">
-                            <label for="id_club"><i class="fas fa-map-marker-alt" style="color: var(--highlight-color); margin-right: 5px;"></i> 1. Selecione o Clube</label>
-                            <select name="club" id="id_club" required>
-                                <option value="">Escolha um clube...</option>
-                                {% for club in clubs %}
-                                <option value="{{ club.id }}">{{ club.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    {% endif %}
-                    
-                    <div class="custom-form-group">
-                        <label for="id_player"><i class="fas fa-user-tag" style="color: var(--highlight-color); margin-right: 5px;"></i> 2. Identifique seu Perfil de Atleta</label>
-                        <select name="player" id="id_player" required disabled>
-                            <option value="">Selecione o clube primeiro</option>
-                        </select>
-                    </div>
-                    
-                    <button type="submit" name="link_request" class="btn-save" style="width: 100%; margin-top: 15px; padding: 16px;">
-                        <i class="fas fa-paper-plane"></i> Enviar Solicitação de Vínculo
-                    </button>
-                </form>
             {% endif %}
+
+            {% if all_link_requests %}
+                <h3 style="color: #fff; font-size: 1.5rem; font-weight: 700; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">Solicitações em Análise ou Rejeitadas</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-bottom: 40px;">
+                    {% for req in all_link_requests %}
+                        {% if req.status == 'pending' %}
+                        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 20px; border-radius: 12px; display: flex; flex-direction: column;">
+                            <h4 style="color: #fbbf24; font-size: 1.4rem; margin-bottom: 10px; font-weight: 800;">{{ req.club.name }}</h4>
+                            <span style="color: var(--subtitle-color); font-size: 1rem; margin-bottom: 15px;">Perfil Solicitado: <strong style="color: #fff;">{{ req.player.name }}</strong></span>
+                            <span class="status-badge status-pending" style="margin-top: auto; display: block; text-align: center;">
+                                <i class="fas fa-hourglass-half"></i> Em Análise
+                            </span>
+                        </div>
+                        {% elif req.status == 'rejected' %}
+                        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 20px; border-radius: 12px; display: flex; flex-direction: column;">
+                            <h4 style="color: #ef4444; font-size: 1.4rem; margin-bottom: 10px; font-weight: 800;">{{ req.club.name }}</h4>
+                            <span style="color: var(--subtitle-color); font-size: 1rem; margin-bottom: 15px;">Perfil Solicitado: <strong style="color: #fff;">{{ req.player.name }}</strong></span>
+                            <form method="post" action="{% url 'athlete_dashboard' %}" style="margin-top: auto;">
+                                {% csrf_token %}
+                                <input type="hidden" name="resubmit_link_request" value="1">
+                                <input type="hidden" name="request_id" value="{{ req.id }}">
+                                <button type="submit" class="btn-save" style="width: 100%; text-align: center; font-size: 0.9rem; padding: 10px; background: #ef4444; border-color: #ef4444;">
+                                    <i class="fas fa-redo"></i> Solicitar Vínculo novamente
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <h3 style="color: #fff; font-size: 1.5rem; font-weight: 700; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; margin-top: 40px;">Solicitar Novo Vínculo</h3>
+            <p style="color: var(--subtitle-color); font-size: 1.1rem; margin-bottom: 25px; line-height: 1.6;">
+                Escolha um clube ou liga da plataforma AllCourts365 e solicite o vínculo para ter acesso aos jogos, torneios e rankings.
+            </p>
+            
+            <form method="post" action="{% url 'athlete_dashboard' %}" id="linkForm" style="max-width: 500px; text-align: left; background: rgba(0,0,0,0.2); padding: 30px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+                {% csrf_token %}
+                <div class="custom-form-group">
+                    <label for="id_club"><i class="fas fa-map-marker-alt" style="color: var(--highlight-color); margin-right: 5px;"></i> 1. Selecione o Clube / Liga</label>
+                    <select name="club" id="id_club" required>
+                        <option value="">Escolha um clube...</option>
+                        {% for club in clubs %}
+                        <option value="{{ club.id }}">{{ club.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="custom-form-group">
+                    <label for="id_player"><i class="fas fa-user-tag" style="color: var(--highlight-color); margin-right: 5px;"></i> 2. Identifique seu Perfil de Atleta</label>
+                    <select name="player" id="id_player" required disabled>
+                        <option value="">Selecione o clube primeiro</option>
+                    </select>
+                </div>
+                
+                <button type="submit" name="link_request" class="btn-save" style="width: 100%; margin-top: 15px; padding: 16px;">
+                    <i class="fas fa-paper-plane"></i> Enviar Solicitação de Vínculo
+                </button>
+            </form>
         </div>
     </div>
     
@@ -587,36 +579,77 @@
                 <a id="btn-back-tournaments" onclick="showTournamentsList(); return false;" href="#" style="display: none; color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600; cursor: pointer;">&larr; Voltar aos Torneios</a>
             </div>
             
-            {% if not my_tournaments %}
+            {% if not my_rankings and not my_knockouts %}
                 <p style="color: var(--subtitle-color); text-align: center; font-size: 1.1rem;">Você ainda não possui jogos gerados em nenhum torneio ou ranking.</p>
             {% else %}
                 <!-- VIEW 1: Lista de Torneios -->
-                <div id="view-tournaments" style="display: flex; flex-direction: column; gap: 15px;">
-                    {% for t in my_tournaments %}
-                    <div onclick="showTournamentMatches({{ t.id }}, {{ t.current_round|default:1 }})" class="glass-card tournament-card" style="position: relative; padding: 25px; cursor: pointer; transition: transform 0.2s, background 0.2s;">
-                        {% if t.status == 'completed' %}
-                            <div class="status-badge status-finished">
-                                <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Encerrado"> Encerrado
+                <div id="view-tournaments" style="display: flex; flex-direction: column; gap: 25px;">
+                    
+                    {% if my_rankings %}
+                    <div>
+                        <h3 style="color: #fff; font-size: 1.4rem; font-weight: 700; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Rankings Contínuos</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+                        {% for t in my_rankings %}
+                        <div onclick="showTournamentMatches({{ t.id }}, {{ t.current_round|default:1 }})" class="glass-card tournament-card" style="position: relative; padding: 25px; cursor: pointer; transition: transform 0.2s, background 0.2s;">
+                            {% if t.status == 'completed' %}
+                                <div class="status-badge status-finished">
+                                    <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Encerrado"> Encerrado
+                                </div>
+                            {% elif t.status == 'in_progress' %}
+                                <div class="status-badge status-active">
+                                    <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Em andamento"> Em andamento
+                                </div>
+                            {% else %}
+                                <div class="status-badge" style="background-color: rgba(255, 165, 0, 0.2); color: orange; border: 1px solid rgba(255, 165, 0, 0.4);">
+                                    <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Pendente"> Pendente
+                                </div>
+                            {% endif %}
+                            <h3 class="tournament-title">
+                                {{ t.name }}
+                            </h3>
+                            <p style="margin-bottom: 5px; color: #ccc;"><strong>Competição:</strong> Simples</p>
+                            <p style="margin-bottom: 20px; color: #ccc;"><strong>Rodada Atual:</strong> {{ t.current_round|default:1 }}</p>
+                            <div style="color: var(--highlight-color); font-size: 1.1rem; font-weight: 600; margin-top: 10px;">
+                                Ver jogos e ranking &rarr;
                             </div>
-                        {% elif t.status == 'in_progress' %}
-                            <div class="status-badge status-active">
-                                <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Em andamento"> Em andamento
-                            </div>
-                        {% else %}
-                            <div class="status-badge" style="background-color: rgba(255, 165, 0, 0.2); color: orange; border: 1px solid rgba(255, 165, 0, 0.4);">
-                                <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Pendente"> Pendente
-                            </div>
-                        {% endif %}
-                        <h3 class="tournament-title">
-                            {{ t.name }}
-                        </h3>
-                        <p style="margin-bottom: 5px; color: #ccc;"><strong>Competição:</strong> Simples</p>
-                        <p style="margin-bottom: 20px; color: #ccc;"><strong>Rodada Atual:</strong> {{ t.current_round|default:1 }}</p>
-                        <div style="color: var(--highlight-color); font-size: 1.1rem; font-weight: 600; margin-top: 10px;">
-                            Ver jogos e ranking &rarr;
+                        </div>
+                        {% endfor %}
                         </div>
                     </div>
-                    {% endfor %}
+                    {% endif %}
+                    
+                    {% if my_knockouts %}
+                    <div>
+                        <h3 style="color: #fff; font-size: 1.4rem; font-weight: 700; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Torneios Eliminatórios</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+                        {% for t in my_knockouts %}
+                        <div onclick="showTournamentMatches({{ t.id }}, {{ t.current_round|default:1 }})" class="glass-card tournament-card" style="position: relative; padding: 25px; cursor: pointer; transition: transform 0.2s, background 0.2s;">
+                            {% if t.status == 'completed' %}
+                                <div class="status-badge status-finished">
+                                    <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Encerrado"> Encerrado
+                                </div>
+                            {% elif t.status == 'in_progress' %}
+                                <div class="status-badge status-active">
+                                    <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Em andamento"> Em andamento
+                                </div>
+                            {% else %}
+                                <div class="status-badge" style="background-color: rgba(255, 165, 0, 0.2); color: orange; border: 1px solid rgba(255, 165, 0, 0.4);">
+                                    <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Pendente"> Pendente
+                                </div>
+                            {% endif %}
+                            <h3 class="tournament-title">
+                                {{ t.name }}
+                            </h3>
+                            <p style="margin-bottom: 5px; color: #ccc;"><strong>Competição:</strong> Simples</p>
+                            <p style="margin-bottom: 20px; color: #ccc;"><strong>Rodada Atual:</strong> {{ t.current_round|default:1 }}</p>
+                            <div style="color: var(--highlight-color); font-size: 1.1rem; font-weight: 600; margin-top: 10px;">
+                                Ver jogos e chaves &rarr;
+                            </div>
+                        </div>
+                        {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <!-- VIEW 2: Jogos do Torneio Selecionado -->
@@ -744,13 +777,27 @@
             <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 20px; font-weight: 900; text-align: center;">Mensagens</h2>
             
             <div style="display: flex; justify-content: flex-end; align-items: center; gap: 15px; margin-bottom: 30px; flex-wrap: wrap;">
-                <span style="color: var(--subtitle-color); font-size: 0.95rem;">Filtrar por data:</span>
-                <form method="GET" action="{% url 'athlete_dashboard' %}" style="display: flex; align-items: center; gap: 10px;">
+                <form method="GET" action="{% url 'athlete_dashboard' %}" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                     <input type="hidden" name="tab" value="mensagens">
-                    <input type="date" name="msg_date" value="{{ request.GET.msg_date }}"
-                        onchange="this.form.submit()"
-                        style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 8px; outline: none; font-weight: bold; min-width: 180px; cursor: pointer;">
-                    {% if request.GET.msg_date %}
+                    
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="color: var(--subtitle-color); font-size: 0.95rem;">Filtrar por Clube:</span>
+                        <select name="msg_club_id" onchange="this.form.submit()" style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 8px; outline: none; font-weight: bold; cursor: pointer;">
+                            <option value="">Todos os Clubes</option>
+                            {% for profile in my_profiles %}
+                            <option value="{{ profile.club.id }}" {% if request.GET.msg_club_id == profile.club.id|stringformat:"s" %}selected{% endif %}>{{ profile.club.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="color: var(--subtitle-color); font-size: 0.95rem;">Data:</span>
+                        <input type="date" name="msg_date" value="{{ request.GET.msg_date }}"
+                            onchange="this.form.submit()"
+                            style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 8px; outline: none; font-weight: bold; cursor: pointer;">
+                    </div>
+                    
+                    {% if request.GET.msg_date or request.GET.msg_club_id %}
                     <a href="{% url 'athlete_dashboard' %}?tab=mensagens" style="color: var(--highlight-color); text-decoration: none; font-size: 0.9rem; font-weight: 600;">Limpar</a>
                     {% endif %}
                 </form>

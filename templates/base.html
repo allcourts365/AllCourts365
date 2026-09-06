@@ -167,13 +167,14 @@
             <a href="/" class="brand">AllCourts<span>365</span></a>
             
             <div class="nav-links" id="nav-links">
-                <a href="/">Home</a>
-                <a href="{% url 'clubs:list' %}">Clubes / Ligas</a>
-                {% block admin_button %}
-                    {% if not club_context %}
-                    <a href="{% url 'admin:login' %}" target="_blank" class="btn-highlight"><i class="fas fa-lock"></i> Admin AllCourts365</a>
-                    {% endif %}
-                {% endblock %}
+                <a href="{% if user.is_authenticated %}{% url 'logout_redirect' %}?next=/{% else %}/{% endif %}">Home</a>
+                <a href="{% if user.is_authenticated %}{% url 'logout_redirect' %}?next={% url 'clubs:list' %}{% else %}{% url 'clubs:list' %}{% endif %}">Clubes / Ligas</a>
+                
+                {% if user.is_authenticated %}
+                    <a href="{% url 'athlete_dashboard' %}" class="btn-highlight" style="background: var(--global-highlight-color);"><i class="fas fa-user"></i> Entrar</a>
+                {% else %}
+                    <a href="{% url 'account_login' %}" class="btn-highlight" style="background: var(--global-highlight-color);"><i class="fas fa-user"></i> Entrar</a>
+                {% endif %}
             </div>
         </div>
     </nav>
@@ -186,8 +187,8 @@
 
     <!-- Rodapé (Footer) -->
     {% if site_config.footer_show %}
-    <footer style="margin-top: auto; margin-left: auto; margin-right: auto; width: {{ site_config.footer_width|default:'100%' }}; max-width: 100%; padding: {{ site_config.footer_padding|default:'40px 20px' }}; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); text-align: center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
-        <div class="container" style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+    <footer style="margin-top: auto; margin-left: auto; margin-right: auto; width: {{ site_config.footer_width|default:'100%' }}; max-width: 100%; padding: {{ site_config.footer_padding|default:'40px 20px' }}; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4); text-align: center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); position: relative;">
+        <div class="container" style="display: flex; flex-direction: column; align-items: center; gap: 5px; position: relative; min-height: 50px; justify-content: center;">
             {% if site_config.footer_text %}
             <div style="color: var(--subtitle-color); font-size: 0.95rem; margin: 0; line-height: 1.6;">{{ site_config.footer_text|linebreaksbr }}</div>
             {% endif %}
@@ -203,7 +204,14 @@
                 <a href="https://wa.me/{{ site_config.clean_whatsapp }}" target="_blank" style="color: #fff; font-size: 1.5rem; transition: color 0.2s;" onmouseover="this.style.color='var(--highlight-color)'" onmouseout="this.style.color='#fff'"><i class="fab fa-whatsapp"></i></a>
                 {% endif %}
             </div>
+            </div>
         </div>
+        
+        {% block admin_button_footer %}
+            {% if not club_context %}
+            <a href="{% url 'admin:login' %}" target="_blank" style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: #fff; font-size: 1.5rem; transition: color 0.2s;" onmouseover="this.style.color='var(--highlight-color)'" onmouseout="this.style.color='#fff'" title="Admin AllCourts365"><i class="fas fa-lock"></i></a>
+            {% endif %}
+        {% endblock %}
     </footer>
     {% endif %}
 
