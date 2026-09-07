@@ -185,13 +185,20 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-# Email Configuration (Prod: SMTP)
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# Email Configuration
+if os.environ.get('EMAIL_HOST_USER'):
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+
+# Desabilita verificação de email para login social (o Google já verifica)
+SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
 DEFAULT_FROM_EMAIL = 'AllCourts365 <allcourts365@gmail.com>'
 
 # CKEditor
