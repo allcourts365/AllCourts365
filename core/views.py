@@ -485,7 +485,7 @@ def athlete_dashboard(request):
     all_link_requests = PlayerLinkRequest.objects.filter(user=user, status__in=['pending', 'rejected']).select_related('club', 'player')
 
     # Prepara dados para o select encadeado (Clube -> Atleta)
-    clubs = Club.objects.all().order_by('name')
+    clubs = Club.objects.filter(is_visible=True).order_by('name')
     players_data = {}
     for c in clubs:
         players_in_club = Player.objects.filter(club=c, user__isnull=True).exclude(name__iexact='Bye (Folga)').order_by('name')

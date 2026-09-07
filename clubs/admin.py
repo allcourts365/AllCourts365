@@ -109,6 +109,18 @@ class ClubAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
         }),
     )
 
+    def get_fieldsets(self, request, obj=None):
+        import copy
+        fieldsets = copy.deepcopy(list(self.fieldsets))
+        
+        if request.user.is_superuser:
+            fields = list(fieldsets[0][1]['fields'])
+            if 'is_visible' not in fields:
+                fields.insert(1, 'is_visible')
+            fieldsets[0][1]['fields'] = tuple(fields)
+            
+        return tuple(fieldsets)
+
 @admin.register(Court)
 class CourtAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     list_display = ('name', 'club', 'is_ranking_court')

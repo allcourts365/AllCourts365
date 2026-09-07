@@ -13,6 +13,7 @@ class Club(models.Model):
     ]
 
     name = models.CharField(max_length=200, verbose_name="Nome do Clube")
+    is_visible = models.BooleanField(default=True, verbose_name="Visível no site", help_text="Se desmarcado, o clube ficará oculto para os usuários.")
     website = models.URLField(max_length=200, blank=True, null=True, verbose_name="Site do Clube")
     logo = models.ImageField(upload_to='clubs/logos/', null=True, blank=True, verbose_name="Logotipo")
     description = models.TextField(blank=True, verbose_name="Descrição")

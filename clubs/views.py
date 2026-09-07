@@ -5,7 +5,7 @@ from .models import Club, Match
 import os
 
 def club_list(request):
-    clubs = Club.objects.all().order_by('name')
+    clubs = Club.objects.filter(is_visible=True).order_by('name')
     return render(request, 'club_list.html', {'clubs': clubs})
 
 def club_detail(request, club_id):
