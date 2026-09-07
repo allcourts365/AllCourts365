@@ -41,6 +41,9 @@ class SiteConfiguration(models.Model):
     footer_facebook = models.URLField(blank=True, verbose_name="Link do Facebook")
     footer_whatsapp = models.CharField(max_length=50, blank=True, verbose_name="Número do WhatsApp", help_text="Apenas números, com DDD (ex: 5511999999999)")
 
+    # Monitoramento e SEO
+    google_analytics_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="ID de Medição do Google Analytics", help_text="Ex: G-XXXXXXXXXX")
+
     @property
     def clean_whatsapp(self):
         if self.footer_whatsapp:

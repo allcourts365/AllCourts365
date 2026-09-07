@@ -127,6 +127,21 @@ class SiteConfigurationAdmin(admin.ModelAdmin):
     form = SiteConfigurationForm
     list_display = ['__str__', 'background_color', 'highlight_color']
     
+    fieldsets = (
+        ('Imagens / Vídeos / Marca d\'Água', {
+            'fields': ('favicon', 'background_image', 'background_video', 'watermark_image', 'watermark_position', 'watermark_opacity', 'watermark_size_percent')
+        }),
+        ('Cores e Aparência', {
+            'fields': ('background_color', 'overlay_color', 'overlay_opacity', 'highlight_color', 'title_color', 'subtitle_color')
+        }),
+        ('Rodapé (Footer)', {
+            'fields': ('footer_show', 'footer_text', 'footer_width', 'footer_padding', 'footer_instagram', 'footer_facebook', 'footer_whatsapp')
+        }),
+        ('Monitoramento e SEO', {
+            'fields': ('google_analytics_id',)
+        }),
+    )
+    
     def has_add_permission(self, request):
         if self.model.objects.exists():
             return False
