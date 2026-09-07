@@ -5,7 +5,7 @@ from django.shortcuts import redirect
 class CustomAccountAdapter(DefaultAccountAdapter):
     def pre_login(self, request, user, **kwargs):
         # Ignora a verificação de e-mail e faz o login direto se for admin
-        if user.is_staff or user.is_superuser or user.managed_clubs.exists():
+        if user.pk and (user.is_staff or user.is_superuser or user.managed_clubs.exists()):
             self.login(request, user)
             raise ImmediateHttpResponse(redirect('/admin/'))
         
