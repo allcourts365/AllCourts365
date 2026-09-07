@@ -185,6 +185,13 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
+if os.environ.get('GOOGLE_OAUTH_CLIENT_ID'):
+    SOCIALACCOUNT_PROVIDERS['google']['APP'] = {
+        'client_id': os.environ.get('GOOGLE_OAUTH_CLIENT_ID'),
+        'secret': os.environ.get('GOOGLE_OAUTH_CLIENT_SECRET'),
+        'key': ''
+    }
+
 # Email Configuration
 if os.environ.get('EMAIL_HOST_USER'):
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
