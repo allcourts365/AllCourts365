@@ -172,11 +172,12 @@ import os
 # ... (os was imported at the top, I will just use os.environ.get directly)
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
-        # Força o uso das credenciais pelas configurações, evitando erro de banco de dados
-        'APP': {
-            'client_id': os.environ.get('GOOGLE_OAUTH_CLIENT_ID', ''),
-            'secret': os.environ.get('GOOGLE_OAUTH_CLIENT_SECRET', ''),
-            'key': ''
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
         }
     }
 }
