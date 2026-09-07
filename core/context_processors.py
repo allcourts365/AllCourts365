@@ -1,5 +1,6 @@
 from .models import SiteConfiguration
 from clubs.models import Club
+import re
 
 def site_config(request):
     try:
@@ -9,10 +10,18 @@ def site_config(request):
         
     club_override = None
     
-    # Se estivemos em uma view de detalhe do clube, ele mesmo passa 'club', 
-    # mas se for uma view genérica (login) podemos pegar pela URL ?club=
+    # Pega club_id via query string
     club_id = request.GET.get('club')
     
+    # Tenta extrair o ID do clube diretamente de URLs de páginas de clube
+    # Ex: /clubes/4/, /ranking/5/ (que tem tournament.club), /eliminatorias/3/
+    if not club_id:
+        path = request.path
+        # Página de detalhe do clube: /clubes/<id>/
+        m = re.match(r'^/clubes/(\d+)/', path)
+        if m:
+            club_id = m.group(1)
+
     # Usa a sessão para persistir a identidade visual do clube em redirects do allauth e no painel
     if club_id:
         request.session['current_club_id'] = club_id

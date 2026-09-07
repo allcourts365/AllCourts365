@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ news.title }} - {% if club %}{{ club.name }}{% else %}AllCourts365{% endif %}{% endblock %}
+
+{% block extra_head %}
+{% if club %}
+<style>
+    :root {
+        {% if club.background_color %}--bg-color: {{ club.background_color }};{% endif %}
+        {% if club.overlay_color %}--overlay-color: {{ club.overlay_color }};{% endif %}
+        {% if club.overlay_opacity %}--overlay-opacity: {{ club.overlay_opacity|stringformat:"s" }};{% endif %}
+        {% if club.highlight_color %}--highlight-color: {{ club.highlight_color }};{% endif %}
+        {% if club.title_color %}--title-color: {{ club.title_color }};{% endif %}
+        {% if club.subtitle_color %}--subtitle-color: {{ club.subtitle_color }};{% endif %}
+    }
+    {% if club.background_image and not club.background_video %}
+    body { background-image: url("{{ club.background_image.url }}") !important; background-size: cover !important; background-position: center !important; background-attachment: fixed !important; }
+    {% endif %}
+</style>
+{% endif %}
+<style>
+    .news-content { color: #e2e8f0; line-height: 1.8; font-size: 1.05rem; }
+    .news-content h1, .news-content h2, .news-content h3 { color: var(--title-color); margin: 1.5em 0 0.5em; }
+    .news-content p { margin-bottom: 1.2em; }
+    .news-content img { max-width: 100%; border-radius: 10px; margin: 20px 0; }
+    .news-content a { color: var(--highlight-color); }
+    .news-content blockquote { border-left: 4px solid var(--highlight-color); padding-left: 20px; margin: 20px 0; color: var(--subtitle-color); font-style: italic; }
+    .news-content table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .news-content table td, .news-content table th { border: 1px solid rgba(255,255,255,0.15); padding: 10px 14px; }
+    .news-content ul, .news-content ol { padding-left: 24px; margin-bottom: 1.2em; }
+</style>
+{% endblock %}
+
+{% block background_video %}
+{% if club and club.background_video %}
+<video id="bg-video" autoplay muted loop playsinline>
+    <source src="{{ club.background_video.url }}" type="video/mp4">
+</video>
+{% elif not club and site_config.background_video %}
+<video id="bg-video" autoplay muted loop playsinline>
+    <source src="{{ site_config.background_video.url }}" type="video/mp4">
+</video>
+{% endif %}
+{% endblock background_video %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 40px auto; padding: 0 20px;">
+
+    <!-- Breadcrumb -->
+    <div style="margin-bottom: 25px;">
+        {% if club %}
+        <a href="{% url 'clubs:news_list' club.id %}" style="color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600;">
+            ← Noticias {{ club.name }}
+        </a>
+        {% else %}
+        <a href="{% url 'news:global_list' %}" style="color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600;">
+            ← Noticias AllCourts365
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Artigo -->
+    <article class="glass-card" style="border-radius: 20px; overflow: hidden; padding: 0;">
+
+        <!-- Midia de destaque -->
+        {% if news.image %}
+        <div style="width: 100%; background: rgba(0,0,0,0.2); text-align: center;">
+            <img src="{{ news.image.url }}" alt="{{ news.title }}" style="max-width: 100%; height: auto; max-height: 800px; object-fit: contain; display: inline-block; vertical-align: middle;">
+        </div>
+        {% if news.media_credit %}
+        <div style="background: rgba(0,0,0,0.5); padding: 8px 20px;">
+            <span style="color: var(--subtitle-color); font-size: 0.8rem; font-style: italic;">{{ news.media_credit }}</span>
+        </div>
+        {% endif %}
+        {% elif news.video %}
+        <div style="width: 100%; background: #000; text-align: center;">
+            <video controls style="max-width: 100%; height: auto; max-height: 800px; display: inline-block; vertical-align: middle;">
+                <source src="{{ news.video.url }}">
+            </video>
+        </div>
+        {% if news.media_credit %}
+        <div style="background: rgba(0,0,0,0.5); padding: 8px 20px;">
+            <span style="color: var(--subtitle-color); font-size: 0.8rem; font-style: italic;">{{ news.media_credit }}</span>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        <!-- Corpo -->
+        <div style="padding: 40px;">
+
+            <!-- Meta -->
+            <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
+                {% if club %}<span style="background: rgba(255,255,255,0.1); color: var(--subtitle-color); font-size: 0.8rem; padding: 4px 12px; border-radius: 20px; font-weight: 600;">{{ club.name }}</span>{% endif %}
+                <span style="color: var(--highlight-color); font-size: 0.85rem; font-weight: 700;">
+                    <i class="fas fa-calendar-alt" style="margin-right: 5px;"></i>
+                    {{ news.published_at|date:"d \d\e F \d\e Y" }}
+                </span>
+            </div>
+
+            <!-- Titulo -->
+            <h1 style="font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800; color: var(--title-color); margin: 0 0 15px 0; line-height: 1.25;">{{ news.title }}</h1>
+
+            {% if news.subtitle %}
+            <p style="font-size: 1.2rem; color: var(--subtitle-color); font-weight: 400; margin: 0 0 25px 0; line-height: 1.5; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 25px;">{{ news.subtitle }}</p>
+            {% endif %}
+
+            <!-- Autor -->
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 35px;">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: var(--highlight-color); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="fas fa-pen-nib" style="color: #fff; font-size: 0.85rem;"></i>
+                </div>
+                <div>
+                    <div style="color: var(--title-color); font-weight: 700; font-size: 0.95rem;">{{ news.author }}</div>
+                    <div style="color: var(--subtitle-color); font-size: 0.8rem;">{{ news.published_at|date:"d/m/Y" }} as {{ news.published_at|date:"H:i" }}</div>
+                </div>
+            </div>
+
+            <!-- Conteudo Rico -->
+            <div class="news-content" style="margin-bottom: 40px;">
+                {{ news.content|safe }}
+            </div>
+
+            <!-- Curtidas -->
+            <div style="display: flex; align-items: center; justify-content: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px;">
+                <button id="like-btn" onclick="toggleLike({{ news.id }})" 
+                        style="background: transparent; border: 2px solid {% if news.id in liked_news_ids %}#ef4444{% else %}rgba(255,255,255,0.2){% endif %}; color: {% if news.id in liked_news_ids %}#ef4444{% else %}var(--subtitle-color){% endif %}; padding: 12px 25px; border-radius: 30px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 10px;">
+                    <i class="{% if news.id in liked_news_ids %}fas{% else %}far{% endif %} fa-heart" id="like-icon"></i>
+                    <span id="like-text">{% if news.id in liked_news_ids %}Curtiu{% else %}Curtir{% endif %}</span>
+                    <span id="like-count" style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; font-size: 0.9rem; margin-left: 5px;">{{ news.get_total_likes }}</span>
+                </button>
+            </div>
+
+        </div>
+    </article>
+
+</div>
+
+<script>
+function toggleLike(newsId) {
+    fetch(`/noticias/like/${newsId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Erro ao curtir");
+        }
+        return response.json();
+    })
+    .then(data => {
+        const btn = document.getElementById('like-btn');
+        const icon = document.getElementById('like-icon');
+        const text = document.getElementById('like-text');
+        const count = document.getElementById('like-count');
+        
+        count.textContent = data.total_likes;
+        
+        if (data.liked) {
+            btn.style.borderColor = '#ef4444';
+            btn.style.color = '#ef4444';
+            icon.classList.remove('far');
+            icon.classList.add('fas');
+            text.textContent = 'Curtiu';
+        } else {
+            btn.style.borderColor = 'rgba(255,255,255,0.2)';
+            btn.style.color = 'var(--subtitle-color)';
+            icon.classList.remove('fas');
+            icon.classList.add('far');
+            text.textContent = 'Curtir';
+        }
+    })
+    .catch(err => console.error(err));
+}
+</script>
+{% endblock %}

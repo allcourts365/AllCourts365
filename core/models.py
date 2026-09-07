@@ -12,8 +12,10 @@ class SiteConfiguration(models.Model):
         ('center', 'Centro'),
     ]
 
-    # Imagens
+    # Imagens / Vídeos
+    favicon = models.ImageField(upload_to='site_config/favicons/', null=True, blank=True, verbose_name="Favicon", help_text="Imagem que aparece na guia do navegador (recomendado: 32x32 ou 64x64)")
     background_image = models.ImageField(upload_to='site_config/', null=True, blank=True, verbose_name="Imagem de Fundo")
+    background_video = models.FileField(upload_to='site_config/videos/', null=True, blank=True, verbose_name="Vídeo de Fundo", help_text="Se preenchido, o vídeo sobrescreve a imagem de fundo. Use arquivos .mp4 ou .webm.")
     watermark_image = models.ImageField(upload_to='site_config/', null=True, blank=True, verbose_name="Marca d'Água")
     
     # Cores (Armazenaremos em Hexadecimal, ex: #FFFFFF)

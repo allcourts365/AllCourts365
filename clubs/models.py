@@ -17,10 +17,13 @@ class Club(models.Model):
     logo = models.ImageField(upload_to='clubs/logos/', null=True, blank=True, verbose_name="Logotipo")
     description = models.TextField(blank=True, verbose_name="Descrição")
     address = models.CharField(max_length=300, blank=True, verbose_name="Endereço")
+    rules_pdf = models.FileField(upload_to='clubs/rules/', null=True, blank=True, verbose_name="Regulamento (PDF)", help_text="Upload do regulamento do clube em formato PDF.")
     administrators = models.ManyToManyField(User, related_name='managed_clubs', blank=True, verbose_name="Administradores")
     
     # Configurações Visuais Específicas do Clube (Sobrescrevem o Global se preenchidas)
+    favicon = models.ImageField(upload_to='clubs/favicons/', null=True, blank=True, verbose_name="Favicon", help_text="Imagem que aparece na guia do navegador (recomendado: 32x32 ou 64x64)")
     background_image = models.ImageField(upload_to='clubs/backgrounds/', null=True, blank=True, verbose_name="Imagem de Fundo")
+    background_video = models.FileField(upload_to='clubs/videos/', null=True, blank=True, verbose_name="Vídeo de Fundo", help_text="Se preenchido, sobrescreve a imagem de fundo. Use .mp4 ou .webm.")
     background_color = models.CharField(max_length=7, null=True, blank=True, verbose_name="Cor de Fundo Fixa (Hex)")
     overlay_color = models.CharField(max_length=7, null=True, blank=True, verbose_name="Cor do Fumê (Overlay)")
     overlay_opacity = models.FloatField(null=True, blank=True, verbose_name="Opacidade do Fumê (0.0 a 1.0)")

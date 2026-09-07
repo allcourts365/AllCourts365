@@ -92,7 +92,7 @@ class ClubAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     
     fieldsets = (
         ('Informações Básicas', {
-            'fields': ('name', 'website', 'logo', 'description', 'address')
+            'fields': ('name', 'website', 'logo', 'description', 'address', 'rules_pdf')
         }),
         ('Horários de Funcionamento', {
             'fields': (
@@ -102,7 +102,7 @@ class ClubAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
             )
         }),
         ('Configurações Visuais Globais', {
-            'fields': ('background_image', 'background_color', 'overlay_color', 'overlay_opacity', 'highlight_color', 'title_color', 'subtitle_color')
+            'fields': ('favicon', 'background_image', 'background_video', 'background_color', 'overlay_color', 'overlay_opacity', 'highlight_color', 'title_color', 'subtitle_color')
         }),
         ('Marca d\'Água', {
             'fields': ('watermark_image', 'watermark_position', 'watermark_opacity', 'watermark_size_percent')

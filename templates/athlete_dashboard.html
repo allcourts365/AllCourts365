@@ -364,10 +364,19 @@
         <p style="margin-bottom: 10px; font-size: 1.1rem; line-height: 1.4;">{{ linked_club.description|default:"Sem descrição." }}</p>
         <p style="font-size: 0.95rem; color: var(--highlight-color); margin-top: auto;">📍 {{ linked_club.address|default:"Endereço não informado" }}</p>
     </div>
-    <div class="btn-wrapper" style="display: flex; align-items: center; justify-content: flex-end;">
+    <div class="btn-wrapper" style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 10px;">
+        {% if linked_club.rules_pdf %}
+        <a href="{{ linked_club.rules_pdf.url }}" target="_blank" class="btn-highlight" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 170px; box-sizing: border-box; background: rgba(255,255,255,0.05); color: #fff; padding: 12px 20px; border-radius: 30px; text-decoration: none; font-weight: 600; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.2); transition: all 0.2s; white-space: nowrap;" onmouseover="this.style.background='var(--highlight-color)'; this.style.borderColor='var(--highlight-color)';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.2)';">
+            <i class="fas fa-file-pdf"></i> Regulamento
+        </a>
+        {% else %}
+        <button class="btn-highlight" onclick="alert('Este clube/liga ainda não tem o regulamento publicado.');" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 170px; box-sizing: border-box; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.5); padding: 12px 20px; border-radius: 30px; font-weight: 600; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.1); cursor: not-allowed; white-space: nowrap;">
+            <i class="fas fa-file-pdf"></i> Regulamento
+        </button>
+        {% endif %}
         <form action="{% url 'account_logout' %}" method="post">
             {% csrf_token %}
-            <button type="submit" class="btn-highlight" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 25px; font-weight: bold; border-radius: 30px; white-space: nowrap; cursor: pointer;">
+            <button type="submit" class="btn-highlight" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444; text-decoration: none; display: flex; justify-content: center; align-items: center; gap: 8px; width: 170px; box-sizing: border-box; padding: 12px 20px; font-weight: bold; border-radius: 30px; white-space: nowrap; cursor: pointer;">
                 <i class="fas fa-sign-out-alt"></i> Sair da Conta
             </button>
         </form>
@@ -783,9 +792,9 @@
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <span style="color: var(--subtitle-color); font-size: 0.95rem;">Filtrar por Clube:</span>
                         <select name="msg_club_id" onchange="this.form.submit()" style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 8px; outline: none; font-weight: bold; cursor: pointer;">
-                            <option value="">Todos os Clubes</option>
+                            <option value="all" {% if request.GET.msg_club_id == 'all' %}selected{% endif %}>Todos os Clubes</option>
                             {% for profile in my_profiles %}
-                            <option value="{{ profile.club.id }}" {% if request.GET.msg_club_id == profile.club.id|stringformat:"s" %}selected{% endif %}>{{ profile.club.name }}</option>
+                            <option value="{{ profile.club.id }}" {% if request.GET.msg_club_id == profile.club.id|stringformat:"s" or not request.GET.msg_club_id and linked_club.id == profile.club.id %}selected{% endif %}>{{ profile.club.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -811,16 +820,16 @@
                 {% if athlete_messages.has_other_pages %}
                 <div style="display: flex; justify-content: center; align-items: center; gap: 6px; margin-bottom: 20px; font-size: 1rem; font-weight: 700; user-select: none;">
                     {% if athlete_messages.has_previous %}
-                        <a href="?tab=mensagens&page=1{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&laquo;</a>
-                        <a href="?tab=mensagens&page={{ athlete_messages.previous_page_number }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&lsaquo;</a>
+                        <a href="?tab=mensagens&page=1{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}{% if request.GET.msg_club_id %}&msg_club_id={{ request.GET.msg_club_id }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&laquo;</a>
+                        <a href="?tab=mensagens&page={{ athlete_messages.previous_page_number }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}{% if request.GET.msg_club_id %}&msg_club_id={{ request.GET.msg_club_id }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&lsaquo;</a>
                     {% else %}
                         <span style="color: rgba(255,255,255,0.2); padding: 4px 8px;">&laquo;</span>
                         <span style="color: rgba(255,255,255,0.2); padding: 4px 8px;">&lsaquo;</span>
                     {% endif %}
                     <span style="color: #fff; padding: 4px 12px;">{{ athlete_messages.number }}/{{ athlete_messages.paginator.num_pages }}</span>
                     {% if athlete_messages.has_next %}
-                        <a href="?tab=mensagens&page={{ athlete_messages.next_page_number }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&rsaquo;</a>
-                        <a href="?tab=mensagens&page={{ athlete_messages.paginator.num_pages }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&raquo;</a>
+                        <a href="?tab=mensagens&page={{ athlete_messages.next_page_number }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}{% if request.GET.msg_club_id %}&msg_club_id={{ request.GET.msg_club_id }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&rsaquo;</a>
+                        <a href="?tab=mensagens&page={{ athlete_messages.paginator.num_pages }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}{% if request.GET.msg_club_id %}&msg_club_id={{ request.GET.msg_club_id }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&raquo;</a>
                     {% else %}
                         <span style="color: rgba(255,255,255,0.2); padding: 4px 8px;">&rsaquo;</span>
                         <span style="color: rgba(255,255,255,0.2); padding: 4px 8px;">&raquo;</span>
@@ -909,6 +918,11 @@
                                     <button type="submit" name="mark_message_read" style="height: 34px; padding: 0 14px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: 600; background: transparent; border: 1px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.6);">Marcar lida</button>
                                 </form>
                                 {% endif %}
+                                <form method="post" style="display: inline; margin: 0;" onsubmit="return confirm('Tem certeza que deseja excluir esta mensagem?');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="message_id" value="{{ msg.id }}">
+                                    <button type="submit" name="delete_message" style="height: 34px; padding: 0 14px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: 600; background: transparent; border: 1px solid rgba(239,68,68,0.3); color: #ef4444;">Excluir</button>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -919,22 +933,23 @@
                 {% if athlete_messages.has_other_pages %}
                 <div style="display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 30px; font-size: 1rem; font-weight: 700; user-select: none;">
                     {% if athlete_messages.has_previous %}
-                        <a href="?tab=mensagens&page=1{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&laquo;</a>
-                        <a href="?tab=mensagens&page={{ athlete_messages.previous_page_number }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&lsaquo;</a>
+                        <a href="?tab=mensagens&page=1{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}{% if request.GET.msg_club_id %}&msg_club_id={{ request.GET.msg_club_id }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&laquo;</a>
+                        <a href="?tab=mensagens&page={{ athlete_messages.previous_page_number }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}{% if request.GET.msg_club_id %}&msg_club_id={{ request.GET.msg_club_id }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&lsaquo;</a>
                     {% else %}
                         <span style="color: rgba(255,255,255,0.2); padding: 4px 8px;">&laquo;</span>
                         <span style="color: rgba(255,255,255,0.2); padding: 4px 8px;">&lsaquo;</span>
                     {% endif %}
                     <span style="color: #fff; padding: 4px 12px;">{{ athlete_messages.number }}/{{ athlete_messages.paginator.num_pages }}</span>
                     {% if athlete_messages.has_next %}
-                        <a href="?tab=mensagens&page={{ athlete_messages.next_page_number }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&rsaquo;</a>
-                        <a href="?tab=mensagens&page={{ athlete_messages.paginator.num_pages }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&raquo;</a>
+                        <a href="?tab=mensagens&page={{ athlete_messages.next_page_number }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}{% if request.GET.msg_club_id %}&msg_club_id={{ request.GET.msg_club_id }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&rsaquo;</a>
+                        <a href="?tab=mensagens&page={{ athlete_messages.paginator.num_pages }}{% if request.GET.msg_date %}&msg_date={{ request.GET.msg_date }}{% endif %}{% if request.GET.msg_club_id %}&msg_club_id={{ request.GET.msg_club_id }}{% endif %}" style="color: var(--highlight-color); text-decoration: none; padding: 4px 8px;">&raquo;</a>
                     {% else %}
                         <span style="color: rgba(255,255,255,0.2); padding: 4px 8px;">&rsaquo;</span>
                         <span style="color: rgba(255,255,255,0.2); padding: 4px 8px;">&raquo;</span>
                     {% endif %}
                 </div>
                 {% endif %}
+
             {% endif %}
         </div>
     </div>
@@ -983,7 +998,7 @@
     </div>
     
     <!-- Mini Popup para Agendamento do Dia (Flutuante) -->
-    <div id="daySchedulePopup" style="display: none; position: absolute; background: #1e293b; border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 350px; padding: 20px; z-index: 10001; flex-direction: column;">
+    <div id="daySchedulePopup" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1e293b; border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 350px; padding: 20px; z-index: 10001; flex-direction: column;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h4 id="popup_date_title" style="color: #fff; margin: 0; font-size: 1.1rem;"></h4>
             <button onclick="closeDayPopup()" style="background: none; border: none; color: var(--subtitle-color); cursor: pointer; font-size: 1.2rem;">&times;</button>
@@ -1237,20 +1252,7 @@
     
     function openDayPopup(e, day) {
         const popup = document.getElementById('daySchedulePopup');
-        const cell = e.currentTarget;
-        const cellRect = cell.getBoundingClientRect();
-        
-        // Position popup near cell
-        let top = cellRect.top + window.scrollY;
-        let left = cellRect.left + cellRect.width + 10;
-        
-        // se passar da tela, joga pra esquerda
-        if (left + 350 > window.innerWidth) {
-            left = cellRect.left - 350 - 10;
-        }
-        
-        popup.style.top = top + 'px';
-        popup.style.left = left + 'px';
+        // Popup é centralizado na tela via CSS
         popup.style.display = 'flex';
         
         const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;

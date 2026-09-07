@@ -18,7 +18,7 @@
         {% if club.subtitle_color %}--subtitle-color: {{ club.subtitle_color }};{% endif %}
     }
     
-    {% if club.background_image %}
+    {% if club.background_image and not club.background_video %}
     body {
         background-image: url('{{ club.background_image.url }}') !important;
         background-size: cover !important;
@@ -92,7 +92,7 @@
 
     .club-header-grid {
         display: grid;
-        grid-template-columns: 150px 1fr;
+        grid-template-columns: 150px 1fr auto;
         gap: 30px;
         align-items: center;
         margin-top: 40px;
@@ -108,10 +108,19 @@
         .club-header-grid .btn-wrapper {
             justify-content: center !important;
             width: 100%;
+            margin-top: 20px;
         }
     }
 </style>
 {% endblock %}
+
+{% block background_video %}
+{% if club.background_video %}
+<video id="bg-video" autoplay muted loop playsinline>
+    <source src="{{ club.background_video.url }}" type="video/mp4">
+</video>
+{% endif %}
+{% endblock background_video %}
 
 {% block watermark %}
     {% if club.watermark_image %}
@@ -144,15 +153,32 @@
         <p style="margin-bottom: 10px; font-size: 1.1rem; line-height: 1.4;">{{ club.description|default:"Sem descrição." }}</p>
         <p style="font-size: 0.95rem; color: var(--highlight-color); margin-top: auto;">📍 {{ club.address|default:"Endereço não informado" }}</p>
     </div>
+    <div class="btn-wrapper" style="display: flex; align-items: center; justify-content: flex-end;">
+        {% if club.rules_pdf %}
+        <a href="{{ club.rules_pdf.url }}" target="_blank" class="btn-highlight" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 170px; box-sizing: border-box; background: rgba(255,255,255,0.05); color: #fff; padding: 12px 20px; border-radius: 30px; text-decoration: none; font-weight: 600; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.2); transition: all 0.2s; white-space: nowrap;" onmouseover="this.style.background='var(--highlight-color)'; this.style.borderColor='var(--highlight-color)';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.2)';">
+            <i class="fas fa-file-pdf"></i> Regulamento
+        </a>
+        {% else %}
+        <button class="btn-highlight" onclick="alert('Este clube/liga ainda não tem o regulamento publicado.');" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 170px; box-sizing: border-box; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.5); padding: 12px 20px; border-radius: 30px; font-weight: 600; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.1); cursor: not-allowed; white-space: nowrap;">
+            <i class="fas fa-file-pdf"></i> Regulamento
+        </button>
+        {% endif %}
+    </div>
 </div>
 
 <div class="tournaments-section">
     <h2 style="font-size: clamp(1.5rem, 4vw, 2rem); margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 10px; text-align: center;">Bem-vindo ao Ranking interno e Torneios de Tenis do {{ club.name }}</h2>
     
     <!-- Menu Horizontal de Abas -->
-    <div class="tabs-container">
+    <div class="tabs-container" style="justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
         <button class="tab-btn active" onclick="openTab('rankings', this)">Rankings</button>
         <button class="tab-btn" onclick="openTab('knockouts', this)">Torneios Eliminatórios</button>
+        <a href="{% url 'clubs:news_list' club.id %}"
+           style="display: inline-flex; align-items: center; gap: 7px; padding: 10px 22px; border-radius: 8px; border: 2px solid var(--highlight-color); color: var(--highlight-color); font-weight: 700; font-size: 0.95rem; text-decoration: none; transition: background 0.2s;"
+           onmouseover="this.style.background='rgba(255,255,255,0.08)'"
+           onmouseout="this.style.background='transparent'">
+            <i class="fas fa-newspaper"></i> Notícias {{ club.name }}
+        </a>
     </div>
 
     <!-- Aba: Rankings -->

@@ -7,8 +7,13 @@
         A central definitiva para gestão de Clubes de Tênis, Rankings e Torneios.
     </p>
     
-    <div style="display: flex; justify-content: center; gap: 20px;">
+    <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
         <a href="{% url 'clubs:list' %}" class="btn-highlight" style="font-size: 1.1rem; padding: 12px 30px; text-decoration: none; display: inline-block;">Clubes / Ligas Associadas</a>
+        <a href="{% url 'news:global_list' %}" style="font-size: 1.1rem; padding: 12px 30px; text-decoration: none; display: inline-block; border: 2px solid var(--highlight-color); color: var(--highlight-color); border-radius: 8px; font-weight: 700; transition: background 0.2s;"
+           onmouseover="this.style.background='rgba(var(--highlight-color-rgb,59,130,246),0.15)'"
+           onmouseout="this.style.background='transparent'">
+            <i class="fas fa-newspaper" style="margin-right: 8px;"></i>Notícias AllCourts365
+        </a>
     </div>
 
     <!-- Seção de demonstração de design premium com cards glassmorphism -->

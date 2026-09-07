@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from news import views as news_views
 
 app_name = 'clubs'
 
@@ -10,4 +11,7 @@ urlpatterns = [
     path('<int:club_id>/torneio/<int:tournament_id>/', views.knockout_detail, name='knockout_detail'),
     path('<int:club_id>/torneio/<int:tournament_id>/categoria/<int:category_id>/', views.knockout_bracket, name='knockout_bracket'),
     path('download/modelo-torneio/', views.download_knockout_template, name='download_knockout_template'),
+    # Noticias por clube
+    path('<int:club_id>/noticias/', news_views.news_club_list, name='news_list'),
+    path('<int:club_id>/noticias/<slug:slug>/', news_views.news_detail, name='news_detail'),
 ]
