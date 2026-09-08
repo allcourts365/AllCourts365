@@ -690,3 +690,25 @@ def api_monthly_agenda(request):
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+def club_landing_page(request):
+    if request.method == 'POST':
+        from .models import ClubLead
+        name = request.POST.get('name')
+        club_name = request.POST.get('club_name')
+        phone = request.POST.get('phone')
+        email = request.POST.get('email')
+        
+        if name and club_name and phone:
+            ClubLead.objects.create(
+                name=name,
+                club_name=club_name,
+                phone=phone,
+                email=email
+            )
+            messages.success(request, 'Solicitação enviada com sucesso! Entraremos em contato em breve.')
+            return redirect('club_landing_page')
+        else:
+            messages.error(request, 'Por favor, preencha os campos obrigatórios.')
+            
+    return render(request, 'presentation.html')

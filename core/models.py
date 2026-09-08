@@ -43,6 +43,9 @@ class SiteConfiguration(models.Model):
 
     # Monitoramento e SEO
     google_analytics_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="ID de Medição do Google Analytics", help_text="Ex: G-XXXXXXXXXX")
+    
+    # Recursos e Exibição
+    show_clubs_cta = models.BooleanField(default=True, verbose_name="Exibir botão 'Para Clubes' no menu", help_text="Se desmarcado, a opção de prospectar novos clubes não aparecerá no topo do site.")
 
     @property
     def clean_whatsapp(self):
@@ -155,3 +158,19 @@ def auto_verify_admin_email(sender, instance, created, **kwargs):
             if not email_created and not email_address.verified:
                 email_address.verified = True
                 email_address.save()
+
+class ClubLead(models.Model):
+    name = models.CharField(max_length=200, verbose_name="Nome do Responsável")
+    club_name = models.CharField(max_length=200, verbose_name="Nome do Clube/Liga")
+    phone = models.CharField(max_length=50, verbose_name="WhatsApp/Telefone")
+    email = models.EmailField(blank=True, null=True, verbose_name="E-mail (Opcional)")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Data de Solicitação")
+    contacted = models.BooleanField(default=False, verbose_name="Contato Realizado?")
+
+    class Meta:
+        verbose_name = "Interesse de Clube (Lead)"
+        verbose_name_plural = "Interesses de Clubes (Leads)"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.club_name} - {self.name}"

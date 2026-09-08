@@ -4,7 +4,7 @@
 <div class="home-container" style="text-align: center; margin-top: clamp(5vh, 10vh, 15vh);">
     <h1 style="font-size: clamp(2.5rem, 8vw, 4rem); font-weight: 800; margin-bottom: 20px;">Bem-vindo ao AllCourts<span style="color: var(--highlight-color);">365</span></h1>
     <p style="font-size: clamp(1rem, 4vw, 1.5rem); margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
-        A central definitiva para gestão de Clubes de Tênis, Rankings e Torneios.
+        A central definitiva para gestão de Clubes, Rankings e Torneios.
     </p>
     
     <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
@@ -17,8 +17,8 @@
     </div>
 
     <!-- Seção de demonstração de design premium com cards glassmorphism -->
-    <div style="margin-top: 60px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; align-items: stretch;" class="desktop-3-cols">
-        <div class="glass-card" style="padding: 25px; display: flex; flex-direction: column; justify-content: center;">
+    <div style="margin-top: 60px; display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; align-items: stretch;">
+        <div class="glass-card" style="padding: 25px; display: flex; flex-direction: column; justify-content: center; flex: 1; min-width: 300px; max-width: 400px;">
             <div style="margin-bottom: 15px; color: #fbbf24;">
                 <i class="fas fa-crown fa-2x"></i>
             </div>
@@ -29,7 +29,7 @@
                 <li style="margin-bottom: 8px;"><i class="fas fa-check" style="color: #10b981; margin-right: 8px;"></i> Histórico de partidas</li>
             </ul>
         </div>
-        <div class="glass-card" style="padding: 25px; display: flex; flex-direction: column; justify-content: center;">
+        <div class="glass-card" style="padding: 25px; display: flex; flex-direction: column; justify-content: center; flex: 1; min-width: 300px; max-width: 400px;">
             <div style="margin-bottom: 15px; color: #3b82f6;">
                 <i class="fas fa-trophy fa-2x"></i>
             </div>
@@ -40,15 +40,18 @@
                 <li style="margin-bottom: 8px;"><i class="fas fa-check" style="color: #10b981; margin-right: 8px;"></i> Acompanhamento de chaves</li>
             </ul>
         </div>
-        <div class="glass-card" style="padding: 25px; display: flex; flex-direction: column; justify-content: center;">
-            <h3 style="font-size: 1.4rem; margin-bottom: 10px;">Gestão Poderosa e Descomplicada</h3>
-            <p style="font-size: 0.95rem;">Gerencie tudo de forma eficiente e visualmente agradável com o nosso painel administrativo.</p>
-            <p style="margin-top: 10px; font-weight: 600; font-size: 0.9rem;">É ADM de clube e quer fazer parte da AllCourts365?</p>
-            <p style="margin-top: 2px; font-size: 0.9rem;">Fale conosco e traga seu clube para a plataforma!</p>
-            <a href="https://wa.me/5516997063560" target="_blank" style="display: inline-block; margin-top: 10px; color: #25D366; font-weight: bold; text-decoration: none; font-size: 1.05rem;">
-                <i class="fab fa-whatsapp"></i> (16) 99706-3560
-            </a>
+        {% if site_config.show_clubs_cta %}
+        <div class="glass-card" style="padding: 25px; display: flex; flex-direction: column; justify-content: center; flex: 1; min-width: 300px; max-width: 400px;">
+            <h3 style="font-size: 1.4rem; margin-bottom: 10px;">Eleve o nível do seu Clube</h3>
+            <p style="font-size: 0.95rem; margin-bottom: 15px;">Automatize a gestão de Torneios, Rankings e Agendamento de Quadras. Ofereça uma experiência premium para seus atletas enquanto você economiza horas de trabalho no WhatsApp e planilhas.</p>
+            <p style="font-size: 0.9rem;">
+                <a href="{% url 'club_landing_page' %}" style="color: var(--highlight-color); text-decoration: underline; font-weight: 600;">Clique aqui</a> ou Fale conosco e traga seu clube para a plataforma! 
+                <a href="https://wa.me/5516997063560" target="_blank" style="display: inline-block; margin-top: 5px; color: #25D366; font-weight: bold; text-decoration: none; font-size: 1.05rem;">
+                    <i class="fab fa-whatsapp"></i> (16) 99706-3560
+                </a>
+            </p>
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

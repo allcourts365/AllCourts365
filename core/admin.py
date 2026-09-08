@@ -3,7 +3,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 from allauth.account.models import EmailAddress
-from .models import SiteConfiguration, UserProfile, PlayerLinkRequest
+from .models import SiteConfiguration, UserProfile, PlayerLinkRequest, ClubLead
 from django.contrib.auth.forms import UserChangeForm, AdminUserCreationForm
 from clubs.models import Club
 from clubs.admin import ClubScopedAdminMixin
@@ -140,6 +140,9 @@ class SiteConfigurationAdmin(admin.ModelAdmin):
         ('Monitoramento e SEO', {
             'fields': ('google_analytics_id',)
         }),
+        ('Recursos e Exibição', {
+            'fields': ('show_clubs_cta',)
+        }),
     )
     
     def has_add_permission(self, request):
@@ -178,3 +181,10 @@ class PlayerLinkRequestAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
             req.status = 'rejected'
             req.save()
         self.message_user(request, "Solicitações rejeitadas e vínculos desfeitos (se aplicável).")
+
+@admin.register(ClubLead)
+class ClubLeadAdmin(admin.ModelAdmin):
+    list_display = ('club_name', 'name', 'phone', 'contacted', 'created_at')
+    list_filter = ('contacted', 'created_at')
+    search_fields = ('club_name', 'name', 'email', 'phone')
+    list_editable = ('contacted',)

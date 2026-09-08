@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Leve a AllCourts365 para seu Clube{% endblock %}
+
+{% block extra_head %}
+<style>
+    .presentation-header {
+        text-align: center;
+        padding: 60px 20px;
+        background: linear-gradient(to bottom, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.4));
+        border-radius: 20px;
+        margin-bottom: 40px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .presentation-title {
+        font-size: 3rem;
+        font-weight: 800;
+        color: var(--global-title-color);
+        margin-bottom: 20px;
+    }
+    .presentation-title span {
+        color: var(--global-highlight-color);
+    }
+    .presentation-subtitle {
+        font-size: 1.2rem;
+        color: var(--global-subtitle-color);
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        margin-bottom: 60px;
+    }
+    .feature-card {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        padding: 30px;
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: center;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        border-color: var(--global-highlight-color);
+    }
+    .feature-icon {
+        font-size: 2.5rem;
+        color: var(--global-highlight-color);
+        margin-bottom: 20px;
+    }
+    .feature-title {
+        font-size: 1.3rem;
+        color: #fff;
+        margin-bottom: 15px;
+        font-weight: 700;
+    }
+    .feature-text {
+        color: var(--global-subtitle-color);
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .cta-section {
+        background: rgba(15, 23, 42, 0.8);
+        padding: 50px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 40px;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .cta-content {
+        flex: 1;
+        min-width: 300px;
+    }
+    .cta-content h2 {
+        font-size: 2rem;
+        color: #fff;
+        margin-bottom: 15px;
+    }
+    .cta-content p {
+        color: var(--global-subtitle-color);
+        font-size: 1.1rem;
+        margin-bottom: 20px;
+    }
+    .cta-form {
+        flex: 1;
+        min-width: 300px;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 30px;
+        border-radius: 15px;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        color: #e2e8f0;
+        margin-bottom: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 8px;
+        color: #fff;
+        font-size: 1rem;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: var(--global-highlight-color);
+        background: rgba(0, 0, 0, 0.4);
+    }
+    .btn-submit {
+        width: 100%;
+        padding: 15px;
+        background: var(--global-highlight-color);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    .btn-submit:hover {
+        filter: brightness(1.1);
+    }
+
+    @media (max-width: 768px) {
+        .presentation-title { font-size: 2rem; }
+        .cta-section { padding: 30px 20px; flex-direction: column; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="presentation-header" style="margin-top: 20px;">
+    <h1 class="presentation-title">Eleve o nível do seu <span>Clube</span></h1>
+    <p class="presentation-subtitle">Automatize a gestão de Torneios, Rankings e Agendamento de Quadras. Ofereça uma experiência premium para seus atletas enquanto você economiza horas de trabalho no WhatsApp e planilhas.</p>
+</div>
+
+<div class="features-grid">
+    <div class="feature-card">
+        <i class="fas fa-trophy feature-icon"></i>
+        <h3 class="feature-title">Rankings e Torneios Automáticos</h3>
+        <p class="feature-text">Importe sua planilha de atletas e o sistema gera automaticamente os confrontos, chaves e rodadas. Fim do sofrimento montando tabelas na mão.</p>
+    </div>
+    
+    <div class="feature-card">
+        <i class="fas fa-calendar-alt feature-icon"></i>
+        <h3 class="feature-title">Agendamento Integrado</h3>
+        <p class="feature-text">Os próprios atletas combinam o horário do jogo pelo sistema, escolhem a quadra e você só acompanha. Bloqueio automático para evitar choques de horário.</p>
+    </div>
+    
+    <div class="feature-card">
+        <i class="fas fa-mobile-alt feature-icon"></i>
+        <h3 class="feature-title">Painel do Atleta</h3>
+        <p class="feature-text">Seus associados terão um portal moderno para ver seus próximos jogos, confirmar presença, lançar resultados e ver sua evolução no circuito.</p>
+    </div>
+</div>
+
+<div class="cta-section">
+    <div class="cta-content">
+        <h2>Pronto para transformar a gestão do seu esporte?</h2>
+        <p>A AllCourts365 é ideal para Clubes e Ligas de Tênis, Beach Tennis, Padel e qualquer outro esporte.</p>
+        <p>Cadastre seu interesse abaixo e nossa equipe entrará em contato para apresentar as condições, planos disponíveis e liberar <strong>30 dias de teste gratuito</strong>.</p>
+        <ul style="color: #cbd5e1; font-size: 1rem; line-height: 1.8; margin-top: 20px; padding-left: 20px;">
+            <li><i class="fas fa-check" style="color: #10b981; margin-right: 10px;"></i> Planos a partir de um valor acessível por atleta</li>
+            <li><i class="fas fa-check" style="color: #10b981; margin-right: 10px;"></i> Suporte na importação inicial dos dados</li>
+            <li><i class="fas fa-check" style="color: #10b981; margin-right: 10px;"></i> Personalização com as cores do seu clube (em breve)</li>
+        </ul>
+    </div>
+    
+    <div class="cta-form">
+        <form method="POST" action="{% url 'club_landing_page' %}">
+            {% csrf_token %}
+            <h3 style="color: #fff; margin-bottom: 20px; font-size: 1.2rem; text-align: center;">Solicitar Contato</h3>
+            
+            <div class="form-group">
+                <label for="name">Seu Nome *</label>
+                <input type="text" id="name" name="name" class="form-control" required placeholder="Ex: João da Silva">
+            </div>
+            
+            <div class="form-group">
+                <label for="club_name">Nome do Clube / Liga *</label>
+                <input type="text" id="club_name" name="club_name" class="form-control" required placeholder="Ex: Liga de Tênis SP">
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">WhatsApp / Telefone *</label>
+                <input type="text" id="phone" name="phone" class="form-control" required placeholder="(11) 99999-9999">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">E-mail (Opcional)</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="seu@email.com">
+            </div>
+            
+            <button type="submit" class="btn-submit">Quero conhecer a plataforma <i class="fas fa-arrow-right" style="margin-left: 8px;"></i></button>
+            <p style="text-align: center; color: #64748b; font-size: 0.8rem; margin-top: 15px;">Sem compromisso. Entraremos em contato rápido.</p>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function (e) {
+            var x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+            e.target.value = !x[2] ? (x[1] ? '(' + x[1] : '') : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+        });
+    }
+});
+</script>
+{% endblock %}
