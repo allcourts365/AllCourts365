@@ -9,6 +9,22 @@
 
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        {% if request.GET.cat %}
+        // If loaded from dashboard directly to a category
+        const catIdStr = 'cat-{{ request.GET.cat }}';
+        // Need to find the name of the category to display, but we can just hide it and show it or find the matching card.
+        // Let's find the card's onclick to get the name
+        const card = document.querySelector(`.category-card[onclick*="${catIdStr}"]`);
+        if (card) {
+            card.click();
+        } else {
+            showCategory(catIdStr, '');
+        }
+        {% endif %}
+    });
+</script>
 <style>
     @keyframes scaleIn {
         from { transform: scale(0.8); opacity: 0; }
@@ -236,7 +252,11 @@
 <!-- View de Detalhes da Categoria -->
 <div id="category-detail-view" style="display: none; margin-top: 20px; width: 100%;">
     <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 30px;">
-        <a onclick="showDashboard(); return false;" href="#" style="color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600; cursor: pointer;">&larr; Voltar para o Ranking</a>
+        {% if request.GET.from_dashboard %}
+            <a href="{% url 'athlete_dashboard' %}?tab=meus-jogos" style="color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600;">&larr; Voltar para o Painel de Atleta</a>
+        {% else %}
+            <a onclick="showDashboard(); return false;" href="#" style="color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600; cursor: pointer;">&larr; Voltar para o Ranking</a>
+        {% endif %}
         <h2 id="active-category-title" style="font-size: 2rem; font-weight: 800; color: #fff; margin: 0; text-transform: uppercase;"></h2>
     </div>
 

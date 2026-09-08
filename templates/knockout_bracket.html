@@ -248,7 +248,11 @@
 
 {% block content %}
 <div class="print-cover" style="margin-top: 2rem; margin-bottom: 2rem; position: relative;">
-    <a href="{% url 'clubs:knockout_detail' club.id tournament.id %}" class="back-link" style="color: var(--primary); text-decoration: none; font-weight: 600;">&larr; Voltar para Torneio</a>
+            {% if request.GET.from_dashboard %}
+                <a href="{% url 'athlete_dashboard' %}?tab=meus-jogos" class="back-link" style="color: var(--primary); text-decoration: none; font-weight: 600;">&larr; Voltar para o Painel de Atleta</a>
+            {% else %}
+                <a href="{% url 'clubs:knockout_detail' club.id tournament.id %}" class="back-link" style="color: var(--primary); text-decoration: none; font-weight: 600;">&larr; Voltar para Torneio</a>
+            {% endif %}
 
     <h1 class="home-title" style="margin-top: 1rem; padding-right: 120px; font-size: 2.2rem; margin-bottom: 0.25rem; color: var(--title-color);">{{ category.name }}</h1>
     <p class="home-subtitle" style="margin-bottom: 0; color: var(--subtitle-color);">
