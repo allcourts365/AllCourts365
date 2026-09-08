@@ -249,7 +249,7 @@
 {% block content %}
 <div class="print-cover" style="margin-top: 2rem; margin-bottom: 2rem; position: relative;">
             {% if request.GET.from_dashboard %}
-                <a href="{% url 'athlete_dashboard' %}?tab=meus-jogos" class="back-link" style="color: var(--primary); text-decoration: none; font-weight: 600;">&larr; Voltar para o Painel de Atleta</a>
+                <a href="javascript:history.back()" class="back-link" style="color: var(--primary); text-decoration: none; font-weight: 600;">&larr; Voltar aos Meus Jogos</a>
             {% else %}
                 <a href="{% url 'clubs:knockout_detail' club.id tournament.id %}" class="back-link" style="color: var(--primary); text-decoration: none; font-weight: 600;">&larr; Voltar para Torneio</a>
             {% endif %}

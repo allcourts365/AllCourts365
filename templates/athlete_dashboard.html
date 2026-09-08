@@ -746,8 +746,9 @@
                                 </p>
                             </div>
                             
-                            {% if match.status == 'pending' and match.round_number == match.tournament.current_round and match.player_a and match.player_b %}
-                                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                {% if match.status == 'pending' and match.round_number == match.tournament.current_round and match.player_a and match.player_b %}
                                     {% if match.tournament.allow_player_scheduling %}
                                         {% if match.schedule_status == 'unagendado' %}
                                         <button onclick="openScheduleModal('{{ match.id }}', '{{ match.player_a.name }} vs {{ match.player_b.name }}')" style="padding: 8px 16px; background: #fff; color: #000; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
@@ -771,18 +772,18 @@
                                             </button>
                                         {% endif %}
                                     {% endif %}
-                                    
-                                    {% if match.tournament.tournament_type == 'ranking' %}
-                                        <a href="{% url 'clubs:ranking_detail' match.tournament.club.id match.tournament.id %}?cat={{ match.category.id }}&from_dashboard=1" style="padding: 8px 16px; background: rgba(59,130,246,0.2); color: #3b82f6; border: 1px solid rgba(59,130,246,0.5); border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem; text-decoration: none;">
-                                            <i class="fas fa-list-ol"></i> Ver Ranking
-                                        </a>
-                                    {% elif match.tournament.tournament_type == 'knockout' %}
-                                        <a href="{% url 'clubs:knockout_bracket' match.tournament.club.id match.tournament.id match.category.id %}?from_dashboard=1" style="padding: 8px 16px; background: rgba(59,130,246,0.2); color: #3b82f6; border: 1px solid rgba(59,130,246,0.5); border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem; text-decoration: none;">
-                                            <i class="fas fa-sitemap"></i> Ver Chaves
-                                        </a>
-                                    {% endif %}
-                                </div>
-                            {% endif %}
+                                {% endif %}
+                                
+                                {% if match.tournament.tournament_type == 'ranking' %}
+                                    <a href="{% url 'clubs:ranking_detail' match.tournament.club.id match.tournament.id %}?cat={{ match.category.id }}&from_dashboard=1" style="padding: 8px 16px; background: rgba(59,130,246,0.2); color: #3b82f6; border: 1px solid rgba(59,130,246,0.5); border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem; text-decoration: none;">
+                                        <i class="fas fa-list-ol"></i> Ver Ranking
+                                    </a>
+                                {% elif match.tournament.tournament_type == 'knockout' %}
+                                    <a href="{% url 'clubs:knockout_bracket' match.tournament.club.id match.tournament.id match.category.id %}?from_dashboard=1" style="padding: 8px 16px; background: rgba(59,130,246,0.2); color: #3b82f6; border: 1px solid rgba(59,130,246,0.5); border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem; text-decoration: none;">
+                                        <i class="fas fa-sitemap"></i> Ver Chaves
+                                    </a>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                     {% endfor %}

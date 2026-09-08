@@ -253,7 +253,7 @@
 <div id="category-detail-view" style="display: none; margin-top: 20px; width: 100%;">
     <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 30px;">
         {% if request.GET.from_dashboard %}
-            <a href="{% url 'athlete_dashboard' %}?tab=meus-jogos" style="color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600;">&larr; Voltar para o Painel de Atleta</a>
+            <a href="javascript:history.back()" style="color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600;">&larr; Voltar aos Meus Jogos</a>
         {% else %}
             <a onclick="showDashboard(); return false;" href="#" style="color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600; cursor: pointer;">&larr; Voltar para o Ranking</a>
         {% endif %}
