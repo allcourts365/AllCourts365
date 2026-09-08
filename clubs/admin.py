@@ -90,6 +90,13 @@ class ClubAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     search_fields = ('name',)
     inlines = [ClubAdministratorsInline]
     
+    def has_add_permission(self, request):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    
     fieldsets = (
         ('Informações Básicas', {
             'fields': ('name', 'website', 'logo', 'description', 'address', 'rules_pdf')
