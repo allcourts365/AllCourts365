@@ -453,7 +453,7 @@
                     <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 20px; border-radius: 12px; display: flex; flex-direction: column;">
                         <h4 style="color: #34d399; font-size: 1.4rem; margin-bottom: 10px; font-weight: 800;">{{ profile.club.name }}</h4>
                         <span style="color: var(--subtitle-color); font-size: 1rem; margin-bottom: 15px;">Perfil: <strong style="color: #fff;">{{ profile.name }}</strong></span>
-                        <a href="{% url 'clubs:detail' profile.club.id %}" class="btn-save" style="margin-top: auto; text-align: center; font-size: 0.9rem; padding: 10px;">
+                        <a href="{% url 'clubs:detail' profile.club.id %}?from_dashboard=1" class="btn-save" style="margin-top: auto; text-align: center; font-size: 0.9rem; padding: 10px;">
                             <i class="fas fa-arrow-right"></i> Acessar Página
                         </a>
                     </div>
