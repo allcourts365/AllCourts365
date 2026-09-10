@@ -712,3 +712,133 @@ def club_landing_page(request):
             messages.error(request, 'Por favor, preencha os campos obrigatórios.')
             
     return render(request, 'presentation.html')
+
+@login_required
+def my_games_calendar(request):
+    user = request.user
+    
+    club_id_str = request.GET.get('club') or request.session.get('active_club_id')
+    club_id = None
+    if club_id_str:
+        try:
+            club_id = int(club_id_str)
+        except ValueError:
+            pass
+            
+    my_profiles = user.player_profiles.all()
+    active_profile = None
+    linked_club = None
+    
+    if club_id:
+        active_profile = my_profiles.filter(club_id=club_id).first()
+        if not active_profile:
+            try:
+                linked_club = Club.objects.get(id=club_id)
+            except Club.DoesNotExist:
+                pass
+                
+    if not club_id and not active_profile and my_profiles.exists():
+        active_profile = my_profiles.first()
+        
+    if active_profile:
+        linked_club = active_profile.club
+        
+    clubs = Club.objects.filter(is_visible=True).order_by('name')
+    
+    context = {
+        'linked_club': linked_club,
+        'my_player_profile': active_profile,
+        'my_profiles': my_profiles,
+        'clubs': clubs,
+    }
+    return render(request, 'my_games_calendar.html', context)
+
+@login_required
+def api_my_games(request):
+    user = request.user
+    start_str = request.GET.get('start')
+    end_str = request.GET.get('end')
+    club_id_str = request.GET.get('club') or request.session.get('active_club_id')
+    
+    if not start_str or not end_str:
+        return JsonResponse({'error': 'Parâmetros start e end obrigatórios'}, status=400)
+        
+    try:
+        club_id = int(club_id_str) if club_id_str else None
+    except ValueError:
+        club_id = None
+        
+    active_profile = user.player_profiles.filter(club_id=club_id).first() if club_id else user.player_profiles.first()
+    
+    if not active_profile:
+        return JsonResponse([], safe=False)
+        
+    try:
+        start_date = datetime.strptime(start_str.split('T')[0], "%Y-%m-%d").date()
+        end_date = datetime.strptime(end_str.split('T')[0], "%Y-%m-%d").date()
+        
+        start_dt = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
+        end_dt = timezone.make_aware(datetime.combine(end_date, datetime.max.time()))
+        
+        # Buscar jogos do jogador
+        matches = Match.objects.filter(
+            Q(player_a=active_profile) | Q(player_b=active_profile)
+        ).select_related('tournament', 'player_a', 'player_b', 'court')
+        
+        # O FullCalendar pede os eventos do mês atual, mas jogos não agendados não tem data.
+        # Nós vamos mandar os agendados no intervalo, e os não agendados também pra ele poder exibir na barra lateral se quiser.
+        # Mas para simplificar agora, focaremos nos agendados ou propostos.
+        
+        events = []
+        for m in matches:
+            if m.scheduled_datetime or m.proposed_datetime:
+                dt = m.scheduled_datetime or m.proposed_datetime
+                # Pular se estiver fora do range, para otimização
+                if dt < start_dt or dt > end_dt:
+                    continue
+                    
+                local_dt = timezone.localtime(dt)
+                
+                # Monta os dados do evento
+                p1 = m.player_a.name if m.player_a else "TBD"
+                p2 = m.player_b.name if m.player_b else "TBD"
+                
+                title = f"{p1} vs {p2}"
+                court_name = m.court.name if m.court else (m.proposed_court.name if m.proposed_court else "A definir")
+                status = m.schedule_status
+                
+                # Cores inspiradas no Outlook
+                if status == 'agendado':
+                    bg_color = '#0078d4' # Azul Outlook
+                    border_color = '#005a9e'
+                elif status == 'aguardando_adversario':
+                    bg_color = '#6b69d6' # Roxo
+                    border_color = '#5c5ab8'
+                elif status == 'unagendado':
+                    bg_color = '#555555' # Cinza
+                    border_color = '#333333'
+                else:
+                    bg_color = '#0078d4'
+                    border_color = '#005a9e'
+                    
+                events.append({
+                    'id': m.id,
+                    'title': title,
+                    'start': local_dt.isoformat(),
+                    'end': (local_dt + timedelta(minutes=90)).isoformat(), # Duração padrão de 90min
+                    'backgroundColor': bg_color,
+                    'borderColor': border_color,
+                    'extendedProps': {
+                        'tournament': m.tournament.name if m.tournament else "",
+                        'court': court_name,
+                        'status': status,
+                        'proposer': m.proposed_by.name if m.proposed_by else "",
+                        'opponentEmail': m.player_b.user.email if (m.player_a == active_profile and m.player_b and m.player_b.user) else (m.player_a.user.email if m.player_a and m.player_a.user else ""),
+                        'isProposer': (m.proposed_by == active_profile) if m.proposed_by else False
+                    }
+                })
+                
+        return JsonResponse(events, safe=False)
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

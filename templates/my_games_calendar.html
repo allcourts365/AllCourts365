@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/calendar_dark.css' %}">
+<!-- FullCalendar CSS and JS via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<!-- Tradução para PT-BR do FullCalendar -->
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales/pt-br.js"></script>
+<style>
+    /* Ocultar barra de navegação, rodapé e overlays globais para tela cheia */
+    .glass-nav, footer, .cookie-banner, .bg-overlay, .watermark { display: none !important; }
+    main.container { 
+        padding: 0 !important; 
+        max-width: 100% !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+        height: 100vh !important;
+    }
+    body { background-color: #1a1a1a !important; background-image: none !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="calendar-layout">
+    <!-- Top Bar -->
+    <div class="calendar-topbar">
+        <div class="topbar-left">
+            <a href="{% url 'athlete_dashboard' %}{% if linked_club %}?club={{ linked_club.id }}{% endif %}" class="outlook-btn" title="Voltar ao Dashboard">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <button class="outlook-btn primary" id="btn-today">Hoje</button>
+            <div style="color: #ffffff; font-size: 16px; font-weight: 600; margin-left: 8px;" id="calendar-title"></div>
+        </div>
+        <div class="topbar-right">
+            <!-- Botão de Filtro Simulado na Top Bar -->
+            <button class="outlook-btn" title="Filtro" id="btn-filter">
+                <i class="fas fa-filter"></i> Filtro
+            </button>
+            <div class="view-selector">
+                <button class="outlook-btn" data-view="timeGridDay">Dia</button>
+                <button class="outlook-btn" data-view="timeGridWeek">Semana de trabalho</button>
+                <button class="outlook-btn" data-view="dayGridMonth">Mês</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Corpo (Sidebar + Calendar) -->
+    <div class="calendar-body">
+        <!-- Sidebar Esquerda -->
+        <div class="calendar-sidebar">
+            <!-- Calendário Miniatura (Espaço para integração futura se desejado) -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">Meus calendários</div>
+                <div class="calendar-item">
+                    <div class="calendar-color" style="background-color: #0078d4;"></div>
+                    <span style="font-size: 14px;">Jogos ({{ my_player_profile.name|default:user.username }})</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Calendar Area -->
+        <div class="calendar-main" id="calendar"></div>
+    </div>
+</div>
+
+<!-- Modal Outlook Style -->
+<div class="outlook-modal-backdrop" id="event-modal-backdrop">
+    <div class="outlook-modal">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modal-title">Título do Jogo</h3>
+            <button class="modal-close" id="modal-close"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <!-- Linha Horário/Local -->
+            <div class="modal-info-row">
+                <i class="far fa-clock modal-icon"></i>
+                <div class="modal-info-text" id="modal-datetime">Qua, 09/09/2026 13:30 - 15:00<br>Quadra</div>
+            </div>
+            <!-- Linha Organizador/Status -->
+            <div class="modal-info-row">
+                <div class="modal-organizer-badge" id="modal-badge">A</div>
+                <div class="modal-info-text">
+                    <span id="modal-organizer">Organizador convidou você.</span><br>
+                    <span id="modal-status-text" style="color: #aaaaaa;">Status do Jogo</span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-actions" id="modal-actions">
+            <!-- Botões Dinâmicos Injetados via JS dependendo do status -->
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        var viewButtons = document.querySelectorAll('.view-selector .outlook-btn');
+        var btnToday = document.getElementById('btn-today');
+        var titleEl = document.getElementById('calendar-title');
+        
+        var modalBackdrop = document.getElementById('event-modal-backdrop');
+        var modalClose = document.getElementById('modal-close');
+        
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            locale: 'pt-br',
+            initialView: 'timeGridWeek', // Semana de trabalho padrão
+            headerToolbar: false, // Escondendo toolbar padrão
+            allDaySlot: false,
+            slotMinTime: '06:00:00',
+            slotMaxTime: '23:59:59',
+            nowIndicator: true,
+            height: '100%',
+            events: function(info, successCallback, failureCallback) {
+                var start = info.startStr;
+                var end = info.endStr;
+                var clubParam = "{% if linked_club %}{{ linked_club.id }}{% endif %}";
+                
+                var url = `{% url 'api_my_games' %}?start=${start}&end=${end}`;
+                if (clubParam) url += `&club=${clubParam}`;
+                
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => successCallback(data))
+                    .catch(error => failureCallback(error));
+            },
+            datesSet: function(info) {
+                // Atualiza o título personalizado na Top Bar
+                titleEl.textContent = info.view.title;
+                
+                // Atualiza o estado ativo dos botões
+                viewButtons.forEach(btn => btn.classList.remove('active'));
+                var activeBtn = document.querySelector(`.view-selector .outlook-btn[data-view="${info.view.type}"]`);
+                if (activeBtn) activeBtn.classList.add('active');
+            },
+            eventClick: function(info) {
+                info.jsEvent.preventDefault();
+                showEventModal(info.event);
+            }
+        });
+        
+        calendar.render();
+        
+        // Listeners da Top Bar Customizada
+        btnToday.addEventListener('click', function() {
+            calendar.today();
+        });
+        
+        viewButtons.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                calendar.changeView(btn.getAttribute('data-view'));
+            });
+        });
+        
+        // Lógica do Modal
+        function showEventModal(event) {
+            var props = event.extendedProps;
+            
+            document.getElementById('modal-title').textContent = event.title;
+            
+            // Format datetime
+            var startDt = event.start;
+            var endDt = event.end;
+            
+            var optionsDate = { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' };
+            var optionsTime = { hour: '2-digit', minute: '2-digit' };
+            
+            var dateStr = startDt.toLocaleDateString('pt-BR', optionsDate);
+            var startTimeStr = startDt.toLocaleTimeString('pt-BR', optionsTime);
+            var endTimeStr = endDt ? endDt.toLocaleTimeString('pt-BR', optionsTime) : '';
+            
+            var timeHtml = `${dateStr} ${startTimeStr} – ${endTimeStr}<br><strong>${props.court}</strong> - ${props.tournament}`;
+            document.getElementById('modal-datetime').innerHTML = timeHtml;
+            
+            // Organizer info
+            var opponentEmail = props.opponentEmail || 'Adversário';
+            var badgeLetter = props.proposer ? props.proposer.charAt(0).toUpperCase() : (opponentEmail.charAt(0).toUpperCase());
+            document.getElementById('modal-badge').textContent = badgeLetter;
+            
+            var organizerText = "";
+            if (props.status === 'aguardando_adversario') {
+                if (props.isProposer) {
+                    organizerText = `Você propôs este horário. Aguardando ${opponentEmail}.`;
+                } else {
+                    organizerText = `${props.proposer} convidou você.`;
+                }
+            } else if (props.status === 'agendado') {
+                organizerText = "Jogo confirmado!";
+            } else {
+                organizerText = "Detalhes do Jogo";
+            }
+            document.getElementById('modal-organizer').textContent = organizerText;
+            document.getElementById('modal-status-text').textContent = "Status: " + props.status.toUpperCase();
+            
+            // Botões de Ação
+            var actionsContainer = document.getElementById('modal-actions');
+            actionsContainer.innerHTML = '';
+            
+            if (props.status === 'aguardando_adversario' && !props.isProposer) {
+                // Aceitar / Recusar
+                actionsContainer.innerHTML = `
+                    <form method="POST" action="{% url 'athlete_dashboard' %}" style="flex:1; display:flex; gap:8px; margin:0;">
+                        {% csrf_token %}
+                        <input type="hidden" name="match_id" value="${event.id}">
+                        <input type="hidden" name="club" value="{% if linked_club %}{{ linked_club.id }}{% endif %}">
+                        <button type="submit" name="accept_schedule" class="action-btn accept">
+                            <i class="fas fa-check"></i> Aceitar
+                        </button>
+                        <button type="submit" name="decline_schedule" class="action-btn decline">
+                            <i class="fas fa-times"></i> Recusar
+                        </button>
+                    </form>
+                `;
+            } else if (props.status === 'agendado' || (props.status === 'aguardando_adversario' && props.isProposer)) {
+                // Cancelar / Reagendar
+                actionsContainer.innerHTML = `
+                    <form method="POST" action="{% url 'athlete_dashboard' %}" style="flex:1; display:flex; margin:0;">
+                        {% csrf_token %}
+                        <input type="hidden" name="match_id" value="${event.id}">
+                        <input type="hidden" name="club" value="{% if linked_club %}{{ linked_club.id }}{% endif %}">
+                        <button type="submit" name="delete_schedule" class="action-btn decline" onclick="return confirm('Deseja realmente cancelar este agendamento?');">
+                            <i class="fas fa-trash"></i> Cancelar Agendamento
+                        </button>
+                    </form>
+                `;
+            }
+            
+            modalBackdrop.classList.add('show');
+        }
+        
+        modalClose.addEventListener('click', function() {
+            modalBackdrop.classList.remove('show');
+        });
+        
+        modalBackdrop.addEventListener('click', function(e) {
+            if (e.target === modalBackdrop) {
+                modalBackdrop.classList.remove('show');
+            }
+        });
+    });
+</script>
+{% endblock %}

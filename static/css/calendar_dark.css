@@ -1,0 +1,317 @@
+/* Estilo Premium Dark Mode inspirado no Outlook Web */
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.calendar-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Barra superior (Top Bar) */
+.calendar-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    height: 48px;
+    background-color: #111111;
+    border-bottom: 1px solid #333333;
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+}
+
+.outlook-btn {
+    background: transparent;
+    color: #ffffff;
+    border: 1px solid transparent;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+}
+
+.outlook-btn:hover {
+    background-color: #2d2d2d;
+}
+
+.outlook-btn.active {
+    background-color: #292929;
+    border-color: #444444;
+}
+
+.outlook-btn.primary {
+    background-color: #0078d4;
+    border-color: #0078d4;
+    color: #ffffff;
+}
+
+.outlook-btn.primary:hover {
+    background-color: #005a9e;
+}
+
+.view-selector {
+    display: flex;
+    gap: 4px;
+    margin-left: 20px;
+}
+
+/* Área principal (Sidebar + Calendar) */
+.calendar-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.calendar-sidebar {
+    width: 260px;
+    background-color: #1a1a1a;
+    border-right: 1px solid #333333;
+    padding: 16px;
+    overflow-y: auto;
+}
+
+.sidebar-section {
+    margin-bottom: 24px;
+}
+
+.sidebar-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #aaaaaa;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+}
+
+.calendar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.calendar-item:hover {
+    background-color: #2d2d2d;
+}
+
+.calendar-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+/* Container do FullCalendar */
+.calendar-main {
+    flex: 1;
+    padding: 16px;
+    background-color: #1a1a1a;
+    overflow-y: auto;
+}
+
+/* Overrides para o FullCalendar se adaptar ao Dark Mode */
+.fc-theme-standard .fc-scrollgrid {
+    border-color: #333333;
+}
+.fc-theme-standard td, .fc-theme-standard th {
+    border-color: #333333;
+}
+.fc .fc-col-header-cell-cushion {
+    color: #ffffff;
+    font-weight: 500;
+    padding: 8px;
+    text-decoration: none;
+}
+.fc .fc-daygrid-day-number {
+    color: #cccccc;
+    text-decoration: none;
+}
+.fc .fc-day-today {
+    background-color: rgba(0, 120, 212, 0.1) !important;
+}
+.fc .fc-timegrid-slot {
+    height: 3em;
+}
+.fc .fc-event {
+    border-radius: 3px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    cursor: pointer;
+    border: none;
+    padding: 2px;
+}
+.fc-v-event .fc-event-main {
+    padding: 2px 4px;
+}
+.fc .fc-toolbar {
+    display: none;
+}
+
+/* Event Modal (Estilo Outlook) */
+.outlook-modal-backdrop {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+
+.outlook-modal-backdrop.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.outlook-modal {
+    background-color: #252525;
+    border-radius: 6px;
+    width: 400px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+    border-top: 4px solid #6b69d6;
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.95);
+    transition: transform 0.2s;
+}
+
+.outlook-modal-backdrop.show .outlook-modal {
+    transform: scale(1);
+}
+
+.modal-header {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    color: #ffffff;
+}
+
+.modal-close {
+    background: transparent;
+    border: none;
+    color: #aaaaaa;
+    cursor: pointer;
+    font-size: 16px;
+}
+.modal-close:hover {
+    color: #ffffff;
+}
+
+.modal-body {
+    padding: 0 20px 20px 20px;
+}
+
+.modal-info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.modal-icon {
+    color: #aaaaaa;
+    font-size: 18px;
+    margin-top: 2px;
+}
+
+.modal-info-text {
+    font-size: 14px;
+    color: #cccccc;
+    line-height: 1.4;
+    flex: 1;
+}
+
+.modal-info-text strong {
+    color: #ffffff;
+    font-weight: 500;
+}
+
+.modal-organizer-badge {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: #6b69d6;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.modal-actions {
+    border-top: 1px solid #333333;
+    padding: 16px 20px;
+    display: flex;
+    gap: 8px;
+    background-color: #212121;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+.action-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px;
+    background: transparent;
+    border: 1px solid #444444;
+    border-radius: 4px;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s;
+    text-decoration: none;
+}
+
+.action-btn:hover {
+    background-color: #333333;
+    color: #ffffff;
+}
+
+.action-btn.accept i { color: #2ea043; }
+.action-btn.tentative i { color: #aaaaaa; }
+.action-btn.decline i { color: #f85149; }
+
+.action-btn.primary {
+    background-color: #0078d4;
+    border-color: #0078d4;
+}
+.action-btn.primary:hover {
+    background-color: #005a9e;
+}
