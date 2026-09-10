@@ -41,8 +41,3 @@ class AutoLogoutMiddleware(MiddlewareMixin):
                     if club_id not in managed_ids:
                         logout(request)
                 # Se não for a rota de um clube, não faz nada com o admin
-            else:
-                # Regra do Atleta: se sair das áreas permitidas (ex: Home, Clubes list), desloga na hora
-                # Exceção: vindo do painel de atleta para ver chaves/ranking
-                if not is_allowed and request.GET.get('from_dashboard') != '1':
-                    logout(request)
