@@ -362,7 +362,7 @@
         <!-- Logo overlapping -->
         <div style="position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%); width: 120px; height: 120px; border-radius: 50%; background: #1a1a2e; border: 4px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(10px);">
             {% if linked_club.logo %}
-                <img src="{{ linked_club.logo.url }}" alt="{{ linked_club.name }}" style="max-width: 90%; max-height: 90%; object-fit: contain;">
+                <img src="{{ linked_club.logo.url }}" alt="{{ linked_club.name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
             {% else %}
                 <img src="{% static 'bolinha.png' %}" style="width: 60px; height: 60px; opacity: 0.8;">
             {% endif %}
@@ -564,7 +564,7 @@
                                 <!-- Overlapping Logo -->
                                 <div style="position: absolute; bottom: -25px; left: 20px; width: 60px; height: 60px; border-radius: 50%; background: #1a1a2e; border: 3px solid rgba(16, 185, 129, 0.5); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.5); backdrop-filter: blur(10px);">
                                     {% if profile.club.logo %}
-                                        <img src="{{ profile.club.logo.url }}" alt="{{ profile.club.name }}" style="max-width: 90%; max-height: 90%; object-fit: contain;">
+                                        <img src="{{ profile.club.logo.url }}" alt="{{ profile.club.name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                                     {% else %}
                                         <img src="{% static 'bolinha.png' %}" style="width: 35px; height: 35px; opacity: 0.8;">
                                     {% endif %}
@@ -600,7 +600,7 @@
                                     {% endif %}
                                     <div style="position: absolute; bottom: -25px; left: 20px; width: 60px; height: 60px; border-radius: 50%; background: #1a1a2e; border: 3px solid rgba(245, 158, 11, 0.5); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
                                         {% if req.club.logo %}
-                                            <img src="{{ req.club.logo.url }}" alt="{{ req.club.name }}" style="max-width: 90%; max-height: 90%; object-fit: contain;">
+                                            <img src="{{ req.club.logo.url }}" alt="{{ req.club.name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                                         {% else %}
                                             <img src="{% static 'bolinha.png' %}" style="width: 35px; height: 35px; opacity: 0.8;">
                                         {% endif %}
@@ -624,7 +624,7 @@
                                     {% endif %}
                                     <div style="position: absolute; bottom: -25px; left: 20px; width: 60px; height: 60px; border-radius: 50%; background: #1a1a2e; border: 3px solid rgba(239, 68, 68, 0.5); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
                                         {% if req.club.logo %}
-                                            <img src="{{ req.club.logo.url }}" alt="{{ req.club.name }}" style="max-width: 90%; max-height: 90%; object-fit: contain;">
+                                            <img src="{{ req.club.logo.url }}" alt="{{ req.club.name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                                         {% else %}
                                             <img src="{% static 'bolinha.png' %}" style="width: 35px; height: 35px; opacity: 0.8;">
                                         {% endif %}
