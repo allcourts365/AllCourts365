@@ -207,6 +207,8 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 
 # Desabilita verificação de email para login social (o Google já verifica)
 SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
 DEFAULT_FROM_EMAIL = 'AllCourts365 <allcourts365@gmail.com>'
 
 # CKEditor
