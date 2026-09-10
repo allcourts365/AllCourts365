@@ -343,43 +343,60 @@
 
 {% block content %}
 {% if linked_club %}
-<div class="club-header glass-card club-header-grid">
-    <div style="width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-        {% if linked_club.logo %}
-            <img src="{{ linked_club.logo.url }}" alt="{{ linked_club.name }}" style="max-width: 100%; max-height: 100%; border-radius: 10px; object-fit: contain;">
-        {% else %}
-            <div style="width: 100%; height: 100%; background: rgba(255,255,255,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                <img src="{% static 'bolinha.png' %}" style="width: 80px; height: 80px; object-fit: contain; opacity: 0.8;" alt="Bola">
-            </div>
+<div class="glass-card club-header-card" style="padding: 0; overflow: hidden; margin-top: 40px; margin-bottom: 40px; border-radius: 20px;">
+    <!-- Capa / Header Image -->
+    <div style="width: 100%; height: 200px; position: relative; background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.1);">
+        {% if linked_club.background_image %}
+            <img src="{{ linked_club.background_image.url }}" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.5;">
         {% endif %}
+        
+        <!-- Logo overlapping -->
+        <div style="position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%); width: 120px; height: 120px; border-radius: 50%; background: #1a1a2e; border: 4px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(10px);">
+            {% if linked_club.logo %}
+                <img src="{{ linked_club.logo.url }}" alt="{{ linked_club.name }}" style="max-width: 90%; max-height: 90%; object-fit: contain;">
+            {% else %}
+                <img src="{% static 'bolinha.png' %}" style="width: 60px; height: 60px; opacity: 0.8;">
+            {% endif %}
+        </div>
     </div>
-    <div style="display: flex; flex-direction: column; justify-content: center;">
-        <h1 style="font-size: 2.5rem; margin-bottom: 10px; line-height: 1.2;">
+    
+    <!-- Info e Botões -->
+    <div style="padding: 80px 20px 40px 20px; text-align: center;">
+        <h1 style="font-size: clamp(2rem, 5vw, 2.5rem); margin-bottom: 15px; font-weight: 900; line-height: 1.2;">
             {% if linked_club.website %}
                 <a href="{{ linked_club.website }}" target="_blank" style="color: var(--title-color); text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">{{ linked_club.name }}</a>
             {% else %}
-                {{ linked_club.name }}
+                <span style="color: var(--title-color);">{{ linked_club.name }}</span>
             {% endif %}
         </h1>
-        <p style="margin-bottom: 10px; font-size: 1.1rem; line-height: 1.4;">{{ linked_club.description|default:"Sem descrição." }}</p>
-        <p style="font-size: 0.95rem; color: var(--highlight-color); margin-top: auto;">📍 {{ linked_club.address|default:"Endereço não informado" }}</p>
-    </div>
-    <div class="btn-wrapper" style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 10px;">
-        {% if linked_club.rules_pdf %}
-        <a href="{{ linked_club.rules_pdf.url }}" target="_blank" class="btn-highlight" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 170px; box-sizing: border-box; background: rgba(255,255,255,0.05); color: #fff; padding: 12px 20px; border-radius: 30px; text-decoration: none; font-weight: 600; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.2); transition: all 0.2s; white-space: nowrap;" onmouseover="this.style.background='var(--highlight-color)'; this.style.borderColor='var(--highlight-color)';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.2)';">
-            <i class="fas fa-file-pdf"></i> Regulamento
-        </a>
-        {% else %}
-        <button class="btn-highlight" onclick="alert('Este clube/liga ainda não tem o regulamento publicado.');" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 170px; box-sizing: border-box; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.5); padding: 12px 20px; border-radius: 30px; font-weight: 600; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.1); cursor: not-allowed; white-space: nowrap;">
-            <i class="fas fa-file-pdf"></i> Regulamento
-        </button>
+        
+        {% if linked_club.description %}
+        <p style="color: var(--subtitle-color); font-size: 1.1rem; margin-bottom: 20px; max-width: 700px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+            {{ linked_club.description }}
+        </p>
         {% endif %}
-        <form action="{% url 'account_logout' %}" method="post">
-            {% csrf_token %}
-            <button type="submit" class="btn-highlight" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444; text-decoration: none; display: flex; justify-content: center; align-items: center; gap: 8px; width: 170px; box-sizing: border-box; padding: 12px 20px; font-weight: bold; border-radius: 30px; white-space: nowrap; cursor: pointer;">
-                <i class="fas fa-sign-out-alt"></i> Sair da Conta
+        
+        <p style="color: var(--highlight-color); font-size: 0.95rem; font-weight: 600; margin-bottom: 30px; display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 20px;">
+            <i class="fas fa-map-marker-alt"></i> {{ linked_club.address|default:"Endereço não informado" }}
+        </p>
+        
+        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            {% if linked_club.rules_pdf %}
+            <a href="{{ linked_club.rules_pdf.url }}" target="_blank" class="btn-highlight" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 200px; box-sizing: border-box; background: rgba(255,255,255,0.05); color: #fff; padding: 12px 20px; border-radius: 30px; text-decoration: none; font-weight: 600; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.2); transition: all 0.2s; white-space: nowrap;" onmouseover="this.style.background='var(--highlight-color)'; this.style.borderColor='var(--highlight-color)';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.2)';">
+                <i class="fas fa-file-pdf"></i> Regulamento
+            </a>
+            {% else %}
+            <button class="btn-highlight" onclick="alert('Este clube/liga ainda não tem o regulamento publicado.');" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 200px; box-sizing: border-box; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.5); padding: 12px 20px; border-radius: 30px; font-weight: 600; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.1); cursor: not-allowed; white-space: nowrap;">
+                <i class="fas fa-file-pdf"></i> Regulamento
             </button>
-        </form>
+            {% endif %}
+            <form action="{% url 'account_logout' %}" method="post" style="margin: 0;">
+                {% csrf_token %}
+                <button type="submit" class="btn-highlight" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; text-decoration: none; display: flex; justify-content: center; align-items: center; gap: 8px; width: 200px; box-sizing: border-box; padding: 12px 20px; font-weight: bold; border-radius: 30px; white-space: nowrap; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.2)';" onmouseout="this.style.background='rgba(239,68,68,0.1)';">
+                    <i class="fas fa-sign-out-alt"></i> Sair da Conta
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 {% endif %}
@@ -436,7 +453,7 @@
                     <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 20px; border-radius: 12px; display: flex; flex-direction: column;">
                         <h4 style="color: #34d399; font-size: 1.4rem; margin-bottom: 10px; font-weight: 800;">{{ profile.club.name }}</h4>
                         <span style="color: var(--subtitle-color); font-size: 1rem; margin-bottom: 15px;">Perfil: <strong style="color: #fff;">{{ profile.name }}</strong></span>
-                        <a href="{% url 'logout_redirect' %}?next={% url 'clubs:detail' profile.club.id %}" class="btn-save" style="margin-top: auto; text-align: center; font-size: 0.9rem; padding: 10px;">
+                        <a href="{% url 'clubs:detail' profile.club.id %}" class="btn-save" style="margin-top: auto; text-align: center; font-size: 0.9rem; padding: 10px;">
                             <i class="fas fa-arrow-right"></i> Acessar Página
                         </a>
                     </div>
