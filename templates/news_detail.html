@@ -29,6 +29,32 @@
     .news-content table { width: 100%; border-collapse: collapse; margin: 20px 0; }
     .news-content table td, .news-content table th { border: 1px solid rgba(255,255,255,0.15); padding: 10px 14px; }
     .news-content ul, .news-content ol { padding-left: 24px; margin-bottom: 1.2em; }
+
+    /* Estilos Desktop */
+    .news-article-desktop { border-radius: 20px; overflow: hidden; padding: 0; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+    .news-header-media { width: 100%; background: rgba(0,0,0,0.2); text-align: center; }
+    .news-header-media img { max-width: 100%; height: auto; max-height: 800px; object-fit: contain; display: inline-block; vertical-align: middle; }
+    .news-media-credit { background: rgba(0,0,0,0.5); padding: 8px 20px; text-align: left; }
+    .news-media-credit span { color: var(--subtitle-color); font-size: 0.8rem; font-style: italic; }
+    .news-body { padding: 40px; }
+    .news-meta-top { margin-bottom: 20px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+    .news-title { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800; color: var(--title-color); margin: 0 0 15px 0; line-height: 1.25; }
+    .news-subtitle { font-size: 1.2rem; color: var(--subtitle-color); font-weight: 400; margin: 0 0 25px 0; line-height: 1.5; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 25px; }
+    .news-author-box { display: flex; align-items: center; gap: 10px; margin-bottom: 35px; }
+    .news-author-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--highlight-color); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    
+    .like-btn-desktop { background: transparent; border: 2px solid rgba(255,255,255,0.2); color: var(--subtitle-color); padding: 12px 25px; border-radius: 30px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 10px; margin: 0 auto; }
+    .like-btn-desktop.liked { border-color: #ef4444; color: #ef4444; }
+    .like-count-badge { background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; font-size: 0.9rem; margin-left: 5px; }
+    
+    /* Layout Mobile Toggles */
+    .news-article-mobile { display: none; }
+
+    /* Estilos Mobile */
+    @media (max-width: 768px) {
+        .news-article-desktop { display: none !important; }
+        .news-article-mobile { display: block !important; }
+    }
 </style>
 {% endblock %}
 
@@ -45,7 +71,7 @@
 {% endblock background_video %}
 
 {% block content %}
-<div style="max-width: 1200px; margin: 40px auto; padding: 0 20px;">
+<div style="padding: 20px 0 40px 0;">
 
     <!-- Breadcrumb -->
     <div style="margin-bottom: 25px;">
@@ -60,77 +86,122 @@
         {% endif %}
     </div>
 
-    <!-- Artigo -->
-    <article class="glass-card" style="border-radius: 20px; overflow: hidden; padding: 0;">
-
-        <!-- Midia de destaque -->
+    <!-- ===== ARTIGO DESKTOP ===== -->
+    <article class="news-article-desktop">
         {% if news.image %}
-        <div style="width: 100%; background: rgba(0,0,0,0.2); text-align: center;">
-            <img src="{{ news.image.url }}" alt="{{ news.title }}" style="max-width: 100%; height: auto; max-height: 800px; object-fit: contain; display: inline-block; vertical-align: middle;">
+        <div class="news-header-media">
+            <img src="{{ news.image.url }}" alt="{{ news.title }}">
         </div>
         {% if news.media_credit %}
-        <div style="background: rgba(0,0,0,0.5); padding: 8px 20px;">
-            <span style="color: var(--subtitle-color); font-size: 0.8rem; font-style: italic;">{{ news.media_credit }}</span>
-        </div>
+        <div class="news-media-credit"><span>{{ news.media_credit }}</span></div>
         {% endif %}
         {% elif news.video %}
-        <div style="width: 100%; background: #000; text-align: center;">
-            <video controls style="max-width: 100%; height: auto; max-height: 800px; display: inline-block; vertical-align: middle;">
+        <div class="news-header-media" style="background: #000; display: flex; align-items: center; justify-content: center;">
+            <video controls style="width: 100%; height: 100%; object-fit: cover;">
                 <source src="{{ news.video.url }}">
             </video>
         </div>
         {% if news.media_credit %}
-        <div style="background: rgba(0,0,0,0.5); padding: 8px 20px;">
-            <span style="color: var(--subtitle-color); font-size: 0.8rem; font-style: italic;">{{ news.media_credit }}</span>
+        <div class="news-media-credit"><span>{{ news.media_credit }}</span></div>
+        {% endif %}
+        {% else %}
+        <div class="news-header-media" style="height: 120px; background: linear-gradient(135deg, rgba(var(--highlight-color),0.1), rgba(0,0,0,0.2)); display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-newspaper" style="font-size: 2rem; color: var(--highlight-color); opacity: 0.4;"></i>
         </div>
         {% endif %}
-        {% endif %}
 
-        <!-- Corpo -->
-        <div style="padding: 40px;">
-
-            <!-- Meta -->
-            <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;">
+        <div class="news-body">
+            <div class="news-meta-top">
                 {% if club %}<span style="background: rgba(255,255,255,0.1); color: var(--subtitle-color); font-size: 0.8rem; padding: 4px 12px; border-radius: 20px; font-weight: 600;">{{ club.name }}</span>{% endif %}
                 <span style="color: var(--highlight-color); font-size: 0.85rem; font-weight: 700;">
                     <i class="fas fa-calendar-alt" style="margin-right: 5px;"></i>
                     {{ news.published_at|date:"d \d\e F \d\e Y" }}
                 </span>
             </div>
+            
+            <h1 class="news-title">{{ news.title }}</h1>
+            {% if news.subtitle %}<p class="news-subtitle">{{ news.subtitle }}</p>{% endif %}
 
-            <!-- Titulo -->
-            <h1 style="font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 800; color: var(--title-color); margin: 0 0 15px 0; line-height: 1.25;">{{ news.title }}</h1>
-
-            {% if news.subtitle %}
-            <p style="font-size: 1.2rem; color: var(--subtitle-color); font-weight: 400; margin: 0 0 25px 0; line-height: 1.5; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 25px;">{{ news.subtitle }}</p>
-            {% endif %}
-
-            <!-- Autor -->
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 35px;">
-                <div style="width: 38px; height: 38px; border-radius: 50%; background: var(--highlight-color); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                    <i class="fas fa-pen-nib" style="color: #fff; font-size: 0.85rem;"></i>
-                </div>
+            <div class="news-author-box">
+                <div class="news-author-avatar"><i class="fas fa-pen-nib" style="color: #fff; font-size: 0.85rem;"></i></div>
                 <div>
                     <div style="color: var(--title-color); font-weight: 700; font-size: 0.95rem;">{{ news.author }}</div>
                     <div style="color: var(--subtitle-color); font-size: 0.8rem;">{{ news.published_at|date:"d/m/Y" }} as {{ news.published_at|date:"H:i" }}</div>
                 </div>
             </div>
 
-            <!-- Conteudo Rico -->
             <div class="news-content" style="margin-bottom: 40px;">
                 {{ news.content|safe }}
             </div>
 
-            <!-- Curtidas -->
-            <div style="display: flex; align-items: center; justify-content: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px;">
-                <button id="like-btn" onclick="toggleLike({{ news.id }})" 
-                        style="background: transparent; border: 2px solid {% if news.id in liked_news_ids %}#ef4444{% else %}rgba(255,255,255,0.2){% endif %}; color: {% if news.id in liked_news_ids %}#ef4444{% else %}var(--subtitle-color){% endif %}; padding: 12px 25px; border-radius: 30px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 10px;">
-                    <i class="{% if news.id in liked_news_ids %}fas{% else %}far{% endif %} fa-heart" id="like-icon"></i>
-                    <span id="like-text">{% if news.id in liked_news_ids %}Curtiu{% else %}Curtir{% endif %}</span>
-                    <span id="like-count" style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; font-size: 0.9rem; margin-left: 5px;">{{ news.get_total_likes }}</span>
+            <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px; text-align: center;">
+                <button id="like-btn-desktop" class="like-btn-desktop {% if news.id in liked_news_ids %}liked{% endif %}" onclick="toggleLike({{ news.id }})">
+                    <i class="{% if news.id in liked_news_ids %}fas{% else %}far{% endif %} fa-heart" id="like-icon-desktop"></i>
+                    <span id="like-text-desktop">{% if news.id in liked_news_ids %}Curtiu{% else %}Curtir{% endif %}</span>
+                    <span id="like-count-desktop" class="like-count-badge">{{ news.get_total_likes }}</span>
                 </button>
             </div>
+        </div>
+    </article>
 
+    <!-- ===== ARTIGO MOBILE (Card Idêntico à Lista) ===== -->
+    <article class="news-article-mobile" style="border-radius: 16px; overflow: hidden; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+        <!-- Imagem -->
+        {% if news.image %}
+        <div style="width: 100%; height: 200px; overflow: hidden;">
+            <img src="{{ news.image.url }}" alt="{{ news.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        {% elif news.video %}
+        <div style="width: 100%; height: 200px; overflow: hidden; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+            <video controls style="width: 100%; height: 100%; object-fit: cover;">
+                <source src="{{ news.video.url }}">
+            </video>
+        </div>
+        {% else %}
+        <div style="width: 100%; height: 120px; background: linear-gradient(135deg, rgba(var(--highlight-color),0.1), rgba(0,0,0,0.2)); display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-newspaper" style="font-size: 2rem; color: var(--highlight-color); opacity: 0.4;"></i>
+        </div>
+        {% endif %}
+
+        <!-- Conteudo do Card -->
+        <div style="padding: 20px;">
+            <!-- Data e Clube (Estilo idêntico à lista) -->
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;">
+                <span style="color: var(--highlight-color); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+                    {{ news.published_at|date:"d/m/Y" }}
+                </span>
+                {% if not club and news.club %}
+                <span style="background: rgba(255,255,255,0.1); color: var(--subtitle-color); font-size: 0.75rem; padding: 2px 8px; border-radius: 20px;">{{ news.club.name }}</span>
+                {% endif %}
+            </div>
+            
+            <!-- Título (Estilo idêntico à lista) -->
+            <h3 style="color: var(--title-color); font-size: 1.1rem; font-weight: 700; margin: 0 0 8px 0; line-height: 1.4; font-family: 'Outfit', sans-serif;">{{ news.title }}</h3>
+            
+            <!-- Subtítulo (Estilo idêntico à lista, mas sem o line-clamp para não cortar) -->
+            {% if news.subtitle %}
+            <p style="color: var(--subtitle-color); font-size: 0.9rem; margin: 0 0 15px 0; line-height: 1.5; font-family: 'Outfit', sans-serif;">{{ news.subtitle }}</p>
+            {% endif %}
+
+            <!-- Corpo da Notícia Inteira -->
+            <div class="news-content" style="margin-top: 20px; margin-bottom: 25px; font-size: 0.95rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px;">
+                {{ news.content|safe }}
+            </div>
+
+            <!-- Rodapé Mobile com Autor e Curtir -->
+            <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 15px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-pen-nib" style="color: var(--subtitle-color); font-size: 0.8rem;"></i>
+                    <span style="color: var(--subtitle-color); font-size: 0.85rem;">{{ news.author }}</span>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <button id="like-btn-mobile" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: {% if news.id in liked_news_ids %}#ef4444{% else %}var(--subtitle-color){% endif %}; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; border-color: {% if news.id in liked_news_ids %}#ef4444{% else %}rgba(255,255,255,0.2){% endif %};" onclick="toggleLike({{ news.id }})">
+                        <i class="{% if news.id in liked_news_ids %}fas{% else %}far{% endif %} fa-heart" id="like-icon-mobile"></i>
+                        <span id="like-count-mobile" style="font-size: 0.85rem; font-weight: 600;">{{ news.get_total_likes }}</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </article>
 
@@ -152,26 +223,30 @@ function toggleLike(newsId) {
         return response.json();
     })
     .then(data => {
-        const btn = document.getElementById('like-btn');
-        const icon = document.getElementById('like-icon');
-        const text = document.getElementById('like-text');
-        const count = document.getElementById('like-count');
+        const btns = [
+            { btn: document.getElementById('like-btn-desktop'), icon: document.getElementById('like-icon-desktop'), text: document.getElementById('like-text-desktop'), count: document.getElementById('like-count-desktop') },
+            { btn: document.getElementById('like-btn-mobile'), icon: document.getElementById('like-icon-mobile'), count: document.getElementById('like-count-mobile') }
+        ];
         
-        count.textContent = data.total_likes;
-        
-        if (data.liked) {
-            btn.style.borderColor = '#ef4444';
-            btn.style.color = '#ef4444';
-            icon.classList.remove('far');
-            icon.classList.add('fas');
-            text.textContent = 'Curtiu';
-        } else {
-            btn.style.borderColor = 'rgba(255,255,255,0.2)';
-            btn.style.color = 'var(--subtitle-color)';
-            icon.classList.remove('fas');
-            icon.classList.add('far');
-            text.textContent = 'Curtir';
-        }
+        btns.forEach(elements => {
+            if (!elements.btn) return;
+            
+            elements.count.textContent = data.total_likes;
+            
+            if (data.liked) {
+                elements.btn.style.borderColor = '#ef4444';
+                elements.btn.style.color = '#ef4444';
+                elements.icon.classList.remove('far');
+                elements.icon.classList.add('fas');
+                if(elements.text) elements.text.textContent = 'Curtiu';
+            } else {
+                elements.btn.style.borderColor = 'rgba(255,255,255,0.2)';
+                elements.btn.style.color = 'var(--subtitle-color)';
+                elements.icon.classList.remove('fas');
+                elements.icon.classList.add('far');
+                if(elements.text) elements.text.textContent = 'Curtir';
+            }
+        });
     })
     .catch(err => console.error(err));
 }
