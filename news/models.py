@@ -70,12 +70,10 @@ class News(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            base_slug = slugify(self.title)
-            slug = base_slug
-            counter = 1
+            from django.utils.crypto import get_random_string
+            slug = get_random_string(length=6)
             while News.objects.filter(slug=slug).exclude(pk=self.pk).exists():
-                slug = f"{base_slug}-{counter}"
-                counter += 1
+                slug = get_random_string(length=6)
             self.slug = slug
 
         if self.is_published and not self.published_at:

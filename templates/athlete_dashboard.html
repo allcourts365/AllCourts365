@@ -339,6 +339,16 @@
             min-height: auto !important;
         }
     }
+    /* Estilos para links nas mensagens */
+    .msg-body-text a {
+        color: var(--highlight-color, #3b82f6);
+        text-decoration: underline;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+    .msg-body-text a:hover {
+        color: #fff;
+    }
 </style>
 {% endblock %}
 
