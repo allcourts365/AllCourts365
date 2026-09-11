@@ -60,8 +60,8 @@ class News(models.Model):
     anonymous_likes = models.PositiveIntegerField(default=0, verbose_name="Curtidas Anonimas")
 
     class Meta:
-        verbose_name = "Noticia"
-        verbose_name_plural = "Noticias"
+        verbose_name = "Notícia"
+        verbose_name_plural = "Notícias"
         ordering = ['-published_at', '-created_at']
 
     def __str__(self):
@@ -97,3 +97,21 @@ class News(models.Model):
     @property
     def get_total_likes(self):
         return self.likes.count() + self.anonymous_likes
+
+class BroadcastMessage(models.Model):
+    subject = models.CharField(max_length=200, verbose_name="Assunto")
+    body = models.TextField(verbose_name="Mensagem")
+    is_global = models.BooleanField(default=False, verbose_name="Mensagem Global (Todos os Usuários)")
+    club = models.ForeignKey('clubs.Club', on_delete=models.CASCADE, null=True, blank=True, verbose_name="Clube/Liga")
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Remetente")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Enviada em")
+
+    class Meta:
+        verbose_name = "Comunicado (Broadcast)"
+        verbose_name_plural = "Comunicados (Broadcast)"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        if self.is_global:
+            return f"[Global] {self.subject}"
+        return f"[{self.club.name if self.club else 'N/A'}] {self.subject}"

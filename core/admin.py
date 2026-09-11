@@ -3,7 +3,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 from allauth.account.models import EmailAddress
-from .models import SiteConfiguration, UserProfile, PlayerLinkRequest, ClubLead
+from .models import SiteConfiguration, UserProfile, PlayerLinkRequest, ClubLead, Message
 from django.contrib.auth.forms import UserChangeForm, AdminUserCreationForm
 from clubs.models import Club
 from clubs.admin import ClubScopedAdminMixin

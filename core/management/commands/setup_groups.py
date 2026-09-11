@@ -2,16 +2,16 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from clubs.models import Club, Court, Player, Match, Category, CategoryPlayer, Tournament, RankingTournament, KnockoutTournament
-from news.models import News
+from news.models import News, BroadcastMessage
 
 class Command(BaseCommand):
     help = 'Cria o grupo Admin de Clube com as permissões corretas'
 
     def handle(self, *args, **kwargs):
-        group, created = Group.objects.get_or_create(name='Admin de Clube')
+        group, created = Group.objects.get_or_create(name='Administradores de Clubes')
         
         # Modelos que o admin do clube pode gerenciar
-        models_to_manage = [Club, Court, Player, Match, Category, CategoryPlayer, Tournament, RankingTournament, KnockoutTournament, News]
+        models_to_manage = [Club, Court, Player, Match, Category, CategoryPlayer, Tournament, RankingTournament, KnockoutTournament, News, BroadcastMessage]
         
         permissions = []
         for model in models_to_manage:
@@ -27,6 +27,6 @@ class Command(BaseCommand):
         group.permissions.set(permissions)
         
         if created:
-            self.stdout.write(self.style.SUCCESS('Grupo "Admin de Clube" criado com sucesso!'))
+            self.stdout.write(self.style.SUCCESS('Grupo "Administradores de Clubes" criado com sucesso!'))
         else:
-            self.stdout.write(self.style.SUCCESS('Grupo "Admin de Clube" atualizado com sucesso!'))
+            self.stdout.write(self.style.SUCCESS('Grupo "Administradores de Clubes" atualizado com sucesso!'))

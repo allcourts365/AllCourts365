@@ -1118,9 +1118,9 @@
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <span style="color: var(--subtitle-color); font-size: 0.95rem;">Filtrar por Clube:</span>
                         <select name="msg_club_id" onchange="this.form.submit()" style="background: rgba(0,0,0,0.5); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 8px; outline: none; font-weight: bold; cursor: pointer;">
-                            <option value="all" {% if request.GET.msg_club_id == 'all' %}selected{% endif %}>Todos os Clubes</option>
+                            <option value="all" {% if request.GET.msg_club_id == 'all' or not request.GET.msg_club_id %}selected{% endif %}>Todas as Mensagens</option>
                             {% for profile in my_profiles %}
-                            <option value="{{ profile.club.id }}" {% if request.GET.msg_club_id == profile.club.id|stringformat:"s" or not request.GET.msg_club_id and linked_club.id == profile.club.id %}selected{% endif %}>{{ profile.club.name }}</option>
+                            <option value="{{ profile.club.id }}" {% if request.GET.msg_club_id == profile.club.id|stringformat:"s" %}selected{% endif %}>{{ profile.club.name }}</option>
                             {% endfor %}
                         </select>
                     </div>

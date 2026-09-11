@@ -529,15 +529,18 @@ def athlete_dashboard(request):
             pass
             
     msg_club_id = request.GET.get('msg_club_id')
-    if msg_club_id == 'all':
+    if msg_club_id == 'all' or not msg_club_id:
         pass
     elif msg_club_id:
         try:
-            user_messages = user_messages.filter(related_match__tournament__club_id=msg_club_id)
+            # We filter messages either by their related match club, or if they are broadcast messages (no related match) we just include them for now.
+            # But since Broadcast messages don't have a related_match, we can use Q objects to include them if they match or if they have no related_match.
+            # For simplicity, if a club is selected, we show messages for that club's matches + broadcast messages without related_match.
+            user_messages = user_messages.filter(
+                Q(related_match__tournament__club_id=msg_club_id) | Q(related_match__isnull=True)
+            )
         except ValueError:
             pass
-    elif linked_club:
-        user_messages = user_messages.filter(related_match__tournament__club_id=linked_club.id)
             
     unread_messages_count = Message.objects.filter(recipient=user, is_read=False).count()
     

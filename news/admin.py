@@ -96,3 +96,78 @@ class NewsAdmin(admin.ModelAdmin):
             else:
                 obj.author = "Redacao AllCourts365"
         super().save_model(request, obj, form, change)
+
+from .models import BroadcastMessage
+from core.models import Message
+from django.contrib.auth.models import User
+
+@admin.register(BroadcastMessage)
+class BroadcastMessageAdmin(admin.ModelAdmin):
+    list_display = ('subject', 'club_display', 'sender', 'created_at')
+    list_filter = ('is_global', 'club')
+    search_fields = ('subject', 'body')
+    readonly_fields = ('created_at', 'sender')
+    
+    def club_display(self, obj):
+        if obj.is_global:
+            return "Global (Todos)"
+        return obj.club if obj.club else "-"
+    club_display.short_description = "Destino"
+
+    def get_fieldsets(self, request, obj=None):
+        if request.user.is_superuser:
+            return (
+                ("Destino", {"fields": ("is_global", "club")}),
+                ("Conteúdo", {"fields": ("subject", "body")}),
+            )
+        return (
+            ("Destino", {"fields": ("club",)}),
+            ("Conteúdo", {"fields": ("subject", "body")}),
+        )
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if request.user.is_superuser:
+            if "club" in form.base_fields:
+                form.base_fields["club"].queryset = Club.objects.all().order_by("name")
+                form.base_fields["club"].required = False
+        else:
+            managed = Club.objects.filter(administrators=request.user)
+            if "club" in form.base_fields:
+                form.base_fields["club"].queryset = managed
+                form.base_fields["club"].required = True
+        return form
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        managed_clubs = Club.objects.filter(administrators=request.user)
+        return qs.filter(club__in=managed_clubs)
+
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:
+            obj.sender = request.user
+        super().save_model(request, obj, form, change)
+        
+        # Disparar mensagens na primeira vez (quando criar)
+        if not change:
+            if obj.is_global:
+                target_users = User.objects.filter(is_active=True).exclude(id=request.user.id)
+            elif obj.club:
+                # Todos os usuários que tem o jogador vinculado ao clube
+                target_users = User.objects.filter(is_active=True, player_profiles__club=obj.club).exclude(id=request.user.id).distinct()
+            else:
+                target_users = []
+            
+            messages_to_create = []
+            for user in target_users:
+                messages_to_create.append(Message(
+                    sender=request.user,
+                    recipient=user,
+                    subject=obj.subject,
+                    body=obj.body
+                ))
+            
+            if messages_to_create:
+                Message.objects.bulk_create(messages_to_create)
