@@ -179,3 +179,15 @@ class BroadcastMessageAdmin(admin.ModelAdmin):
             
             if messages_to_create:
                 Message.objects.bulk_create(messages_to_create)
+        else:
+            # Se for uma edição, atualiza os textos de todas as mensagens que já foram enviadas
+            signature = f"\n\n---\nEnviado por: {request.user.get_full_name() or request.user.username}"
+            if obj.club:
+                signature += f" (Administração - {obj.club.name})"
+            else:
+                signature += " (Administração - AllCourts365)"
+                
+            obj.delivered_messages.update(
+                subject=obj.subject,
+                body=obj.body + signature
+            )
