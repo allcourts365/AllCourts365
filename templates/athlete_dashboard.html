@@ -1170,7 +1170,7 @@
                             <strong style="color: #fff;">{{ msg.subject }}</strong>
                             <span style="color: var(--subtitle-color); font-size: 0.85rem;">{{ msg.created_at|date:"d/m/Y H:i" }}</span>
                         </div>
-                        <p style="color: #ccc; margin: 0; line-height: 1.5;">{{ msg.body }}</p>
+                        <p style="color: #ccc; margin: 0; line-height: 1.5;">{{ msg.body|linebreaksbr }}</p>
                         
                         <div style="margin-top: 15px;">
                             {% if msg.related_match and msg.related_match.result_status == 'pending_approval' and msg.related_match.reported_by != my_player_profile %}

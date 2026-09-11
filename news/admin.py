@@ -160,13 +160,20 @@ class BroadcastMessageAdmin(admin.ModelAdmin):
             else:
                 target_users = []
             
+            # Create signature
+            signature = f"\n\n---\nEnviado por: {request.user.get_full_name() or request.user.username}"
+            if obj.club:
+                signature += f" (Administração - {obj.club.name})"
+            else:
+                signature += " (Administração - AllCourts365)"
+
             messages_to_create = []
             for user in target_users:
                 messages_to_create.append(Message(
                     sender=request.user,
                     recipient=user,
                     subject=obj.subject,
-                    body=obj.body
+                    body=obj.body + signature
                 ))
             
             if messages_to_create:
