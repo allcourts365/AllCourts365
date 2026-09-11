@@ -1170,7 +1170,7 @@
                             <strong style="color: #fff;">{{ msg.subject }}</strong>
                             <span style="color: var(--subtitle-color); font-size: 0.85rem;">{{ msg.created_at|date:"d/m/Y H:i" }}</span>
                         </div>
-                        <p style="color: #ccc; margin: 0; line-height: 1.5;">{{ msg.body|linebreaksbr }}</p>
+                        <p class="msg-body-text" style="color: #ccc; margin: 0; line-height: 1.5;">{{ msg.body|urlize|linebreaksbr }}</p>
                         
                         <div style="margin-top: 15px;">
                             {% if msg.related_match and msg.related_match.result_status == 'pending_approval' and msg.related_match.reported_by != my_player_profile %}
@@ -1404,6 +1404,13 @@
 {% endblock %}
 
 {% block extra_scripts %}
+    document.addEventListener("DOMContentLoaded", function() {
+        // Garantir que todos os links renderizados no corpo da mensagem abram em nova aba
+        document.querySelectorAll('.msg-body-text a').forEach(function(link) {
+            link.setAttribute('target', '_blank');
+        });
+    });
+
     // Controle do Modal
     function openScheduleModal(matchId, matchName) {
         document.getElementById('modalMatchId').value = matchId;
