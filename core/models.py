@@ -133,6 +133,7 @@ class Message(models.Model):
     body = models.TextField(verbose_name="Mensagem")
     is_read = models.BooleanField(default=False, verbose_name="Lida")
     related_match = models.ForeignKey('clubs.Match', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Jogo Relacionado")
+    broadcast = models.ForeignKey('news.BroadcastMessage', on_delete=models.CASCADE, null=True, blank=True, related_name='delivered_messages', verbose_name="Comunicado Origem")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Enviada em")
 
     class Meta:

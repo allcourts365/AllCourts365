@@ -173,7 +173,8 @@ class BroadcastMessageAdmin(admin.ModelAdmin):
                     sender=request.user,
                     recipient=user,
                     subject=obj.subject,
-                    body=obj.body + signature
+                    body=obj.body + signature,
+                    broadcast=obj
                 ))
             
             if messages_to_create:
