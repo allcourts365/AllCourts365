@@ -1757,42 +1757,47 @@
 
     // Lógica para carregamento dinâmico de atletas no select
     document.addEventListener("DOMContentLoaded", function() {
-        const clubSelect = document.getElementById('id_club');
-        const playerSelect = document.getElementById('id_player');
+        const playersData = {{ players_json|safe }};
         
-        if (clubSelect && playerSelect) {
-            const playersData = {{ players_json|safe }};
+        function setupDynamicSelect(clubSelectId, playerSelectId) {
+            const clubSelect = document.getElementById(clubSelectId);
+            const playerSelect = document.getElementById(playerSelectId);
             
-            function updatePlayerSelect(clubId) {
-                playerSelect.innerHTML = '<option value="">Selecione o Atleta...</option>';
-                
-                if (clubId && playersData[clubId] && playersData[clubId].length > 0) {
-                    playerSelect.disabled = false;
-                    playersData[clubId].forEach(player => {
-                        const option = document.createElement('option');
-                        option.value = player.id;
-                        option.textContent = player.name;
-                        playerSelect.appendChild(option);
-                    });
-                } else {
-                    playerSelect.disabled = true;
-                    if (clubId) {
-                        playerSelect.innerHTML = '<option value="">Nenhum atleta disponível neste clube</option>';
+            if (clubSelect && playerSelect) {
+                function updatePlayerSelect(clubId) {
+                    playerSelect.innerHTML = '<option value="">Selecione o Atleta...</option>';
+                    
+                    if (clubId && playersData[clubId] && playersData[clubId].length > 0) {
+                        playerSelect.disabled = false;
+                        playersData[clubId].forEach(player => {
+                            const option = document.createElement('option');
+                            option.value = player.id;
+                            option.textContent = player.name;
+                            playerSelect.appendChild(option);
+                        });
                     } else {
-                        playerSelect.innerHTML = '<option value="">Selecione o clube primeiro</option>';
+                        playerSelect.disabled = true;
+                        if (clubId) {
+                            playerSelect.innerHTML = '<option value="">Nenhum atleta disponível neste clube</option>';
+                        } else {
+                            playerSelect.innerHTML = '<option value="">Selecione o clube primeiro</option>';
+                        }
                     }
                 }
-            }
 
-            clubSelect.addEventListener('change', function() {
-                updatePlayerSelect(this.value);
-            });
-            
-            // Dispara na montagem se o clube já estiver preenchido (caso do hidden input)
-            if (clubSelect.value) {
-                updatePlayerSelect(clubSelect.value);
+                clubSelect.addEventListener('change', function() {
+                    updatePlayerSelect(this.value);
+                });
+                
+                // Dispara na montagem se o clube já estiver preenchido (caso do hidden input)
+                if (clubSelect.value) {
+                    updatePlayerSelect(clubSelect.value);
+                }
             }
         }
+        
+        setupDynamicSelect('id_club_desktop', 'id_player_desktop');
+        setupDynamicSelect('id_club_mobile', 'id_player_mobile');
     });
 
     // Auto-abrir agenda para contraproposta após recusar agendamento

@@ -40,11 +40,11 @@ class PlayerLinkRequestForm(forms.ModelForm):
                 self.fields['player'].queryset = Player.objects.filter(
                     club_id=club_id
                 ).exclude(
-                    name__iexact='Bye (Folga)'
+                    name__icontains='Bye'
                 ).order_by('name')
             except (ValueError, TypeError):
                 pass
         elif self.instance.pk:
             self.fields['player'].queryset = self.instance.club.player_set.exclude(
-                name__iexact='Bye (Folga)'
+                name__icontains='Bye'
             ).order_by('name')
