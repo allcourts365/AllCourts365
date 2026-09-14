@@ -757,9 +757,12 @@
             // Show all events, but we could optionally filter by court if desired
             if (courtVal && ev.court_id && ev.court_id != courtVal) return;
             
+            const currentEditingMatchId = document.getElementById('modal-match-id').value;
+            if (currentEditingMatchId && ev.id == currentEditingMatchId) return;
+            
             const evDate = new Date(ev.start);
             const top = (evDate.getHours() * 60) + evDate.getMinutes();
-            const height = 90; // Default 1.5 hours
+            const height = ev.duration || 90;
             
             let bg = '#4b5563'; // Occupied gray
             let borderLeft = '4px solid #374151';
