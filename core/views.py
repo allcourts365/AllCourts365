@@ -211,10 +211,10 @@ def athlete_dashboard(request):
                         from core.models import Message
                         if is_reschedule:
                             subject = "Reagendamento Proposto"
-                            body = f"{active_profile.name} está propondo um REAGENDAMENTO do jogo {match.tournament.name} do {match.tournament.club.name} (Rodada {match.round_number}). Nova proposta: {scheduled_dt.strftime('%d/%m/%Y às %H:%M')} na quadra {court.name}. O agendamento anterior foi cancelado. Acesse a aba Mensagens para aceitar ou recusar."
+                            body = f"{active_profile.name} está propondo um REAGENDAMENTO do jogo {match.tournament.name} do {match.tournament.club.name} (Rodada {match.round_number}). Nova proposta: {scheduled_dt.strftime('%d/%m/%Y às %H:%M')} na quadra {court.name}. O agendamento anterior foi cancelado. Vá para o novo agendamento clicando no botão abaixo."
                         else:
                             subject = "Proposta de Agendamento"
-                            body = f"{active_profile.name} propôs agendar o jogo {match.tournament.name} do {match.tournament.club.name} (Rodada {match.round_number}) para o dia {scheduled_dt.strftime('%d/%m/%Y às %H:%M')} na quadra {court.name}. Acesse a aba Mensagens para aceitar ou recusar."
+                            body = f"{active_profile.name} propôs agendar o jogo {match.tournament.name} do {match.tournament.club.name} (Rodada {match.round_number}) para o dia {scheduled_dt.strftime('%d/%m/%Y às %H:%M')} na quadra {court.name}. Vá para o novo agendamento clicando no botão abaixo."
                         Message.objects.create(
                             sender=user,
                             recipient=opponent.user,
@@ -832,7 +832,7 @@ def athlete_calendar(request):
                             f"Nova proposta: {scheduled_dt.strftime('%d/%m/%Y às %H:%M')}"
                             f"{' na quadra ' + court_obj_name if court_obj_name else ''}. "
                             f"O agendamento anterior foi cancelado. "
-                            f"Acesse a aba Mensagens para aceitar ou recusar."
+                            f"Vá para o novo agendamento clicando no botão abaixo."
                         )
                     else:
                         subject = "Proposta de Agendamento"
@@ -842,7 +842,7 @@ def athlete_calendar(request):
                             f"(Rodada {match.round_number}) "
                             f"para o dia {scheduled_dt.strftime('%d/%m/%Y às %H:%M')}"
                             f"{' na quadra ' + court_obj_name if court_obj_name else ''}. "
-                            f"Acesse a aba Mensagens para aceitar ou recusar."
+                            f"Vá para o novo agendamento clicando no botão abaixo."
                         )
                     Message.objects.create(
                         sender=user,
