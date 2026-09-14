@@ -149,6 +149,11 @@ def athlete_dashboard(request):
                 scheduled_dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M")
                 scheduled_dt = timezone.make_aware(scheduled_dt)
                 
+                # Validação de Horário no Passado
+                if scheduled_dt < timezone.now():
+                    messages.error(request, 'Não é possível agendar um jogo em um horário no passado.')
+                    return redirect('athlete_dashboard')
+                
                 # Validação de Horário de Expediente
                 weekday = scheduled_dt.weekday() # 0 = Monday, 6 = Sunday
                 club_obj = match.tournament.club
@@ -184,6 +189,10 @@ def athlete_dashboard(request):
                     # Se já havia um agendamento/proposta anterior, registra que é um reagendamento
                     is_reschedule = match.schedule_status in ['agendado', 'aguardando_adversario']
                     old_datetime = match.scheduled_datetime
+                    
+                    # Deleta mensagens antigas de agendamento/reagendamento pendentes
+                    from core.models import Message
+                    Message.objects.filter(related_match=match, subject__in=["Proposta de Agendamento", "Reagendamento Proposto"]).delete()
                     
                     # Limpa o agendamento anterior
                     match.scheduled_datetime = None
@@ -308,10 +317,8 @@ def athlete_dashboard(request):
             except Exception as e:
                 messages.error(request, f'Erro: {str(e)}')
                 return redirect('athlete_dashboard')
-            # Redireciona de volta abrindo automaticamente a agenda para contraproposta
-            club_id = active_profile.club.id if active_profile and active_profile.club else ''
-            base_url = reverse('athlete_dashboard')
-            return redirect(f'{base_url}?open_schedule={match_id}&club={club_id}')
+            # Redireciona para o novo calendário para fazer a contraproposta
+            return redirect('athlete_calendar')
                 
         elif 'delete_schedule' in request.POST:
             match_id = request.POST.get('match_id')
@@ -715,3 +722,283 @@ def club_landing_page(request):
             messages.error(request, 'Por favor, preencha os campos obrigatórios.')
             
     return render(request, 'presentation.html')
+
+
+@login_required
+def athlete_calendar(request):
+    user = request.user
+
+    my_profiles = user.player_profiles.all()
+    active_profile = my_profiles.first()
+    linked_club = active_profile.club if active_profile else None
+
+    my_club_ids = list(set(p.club_id for p in my_profiles if p.club_id))
+    my_clubs = Club.objects.filter(id__in=my_club_ids)
+    courts = Court.objects.filter(club_id__in=my_club_ids, is_ranking_court=True).select_related('club')
+
+    # ──────────────────────────────────────────────────────────
+    # POST: handle schedule_match / delete_schedule / edit_schedule
+    # ──────────────────────────────────────────────────────────
+    if request.method == 'POST':
+
+        if 'schedule_match' in request.POST:
+            match_id = request.POST.get('match_id')
+            date_str = request.POST.get('date')
+            time_str = request.POST.get('time')
+            end_time_str = request.POST.get('end_time')
+            court_id = request.POST.get('court')
+
+            try:
+                match = Match.objects.get(id=match_id)
+                dt_str = f"{date_str} {time_str}"
+                scheduled_dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M")
+                scheduled_dt = timezone.make_aware(scheduled_dt)
+
+                # Validação de Horário no Passado
+                if scheduled_dt < timezone.now():
+                    messages.error(request, 'Não é possível agendar um jogo em um horário no passado.')
+                    return redirect('athlete_calendar')
+
+                # Validação de Horário de Expediente
+                if court_id:
+                    try:
+                        court_obj = Court.objects.select_related('club').get(id=court_id)
+                        club = court_obj.club
+                        d = scheduled_dt.weekday()  # 0=Mon, 6=Sun
+                        if d == 6:
+                            open_t = club.sunday_open
+                            close_t = club.sunday_close
+                        elif d == 5:
+                            open_t = club.saturday_open
+                            close_t = club.saturday_close
+                        else:
+                            open_t = club.weekday_open
+                            close_t = club.weekday_close
+
+                        if open_t and close_t:
+                            sched_time = scheduled_dt.time()
+                            if sched_time < open_t or sched_time > close_t:
+                                messages.error(request, f'Horário fora do expediente do clube ({open_t.strftime("%H:%M")} – {close_t.strftime("%H:%M")}).')
+                                return redirect('athlete_calendar')
+                    except Court.DoesNotExist:
+                        pass
+
+                end_dt = None
+                if end_time_str:
+                    end_dt_str = f"{date_str} {end_time_str}"
+                    try:
+                        end_dt = timezone.make_aware(datetime.strptime(end_dt_str, "%Y-%m-%d %H:%M"))
+                    except ValueError:
+                        pass
+
+                is_reschedule = match.schedule_status in ['agendado', 'aguardando_adversario']
+
+                # Delete old pending schedule/reschedule messages
+                from core.models import Message
+                Message.objects.filter(
+                    related_match=match,
+                    subject__in=["Proposta de Agendamento", "Reagendamento Proposto"]
+                ).delete()
+
+                # Clear old scheduled data
+                match.scheduled_datetime = None
+                match.court = None
+
+                # Save new proposal
+                match.proposed_datetime = scheduled_dt
+                match.proposed_end_datetime = end_dt
+                if court_id:
+                    match.proposed_court_id = court_id
+                match.proposed_by = active_profile
+                match.schedule_status = 'aguardando_adversario'
+                match.save()
+
+                # Notify opponent
+                opponent = match.player_b if match.player_a == active_profile else match.player_a
+                if opponent and opponent.user:
+                    court_obj_name = ''
+                    if court_id:
+                        try:
+                            court_obj_name = Court.objects.get(id=court_id).name
+                        except Court.DoesNotExist:
+                            pass
+                    tourn = match.tournament
+                    if is_reschedule:
+                        subject = "Reagendamento Proposto"
+                        body = (
+                            f"{active_profile.name} está propondo um REAGENDAMENTO do jogo "
+                            f"{tourn.name if tourn else 'Amistoso'} "
+                            f"(Rodada {match.round_number}). "
+                            f"Nova proposta: {scheduled_dt.strftime('%d/%m/%Y às %H:%M')}"
+                            f"{' na quadra ' + court_obj_name if court_obj_name else ''}. "
+                            f"O agendamento anterior foi cancelado. "
+                            f"Acesse a aba Mensagens para aceitar ou recusar."
+                        )
+                    else:
+                        subject = "Proposta de Agendamento"
+                        body = (
+                            f"{active_profile.name} propôs agendar o jogo "
+                            f"{tourn.name if tourn else 'Amistoso'} "
+                            f"(Rodada {match.round_number}) "
+                            f"para o dia {scheduled_dt.strftime('%d/%m/%Y às %H:%M')}"
+                            f"{' na quadra ' + court_obj_name if court_obj_name else ''}. "
+                            f"Acesse a aba Mensagens para aceitar ou recusar."
+                        )
+                    Message.objects.create(
+                        sender=user,
+                        recipient=opponent.user,
+                        subject=subject,
+                        body=body,
+                        related_match=match
+                    )
+
+                if is_reschedule:
+                    messages.success(request, 'Reagendamento proposto! O adversário foi notificado para confirmar.')
+                else:
+                    messages.success(request, 'Proposta de agendamento enviada com sucesso ao seu adversário!')
+
+            except Match.DoesNotExist:
+                messages.error(request, 'Jogo não encontrado.')
+            except Exception as e:
+                messages.error(request, f'Erro: {str(e)}')
+
+            return redirect('athlete_calendar')
+
+
+        elif 'delete_schedule' in request.POST:
+            match_id = request.POST.get('match_id')
+            try:
+                match = Match.objects.get(id=match_id)
+                match.scheduled_datetime = None
+                match.proposed_datetime = None
+                match.proposed_end_datetime = None
+                match.proposed_court = None
+                match.schedule_status = 'pendente'
+                match.save()
+                messages.success(request, 'Agendamento excluído com sucesso.')
+            except Match.DoesNotExist:
+                messages.error(request, 'Jogo não encontrado.')
+            except Exception as e:
+                messages.error(request, f'Erro: {str(e)}')
+            return redirect('athlete_calendar')
+
+    # ──────────────────────────────────────────────────────────
+    # GET: build context
+    # ──────────────────────────────────────────────────────────
+    my_profile_ids = set(p.id for p in my_profiles)
+
+    # User's own matches
+    my_matches = Match.objects.filter(
+        Q(player_a=active_profile) | Q(player_b=active_profile)
+    ).select_related('tournament', 'player_a', 'player_b', 'court', 'proposed_court').order_by('-tournament__current_round', 'round_number') if active_profile else Match.objects.none()
+
+    # All scheduled matches at user's clubs (for occupation view)
+    all_club_matches = Match.objects.filter(
+        Q(tournament__club_id__in=my_club_ids) &
+        (Q(scheduled_datetime__isnull=False) | Q(proposed_datetime__isnull=False))
+    ).select_related('tournament', 'tournament__club', 'player_a', 'player_b', 'court', 'proposed_court')
+
+    # Standby matches: current round, not scheduled, not Bye
+    standby_matches = []
+    if active_profile:
+        for m in my_matches:
+            if m.schedule_status not in ['pendente', 'aguardando_adversario', 'unagendado']:
+                continue
+            if m.tournament and m.round_number != m.tournament.current_round:
+                continue
+            if 'bye' in m.player_a.name.lower() or 'bye' in m.player_b.name.lower():
+                continue
+            adversary = m.player_b.name if m.player_a_id in my_profile_ids else m.player_a.name
+            standby_matches.append({
+                'id': m.id,
+                'title': f"{m.player_a.name} vs {m.player_b.name}",
+                'adversary': adversary,
+                'tournament': m.tournament.name if m.tournament else '',
+                'duration': m.duration if hasattr(m, 'duration') and m.duration else 90,
+                'club_id': m.tournament.club_id if m.tournament else None,
+            })
+
+    # Build matches_json (user's own matches for calendar display)
+    matches_json = []
+    for m in my_matches:
+        dt = m.scheduled_datetime if m.scheduled_datetime else m.proposed_datetime
+        if not dt:
+            continue
+        court = m.court if m.court else m.proposed_court
+        court_name_str = f' na {court.name}' if court else ''
+        tourn_name = m.tournament.name if m.tournament else 'Amistoso'
+        club_name = m.tournament.club.name if m.tournament and m.tournament.club else (linked_club.name if linked_club else '')
+        status_display = m.schedule_status.upper().replace('_', ' ')
+        title = f"{m.player_a.name} vs {m.player_b.name}{court_name_str} - {tourn_name} - {club_name} - {status_display}"
+        duration = m.duration if hasattr(m, 'duration') and m.duration else 90
+        local_dt = timezone.localtime(dt)
+        matches_json.append({
+            'id': m.id,
+            'title': title,
+            'start': local_dt.isoformat(),
+            'end': (local_dt + timedelta(minutes=duration)).isoformat(),
+            'status': m.schedule_status,
+            'is_mine': True,
+            'court_id': court.id if court else None,
+            'court_name': court.name if court else '',
+            'tournament': tourn_name,
+            'club_id': m.tournament.club_id if m.tournament else None,
+            'duration': duration,
+            'adversary': m.player_b.name if m.player_a_id in my_profile_ids else m.player_a.name,
+        })
+
+    # Build all_matches_json (all club matches for occupation display)
+    all_matches_json = []
+    for m in all_club_matches:
+        is_mine = m.player_a_id in my_profile_ids or m.player_b_id in my_profile_ids
+        dt = m.scheduled_datetime if m.scheduled_datetime else m.proposed_datetime
+        if not dt:
+            continue
+        court = m.court if m.court else m.proposed_court
+        tourn_name = m.tournament.name if m.tournament else 'Amistoso'
+        club_name = m.tournament.club.name if m.tournament and m.tournament.club else ''
+        if is_mine:
+            status_display = m.schedule_status.upper().replace('_', ' ')
+            title = f"{m.player_a.name} vs {m.player_b.name} - {tourn_name} - {club_name} - {status_display}"
+        else:
+            status_str = 'Aguardando Adversário' if m.schedule_status == 'aguardando_adversario' else ('Agendado' if m.schedule_status == 'agendado' else m.schedule_status.capitalize())
+            title = f"Horário Reservado (Status {status_str}) - Jogo do {tourn_name} - ({m.player_a.name} x {m.player_b.name}) - {club_name}"
+        duration = m.duration if hasattr(m, 'duration') and m.duration else 90
+        local_dt = timezone.localtime(dt)
+        all_matches_json.append({
+            'id': m.id,
+            'title': title,
+            'start': local_dt.isoformat(),
+            'end': (local_dt + timedelta(minutes=duration)).isoformat(),
+            'status': m.schedule_status,
+            'is_mine': is_mine,
+            'court_id': court.id if court else None,
+            'court_name': court.name if court else '',
+            'club_id': m.tournament.club_id if m.tournament else None,
+            'duration': duration,
+        })
+
+    # Club opening hours for frontend validation
+    clubs_hours_json = {}
+    for c in Club.objects.filter(id__in=my_club_ids):
+        clubs_hours_json[c.id] = {
+            'weekday_open': c.weekday_open.strftime('%H:%M') if c.weekday_open else None,
+            'weekday_close': c.weekday_close.strftime('%H:%M') if c.weekday_close else None,
+            'saturday_open': c.saturday_open.strftime('%H:%M') if hasattr(c, 'saturday_open') and c.saturday_open else None,
+            'saturday_close': c.saturday_close.strftime('%H:%M') if hasattr(c, 'saturday_close') and c.saturday_close else None,
+            'sunday_open': c.sunday_open.strftime('%H:%M') if hasattr(c, 'sunday_open') and c.sunday_open else None,
+            'sunday_close': c.sunday_close.strftime('%H:%M') if hasattr(c, 'sunday_close') and c.sunday_close else None,
+        }
+
+    context = {
+        'my_profiles': my_profiles,
+        'active_profile': active_profile,
+        'linked_club': linked_club,
+        'my_clubs': my_clubs,
+        'courts': courts,
+        'matches_json': json.dumps(matches_json),
+        'all_matches_json': json.dumps(all_matches_json),
+        'standby_matches': standby_matches,
+        'clubs_hours_json': json.dumps(clubs_hours_json),
+    }
+    return render(request, 'athlete_calendar.html', context)

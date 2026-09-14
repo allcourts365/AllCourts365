@@ -454,7 +454,7 @@
     <div class="tabs-container">
         <button class="tab-btn {% if not linked_club %}active{% endif %}" onclick="openTab('meu-clube', this)"><i class="fas fa-link"></i> Meu(s) Clube(s) / Liga(s)</button>
         <button class="tab-btn {% if linked_club %}active{% endif %}" onclick="openTab('meu-perfil', this)"><i class="fas fa-user-edit"></i> Meu Perfil</button>
-        <button class="tab-btn" onclick="openTab('meus-jogos', this)"><i class="fas fa-calendar-alt"></i> Meus Jogos</button>
+        <button class="tab-btn" onclick="window.location.href='{% url 'athlete_calendar' %}'"><i class="fas fa-calendar-alt"></i> Meus Jogos</button>
         <button class="tab-btn" onclick="openTab('mensagens', this)"><i class="fas fa-envelope"></i> Mensagens {% if unread_messages_count %}<span style="background: red; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.8rem; margin-left: 5px;">{{ unread_messages_count }}</span>{% endif %}</button>
     </div>
 
@@ -910,7 +910,14 @@
                 <h2 style="font-size: 2rem; color: #fff; margin: 0; font-weight: 800;">
                     Meus Jogos
                 </h2>
-                <a id="btn-back-tournaments" onclick="showTournamentsList(); return false;" href="#" style="display: none; color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600; cursor: pointer;">&larr; Voltar aos Torneios</a>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <a href="{% url 'athlete_calendar' %}"
+                       style="display: inline-flex; align-items: center; gap: 8px; background: #3b82f6; color: white; text-decoration: none; padding: 8px 18px; border-radius: 8px; font-weight: 700; font-size: 0.95rem; transition: background 0.2s;"
+                       onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+                        <i class="fas fa-calendar-alt"></i> Calendário de Agendamento
+                    </a>
+                    <a id="btn-back-tournaments" onclick="showTournamentsList(); return false;" href="#" style="display: none; color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600; cursor: pointer;">&larr; Voltar aos Torneios</a>
+                </div>
             </div>
             
             {% if not my_rankings and not my_knockouts %}
@@ -1076,11 +1083,11 @@
                                 {% if match.status == 'pending' and match.round_number == match.tournament.current_round and match.player_a and match.player_b %}
                                     {% if match.tournament.allow_player_scheduling %}
                                         {% if match.schedule_status == 'unagendado' %}
-                                        <button onclick="openScheduleModal('{{ match.id }}', '{{ match.player_a.name }} vs {{ match.player_b.name }}')" style="padding: 8px 16px; background: #fff; color: #000; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
+                                        <button onclick="window.location.href='{% url 'athlete_calendar' %}'" style="padding: 8px 16px; background: #fff; color: #000; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
                                             <i class="fas fa-calendar-plus"></i> Agendar
                                         </button>
                                         {% else %}
-                                        <button onclick="openScheduleModal('{{ match.id }}', '{{ match.player_a.name }} vs {{ match.player_b.name }}')" style="padding: 8px 16px; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.5); border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
+                                        <button onclick="window.location.href='{% url 'athlete_calendar' %}'" style="padding: 8px 16px; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.5); border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
                                             <i class="fas fa-calendar-alt"></i> Reagendar
                                         </button>
                                         {% endif %}
@@ -1230,7 +1237,7 @@
                                 
                                 {% if msg.related_match and msg.related_match.schedule_status == 'unagendado' and msg.related_match.status == 'pending' %}
                                     {% if msg.subject == 'Proposta de Agendamento' or msg.subject == 'Reagendamento Proposto' %}
-                                        <button onclick="openScheduleModal('{{ msg.related_match.id }}', '{{ msg.related_match.player_a.name }} vs {{ msg.related_match.player_b.name }}')" style="height: 38px; padding: 0 18px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 700; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.5);">
+                                        <button onclick="window.location.href='{% url 'athlete_calendar' %}'" style="height: 38px; padding: 0 18px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 700; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.5);">
                                             <i class="fas fa-calendar-plus"></i> Propor Novo Horário
                                         </button>
                                     {% endif %}

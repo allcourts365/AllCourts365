@@ -13,4 +13,5 @@ urlpatterns = [
     path('api/agenda/', views.api_court_agenda, name='api_court_agenda'),
     path('api/agenda/mensal/', views.api_monthly_agenda, name='api_monthly_agenda'),
     path('para-clubes/', views.club_landing_page, name='club_landing_page'),
+    path('painel-atleta/calendario/', views.athlete_calendar, name='athlete_calendar'),
 ]

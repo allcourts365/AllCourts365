@@ -1,0 +1,927 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Meus Jogos - AllCourts365{% endblock %}
+
+{% block content %}
+<style>
+    /* Outlook Dark Theme Variables */
+    :root {
+        --ol-bg: #111111;
+        --ol-border: #333333;
+        --ol-hover: #222222;
+        --ol-primary: #3b82f6;
+        --ol-text: #ffffff;
+        --ol-text-muted: #888888;
+        --ol-header-bg: #181818;
+    }
+
+    body {
+        overflow: hidden; /* Prevent full page scroll, only calendar scrolls */
+    }
+
+    /* Override base.html main container to be truly full width */
+    main.container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .ol-container {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 70px); /* Adjust based on your top navbar height */
+        background-color: var(--ol-bg);
+        color: var(--ol-text);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Toolbar */
+    .ol-toolbar {
+        display: flex;
+        align-items: center;
+        height: 50px;
+        padding: 0 15px;
+        border-bottom: 1px solid var(--ol-border);
+        background-color: var(--ol-bg);
+        gap: 15px;
+    }
+    
+    .ol-btn {
+        background: transparent;
+        border: none;
+        color: var(--ol-text);
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+    }
+    .ol-btn:hover {
+        background-color: var(--ol-hover);
+    }
+    .ol-btn.active {
+        background-color: var(--ol-hover);
+        border: 1px solid var(--ol-border);
+    }
+    .ol-btn-primary {
+        background-color: var(--ol-primary);
+        color: white;
+    }
+    .ol-btn-primary:hover {
+        background-color: #2563eb;
+    }
+
+    /* Main Body */
+    .ol-body {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+    }
+
+    /* Sidebar */
+    .ol-sidebar {
+        width: 250px;
+        border-right: 1px solid var(--ol-border);
+        display: flex;
+        flex-direction: column;
+        padding: 15px;
+        overflow-y: auto;
+    }
+
+    .ol-mini-cal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .ol-mini-cal-nav button {
+        background: none;
+        border: none;
+        color: var(--ol-text);
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .ol-mini-cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+        gap: 2px;
+        font-size: 0.8rem;
+    }
+    
+    .ol-mini-cal-grid div {
+        padding: 4px 0;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    .ol-mini-cal-grid div:hover:not(.empty) {
+        background-color: var(--ol-hover);
+    }
+    .ol-mini-cal-grid .today {
+        background-color: var(--ol-primary);
+        color: white;
+    }
+    .ol-mini-cal-grid .selected {
+        border: 1px solid var(--ol-primary);
+    }
+    
+    .ol-standby-section {
+        margin-top: 30px;
+    }
+    .ol-standby-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: var(--ol-text-muted);
+    }
+    .ol-standby-item {
+        background: var(--ol-hover);
+        border: 1px solid var(--ol-border);
+        border-radius: 6px;
+        padding: 10px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        font-size: 0.85rem;
+    }
+    .ol-standby-item:hover {
+        border-color: var(--ol-primary);
+    }
+
+    /* Calendar Grid Area */
+    .ol-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    .ol-main-header {
+        display: flex;
+        align-items: center;
+        height: 60px;
+        padding: 0 20px;
+        gap: 15px;
+        border-bottom: 1px solid var(--ol-border);
+    }
+
+    .ol-date-title {
+        font-size: 1.5rem;
+        font-weight: 400;
+    }
+
+    /* Day View */
+    .ol-day-view {
+        flex: 1;
+        overflow-y: auto;
+        position: relative;
+        background: var(--ol-bg);
+    }
+    
+    .ol-time-grid {
+        position: relative;
+    }
+
+    .ol-time-row {
+        display: flex;
+        height: 60px; /* 1 hour = 60px */
+        border-bottom: 1px solid var(--ol-border);
+    }
+    .ol-time-label {
+        width: 60px;
+        padding-right: 10px;
+        text-align: right;
+        font-size: 0.75rem;
+        color: var(--ol-text-muted);
+        position: relative;
+        top: 2px;
+    }
+    .ol-time-cell {
+        flex: 1;
+        border-left: 1px solid var(--ol-border);
+        position: relative;
+    }
+    
+    .ol-half-hour {
+        height: 50%;
+        cursor: pointer;
+        transition: background-color 0.1s;
+    }
+    .ol-half-hour:hover {
+        background-color: rgba(255,255,255,0.05);
+    }
+    .ol-half-hour.selected-slot {
+        background-color: var(--ol-primary);
+        opacity: 0.8;
+    }
+
+    .ol-event {
+        position: absolute;
+        left: 5px;
+        right: 15px;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 0.8rem;
+        overflow: hidden;
+        color: white;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .ol-event.mine {
+        background-color: var(--ol-primary);
+        border-left: 4px solid #1e40af;
+    }
+    .ol-event.occupied {
+        background-color: #4b5563;
+        border-left: 4px solid #374151;
+        opacity: 0.7;
+    }
+    
+    .ol-current-time-line {
+        position: absolute;
+        left: 60px;
+        right: 0;
+        height: 2px;
+        background-color: var(--ol-primary);
+        z-index: 10;
+        pointer-events: none;
+    }
+    .ol-current-time-circle {
+        position: absolute;
+        left: 56px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: var(--ol-primary);
+        transform: translateY(-4px);
+    }
+
+</style>
+
+<div class="ol-container">
+    <div class="ol-toolbar">
+        <button class="ol-btn ol-btn-primary"><i class="fas fa-plus"></i> Novo evento</button>
+        <div style="width: 1px; height: 20px; background: var(--ol-border); margin: 0 10px;"></div>
+        <button class="ol-btn active" id="btn-view-day" onclick="changeView('day')" style="display: flex; align-items: center; gap: 6px; padding-right: 6px;">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="2" width="14" height="12" rx="2" />
+                <line x1="1" y1="6" x2="15" y2="6" />
+                <rect x="4" y="9" width="8" height="2.5" rx="0.5" />
+            </svg>
+            <span style="font-weight: 600;">Dia</span>
+            <i class="fas fa-chevron-down" style="font-size: 0.7em; margin-left: 2px;"></i>
+        </button>
+        <button class="ol-btn" id="btn-view-week" onclick="changeView('week')" style="display: flex; align-items: center; gap: 6px;">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="2" width="14" height="12" rx="2" />
+                <line x1="5.5" y1="5" x2="5.5" y2="11" />
+                <line x1="8" y1="5" x2="8" y2="11" />
+                <line x1="10.5" y1="5" x2="10.5" y2="11" />
+            </svg>
+            <span style="font-weight: 600;">Semana</span>
+        </button>
+        <button class="ol-btn" id="btn-view-month" onclick="changeView('month')" style="display: flex; align-items: center; gap: 6px;">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="2" width="14" height="12" rx="2" />
+                <line x1="1" y1="6" x2="15" y2="6" />
+                <line x1="6" y1="6" x2="6" y2="14" />
+                <line x1="11" y1="6" x2="11" y2="14" />
+                <line x1="1" y1="10" x2="15" y2="10" />
+            </svg>
+            <span style="font-weight: 600;">Mês</span>
+        </button>
+        
+        <div style="flex: 1;"></div>
+        
+        <select id="court-filter" onchange="renderCalendar()" style="background: var(--ol-hover); color: white; border: 1px solid var(--ol-border); padding: 5px 10px; border-radius: 4px; outline: none;">
+            <option value="all">Todas as Quadras</option>
+            {% for court in courts %}
+            <option value="{{ court.id }}">{{ court.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="ol-body">
+        <!-- Sidebar -->
+        <div class="ol-sidebar">
+            <div class="ol-mini-cal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: bold; font-size: 0.95rem;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-chevron-down" style="font-size: 0.75rem; cursor: pointer; color: var(--ol-text-muted);"></i>
+                    <span id="mini-cal-month-year">Setembro 2026</span>
+                </div>
+                <div class="ol-mini-cal-nav" style="display: flex; gap: 15px; margin-right: 5px;">
+                    <i class="fas fa-arrow-up" style="font-size: 0.85rem; cursor: pointer; color: var(--ol-primary);" onclick="changeMiniMonth(-1)"></i>
+                    <i class="fas fa-arrow-down" style="font-size: 0.85rem; cursor: pointer; color: var(--ol-primary);" onclick="changeMiniMonth(1)"></i>
+                </div>
+            </div>
+            
+            <div class="ol-mini-cal-grid" style="color: var(--ol-text-muted); margin-bottom: 5px; font-weight: bold;">
+                <div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div>
+            </div>
+            <div class="ol-mini-cal-grid" id="mini-cal-days">
+                <!-- JS populated -->
+            </div>
+            
+            <div style="position: relative; text-align: center; margin: 20px 0;">
+                <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--ol-border); z-index: 1;"></div>
+                <button id="btn-toggle-next-month" onclick="toggleNextMonth()" style="position: relative; z-index: 2; background: var(--ol-bg); border: 1px solid var(--ol-border); color: var(--ol-text-muted); padding: 2px 15px; border-radius: 4px; cursor: pointer;">
+                    <i id="icon-toggle-next-month" class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+                </button>
+            </div>
+
+            <!-- Next Month Container -->
+            <div id="mini-cal-next-month-container" style="display: none; margin-bottom: 15px;">
+                <div class="ol-mini-cal-header" style="margin-bottom: 10px; font-weight: bold; font-size: 0.95rem;">
+                    <span id="mini-cal-next-month-year">Outubro 2026</span>
+                </div>
+                <div class="ol-mini-cal-grid" style="color: var(--ol-text-muted); margin-bottom: 5px; font-weight: bold;">
+                    <div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div>
+                </div>
+                <div class="ol-mini-cal-grid" id="mini-cal-next-days">
+                    <!-- JS populated -->
+                </div>
+            </div>
+            
+            <div class="ol-standby-section">
+                <div class="ol-standby-title">Jogos Aguardando Agendamento</div>
+                <div id="standby-list">
+                    {% for sm in standby_matches %}
+                    <div class="ol-standby-item" onclick="selectStandbyMatch('{{ sm.id }}', '{{ sm.title }}')">
+                        <strong>{{ sm.title }}</strong><br>
+                        <span style="color: var(--ol-text-muted);">{{ sm.tournament }} (Rodada {{ sm.round }})</span>
+                    </div>
+                    {% empty %}
+                    <p style="font-size: 0.8rem; color: var(--ol-text-muted);">Nenhum jogo pendente.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Calendar -->
+        <div class="ol-main">
+            <div class="ol-main-header">
+                <button class="ol-btn" onclick="goToToday()" style="border: 1px solid var(--ol-border);">Hoje</button>
+                <button class="ol-btn" onclick="changeMainDate(-1)"><i class="fas fa-chevron-left"></i></button>
+                <button class="ol-btn" onclick="changeMainDate(1)"><i class="fas fa-chevron-right"></i></button>
+                <div class="ol-date-title" id="main-date-title">11 Setembro, 2026</div>
+            </div>
+            
+            <!-- Day View Area -->
+            <div class="ol-day-view" id="day-view-container">
+                <div class="ol-time-grid" id="time-grid">
+                    <div class="ol-current-time-line" id="current-time-line" style="display: none;"></div>
+                    <div class="ol-current-time-circle" id="current-time-circle" style="display: none;"></div>
+                    
+                    <!-- 24 Hours populated by JS -->
+                </div>
+            </div>
+            
+            <!-- Week View Area (Hidden by default) -->
+            <div class="ol-day-view" id="week-view-container" style="display: none; flex-direction: column;">
+                <div style="display: flex; border-bottom: 1px solid var(--ol-border); margin-left: 60px;" id="week-header">
+                    <!-- Days -->
+                </div>
+                <div class="ol-time-grid" id="week-time-grid" style="display: flex;">
+                    <div style="width: 60px;" id="week-time-labels"></div>
+                    <div style="flex: 1; display: flex; position: relative;" id="week-columns">
+                        <!-- 7 Columns -->
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+
+<!-- Novo Modal Estilo Outlook -->
+<div id="scheduleModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    <div style="background: #1e1e1e; border: 1px solid #333; border-radius: 6px; width: 850px; height: 550px; color: white; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        
+        <!-- Top Toolbar -->
+        <div style="display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid #333; gap: 15px;">
+            <button type="button" onclick="submitScheduleForm()" style="background: #0f6cbd; border: none; color: white; padding: 6px 15px; border-radius: 4px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <i class="far fa-save"></i> Salvar
+            </button>
+            <button type="button" onclick="document.getElementById('scheduleModal').style.display='none'" style="background: none; border: none; color: #ccc; cursor: pointer;">Descartar</button>
+            <div style="flex: 1;"></div>
+            <i class="fas fa-times" style="cursor: pointer; color: #ccc;" onclick="document.getElementById('scheduleModal').style.display='none'"></i>
+        </div>
+        
+        <!-- Modal Body: Split Pane -->
+        <div style="display: flex; flex: 1; overflow: hidden;">
+            
+            <!-- Left Side: Form -->
+            <div style="flex: 1; padding: 20px; overflow-y: auto;">
+                <form id="scheduleForm" method="post" action="{% url 'athlete_dashboard' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="schedule_match" value="1">
+                    
+                    <!-- Adicionar Jogo -->
+                    <div style="display: flex; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+                        <i class="fas fa-trophy" style="width: 30px; text-align: center; color: #888;"></i>
+                        <select name="match_id" id="modal-match-id" onchange="onMatchSelected()" required style="flex: 1; background: transparent; border: none; color: white; font-size: 1.2rem; outline: none;">
+                            <option value="" style="background: #1e1e1e; color: #888;">Adicionar jogo (Rodada Atual)</option>
+                            {% for sm in standby_matches %}
+                            <option value="{{ sm.id }}" data-adversary="{{ sm.adversary }}" data-duration="{{ sm.duration }}" data-club="{{ sm.club_id }}" style="background: #1e1e1e; color: white;">
+                                {{ sm.title }} ({{ sm.tournament }})
+                            </option>
+                            {% empty %}
+                            <option value="" disabled style="background: #1e1e1e; color: #888;">Nenhum jogo da rodada atual disponível</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Adversário -->
+                    <div style="display: flex; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+                        <i class="far fa-user" style="width: 30px; text-align: center; color: #888;"></i>
+                        <input type="text" id="modal-adversary" readonly placeholder="Adversário" style="flex: 1; background: transparent; border: none; color: white; font-size: 0.95rem; outline: none;">
+                    </div>
+                    
+                    <!-- Data/Hora -->
+                    <div style="display: flex; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; gap: 10px;">
+                        <i class="far fa-clock" style="width: 20px; text-align: center; color: #888;"></i>
+                        <input type="date" name="date" id="modal-date" onchange="syncFromInputs()" required style="background: transparent; border: none; color: white; outline: none; font-family: inherit;">
+                        <input type="time" name="time" id="modal-time" onchange="syncFromInputs()" required style="background: transparent; border: none; color: white; outline: none; font-family: inherit;">
+                        <span style="color: #888;">—</span>
+                        <input type="time" name="end_time" id="modal-time-end" onchange="syncFromInputs()" required style="background: transparent; border: none; color: white; outline: none; font-family: inherit;">
+                    </div>
+                    
+                    <!-- Local -->
+                    <div style="display: flex; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px;">
+                        <i class="fas fa-map-marker-alt" style="width: 30px; text-align: center; color: #888;"></i>
+                        <select name="court" id="modal-court" required style="flex: 1; background: transparent; border: none; color: white; font-size: 0.95rem; outline: none;">
+                            <option value="" style="background: #1e1e1e;">Procurar um local</option>
+                            {% for court in courts %}
+                            <option value="{{ court.id }}" data-club="{{ court.club_id }}" style="background: #1e1e1e; color: white;">
+                                {{ court.name }} ({{ court.club.name }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Descrição -->
+                    <div style="display: flex; align-items: flex-start; margin-bottom: 15px;">
+                        <i class="fas fa-align-left" style="width: 30px; text-align: center; color: #888; margin-top: 5px;"></i>
+                        <textarea placeholder="Adicione uma descrição..." style="flex: 1; background: transparent; border: none; color: white; font-size: 0.95rem; outline: none; resize: none; height: 100px; font-family: inherit;"></textarea>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Right Side: Mini Grid (Day View) -->
+            <div style="width: 280px; border-left: 1px solid #333; background: #252525; display: flex; flex-direction: column;">
+                <div style="padding: 10px 15px; border-bottom: 1px solid #333; font-weight: 600; font-size: 0.9rem;" id="modal-right-date-title">
+                    Dia Selecionado
+                </div>
+                <div style="flex: 1; overflow-y: auto; position: relative;" id="modal-mini-grid-container">
+                    <div id="modal-mini-grid" style="position: relative; height: 1440px;"> <!-- 24 hours * 60px -->
+                        <!-- Hours Background -->
+                        <script>
+                            for(let i=0; i<24; i++) {
+                                document.write(`<div style="height: 60px; border-bottom: 1px solid #333; box-sizing: border-box; display: flex;">
+                                    <div style="width: 40px; text-align: center; color: #888; font-size: 0.75rem; padding-top: 5px;">${i}</div>
+                                    <div style="flex: 1; border-left: 1px solid #333;">
+                                        <div style="height: 30px; border-bottom: 1px dashed #333;"></div>
+                                    </div>
+                                </div>`);
+                            }
+                        </script>
+                        
+                        <!-- Draggable Event Block -->
+                        <div id="modal-drag-block" style="position: absolute; left: 41px; right: 10px; background: #60a5fa; opacity: 0.9; border-radius: 4px; cursor: move; display: none; padding: 2px 5px; font-size: 0.75rem; color: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.3); box-sizing: border-box; overflow: hidden; transition: box-shadow 0.2s;">
+                            <span id="modal-drag-time-label"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<script>
+
+    const matchesJson = {{ matches_json|safe }};
+    const allMatchesJson = {{ all_matches_json|safe }};
+    let currentDate = new Date(); // Main calendar date
+    let miniCalDate = new Date(); // Mini calendar date
+    let currentView = 'day';
+    let isNextMonthExpanded = false;
+
+    // --- Nova Lógica do Modal Outlook ---
+    let dragBlock = null;
+    let gridContainer = null;
+    let isDragging = false;
+    let dragStartY = 0;
+    let initialTop = 0;
+    const pxPerMinute = 1; // 60px per hour => 1px per min
+
+    function initDragLogic() {
+        dragBlock = document.getElementById('modal-drag-block');
+        gridContainer = document.getElementById('modal-mini-grid');
+        
+        dragBlock.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            dragStartY = e.clientY;
+            initialTop = parseInt(dragBlock.style.top || 0);
+            dragBlock.style.boxShadow = '0 5px 15px rgba(0,0,0,0.5)';
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            const deltaY = e.clientY - dragStartY;
+            let newTop = initialTop + deltaY;
+            
+            // Snap to 15 mins (15px) for smoother dragging than 30
+            newTop = Math.round(newTop / 15) * 15;
+            
+            if (newTop < 0) newTop = 0;
+            const maxTop = 1440 - parseInt(dragBlock.style.height || 0);
+            if (newTop > maxTop) newTop = maxTop;
+            
+            dragBlock.style.top = newTop + 'px';
+            syncToInputs(); // Update inputs as we drag
+        });
+        
+        document.addEventListener('mouseup', function(e) {
+            if (isDragging) {
+                isDragging = false;
+                dragBlock.style.boxShadow = '0 2px 5px rgba(0,0,0,0.3)';
+                syncToInputs();
+            }
+        });
+    }
+
+    function timeToPx(timeStr) {
+        if(!timeStr) return 0;
+        const parts = timeStr.split(':');
+        return (parseInt(parts[0]) * 60) + parseInt(parts[1]);
+    }
+    
+    function pxToTime(px) {
+        let totalMins = px;
+        let h = Math.floor(totalMins / 60);
+        let m = totalMins % 60;
+        return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+    }
+
+    function syncFromInputs() {
+        const start = document.getElementById('modal-time').value;
+        const end = document.getElementById('modal-time-end').value;
+        const dateVal = document.getElementById('modal-date').value;
+        
+        if (dateVal) {
+            const d = new Date(dateVal + 'T00:00:00');
+            const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            document.getElementById('modal-right-date-title').innerText = `${dayNames[d.getDay()]}, ${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+        }
+
+        if (start && end && dragBlock) {
+            const startPx = timeToPx(start);
+            let endPx = timeToPx(end);
+            if(endPx <= startPx) endPx = startPx + 30; // minimum 30 min block if invalid
+            
+            dragBlock.style.display = 'block';
+            dragBlock.style.top = startPx + 'px';
+            dragBlock.style.height = (endPx - startPx) + 'px';
+            document.getElementById('modal-drag-time-label').innerText = `${start} - ${pxToTime(endPx)}`;
+        }
+    }
+
+    function syncToInputs() {
+        const topPx = parseInt(dragBlock.style.top || 0);
+        const heightPx = parseInt(dragBlock.style.height || 0);
+        
+        const start = pxToTime(topPx);
+        const end = pxToTime(topPx + heightPx);
+        
+        document.getElementById('modal-time').value = start;
+        document.getElementById('modal-time-end').value = end;
+        document.getElementById('modal-drag-time-label').innerText = `${start} - ${end}`;
+    }
+
+    function onMatchSelected() {
+        const sel = document.getElementById('modal-match-id');
+        const opt = sel.options[sel.selectedIndex];
+        
+        if (opt && opt.value) {
+            const adversary = opt.getAttribute('data-adversary');
+            const duration = parseInt(opt.getAttribute('data-duration') || 90);
+            const clubId = opt.getAttribute('data-club');
+            
+            document.getElementById('modal-adversary').value = adversary;
+            
+            // Calculate end time based on start time + duration
+            const startTimeStr = document.getElementById('modal-time').value;
+            if (startTimeStr) {
+                let startMins = timeToPx(startTimeStr);
+                let endMins = startMins + duration;
+                if(endMins > 1440) endMins = 1440;
+                document.getElementById('modal-time-end').value = pxToTime(endMins);
+                syncFromInputs();
+            }
+            
+            // Filter Courts by club
+            const courtSel = document.getElementById('modal-court');
+            let firstValid = null;
+            for(let i=0; i<courtSel.options.length; i++) {
+                const cOpt = courtSel.options[i];
+                if(cOpt.value === "") continue;
+                if(cOpt.getAttribute('data-club') === clubId) {
+                    cOpt.style.display = 'block';
+                    if(!firstValid) firstValid = cOpt.value;
+                } else {
+                    cOpt.style.display = 'none';
+                }
+            }
+            if (firstValid) {
+                courtSel.value = firstValid;
+            } else {
+                courtSel.value = "";
+            }
+        }
+    }
+
+    function openScheduleModal(dateStr, timeStr) {
+        document.getElementById('modal-date').value = dateStr;
+        document.getElementById('modal-time').value = timeStr;
+        
+        // Reset match select and end time
+        document.getElementById('modal-match-id').value = '';
+        document.getElementById('modal-adversary').value = '';
+        document.getElementById('modal-court').value = '';
+        document.getElementById('modal-time-end').value = pxToTime(timeToPx(timeStr) + 90); // temp default until match selected
+        
+        syncFromInputs();
+        
+        // Show modal and scroll mini-grid to time
+        document.getElementById('scheduleModal').style.display = 'flex';
+        setTimeout(() => {
+            document.getElementById('modal-mini-grid-container').scrollTop = timeToPx(timeStr) - 100;
+        }, 10);
+        
+        if (!dragBlock) {
+            initDragLogic();
+        }
+    }
+
+    function submitScheduleForm() {
+        if(!document.getElementById('modal-match-id').value) {
+            alert("Por favor, selecione um jogo para agendar.");
+            return;
+        }
+        if(!document.getElementById('modal-court').value) {
+            alert("Por favor, selecione uma quadra.");
+            return;
+        }
+        document.getElementById('scheduleForm').submit();
+    }
+    // --- Fim Nova Lógica ---
+
+    
+    function toggleNextMonth() {
+        isNextMonthExpanded = !isNextMonthExpanded;
+        const container = document.getElementById('mini-cal-next-month-container');
+        const icon = document.getElementById('icon-toggle-next-month');
+        if (isNextMonthExpanded) {
+            container.style.display = 'block';
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        } else {
+            container.style.display = 'none';
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        }
+    }
+
+    
+    // Mount the initial layout
+    document.addEventListener('DOMContentLoaded', () => {
+        renderMiniCalendar();
+        renderMainCalendar();
+        updateCurrentTimeLine();
+        setInterval(updateCurrentTimeLine, 60000); // update every minute
+        
+        // Scroll to 14:00 by default as in the screenshot
+        const dayView = document.getElementById('day-view-container');
+        if (dayView) {
+            dayView.scrollTop = 14 * 60 - 20;
+        }
+    });
+    
+    function changeView(view) {
+        currentView = view;
+        document.querySelectorAll('.ol-toolbar .ol-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`btn-view-${view}`).classList.add('active');
+        
+        if (view === 'day') {
+            document.getElementById('day-view-container').style.display = 'block';
+            document.getElementById('week-view-container').style.display = 'none';
+        } else if (view === 'week') {
+            document.getElementById('day-view-container').style.display = 'none';
+            document.getElementById('week-view-container').style.display = 'flex';
+        } else {
+            // Month view not fully implemented in this demo script yet, fallback to week
+            alert("Mês view is a WIP in this prototype.");
+        }
+        renderMainCalendar();
+    }
+    
+    function goToToday() {
+        currentDate = new Date();
+        miniCalDate = new Date();
+        renderMiniCalendar();
+        renderMainCalendar();
+    }
+    
+    function changeMainDate(delta) {
+        if (currentView === 'day') {
+            currentDate.setDate(currentDate.getDate() + delta);
+        } else if (currentView === 'week') {
+            currentDate.setDate(currentDate.getDate() + (delta * 7));
+        }
+        renderMainCalendar();
+    }
+    
+    function changeMiniMonth(delta) {
+        miniCalDate.setMonth(miniCalDate.getMonth() + delta);
+        renderMiniCalendar();
+    }
+    
+    function selectMiniDate(year, month, day) {
+        currentDate = new Date(year, month, day);
+        renderMainCalendar();
+        renderMiniCalendar();
+    }
+    
+    function renderMiniCalendar() {
+        const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        
+        function generateMonthHTML(year, month) {
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            let html = '';
+            const prevMonthDays = new Date(year, month, 0).getDate();
+            for (let i = 0; i < firstDay; i++) {
+                html += `<div class="empty" style="opacity: 0.3;">${prevMonthDays - firstDay + i + 1}</div>`;
+            }
+            
+            const today = new Date();
+            for (let i = 1; i <= daysInMonth; i++) {
+                let classes = [];
+                if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) classes.push('today');
+                if (i === currentDate.getDate() && month === currentDate.getMonth() && year === currentDate.getFullYear()) classes.push('selected');
+                
+                html += `<div class="${classes.join(' ')}" onclick="selectMiniDate(${year}, ${month}, ${i})">${i}</div>`;
+            }
+            
+            const remaining = 42 - (firstDay + daysInMonth);
+            for (let i = 1; i <= remaining; i++) {
+                html += `<div class="empty" style="opacity: 0.3;">${i}</div>`;
+            }
+            return html;
+        }
+
+        const year1 = miniCalDate.getFullYear();
+        const month1 = miniCalDate.getMonth();
+        document.getElementById('mini-cal-month-year').innerText = `${monthNames[month1]} ${year1}`;
+        document.getElementById('mini-cal-days').innerHTML = generateMonthHTML(year1, month1);
+
+        let nextDate = new Date(year1, month1 + 1, 1);
+        const year2 = nextDate.getFullYear();
+        const month2 = nextDate.getMonth();
+        document.getElementById('mini-cal-next-month-year').innerText = `${monthNames[month2]} ${year2}`;
+        document.getElementById('mini-cal-next-days').innerHTML = generateMonthHTML(year2, month2);
+    }
+    
+    function renderMainCalendar() {
+        const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        const dayNames = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+        
+        if (currentView === 'day') {
+            document.getElementById('main-date-title').innerText = `${currentDate.getDate()} ${monthNames[currentDate.getMonth()]}, ${currentDate.getFullYear()}`;
+            
+            let html = '';
+            for (let h = 0; h < 24; h++) {
+                html += `
+                <div class="ol-time-row">
+                    <div class="ol-time-label">${h}:00</div>
+                    <div class="ol-time-cell">
+                        <div class="ol-half-hour" onclick="selectSlot(this)" ondblclick="openScheduleModal('${currentDate.toISOString().split('T')[0]}', '${h}:00')"></div>
+                        <div class="ol-half-hour" style="border-top: 1px dashed var(--ol-border);" onclick="selectSlot(this)" ondblclick="openScheduleModal('${currentDate.toISOString().split('T')[0]}', '${h}:30')"></div>
+                    </div>
+                </div>`;
+            }
+            
+            // Add events
+            const timeGrid = document.getElementById('time-grid');
+            timeGrid.innerHTML = `
+                <div class="ol-current-time-line" id="current-time-line" style="display: none;"></div>
+                <div class="ol-current-time-circle" id="current-time-circle" style="display: none;"></div>
+            ` + html;
+            
+            // Filter events for this day
+            const dateStr = currentDate.toISOString().split('T')[0];
+            const filterCourtId = document.getElementById('court-filter').value;
+            
+            allMatchesJson.forEach(ev => {
+                if (!ev.start.startsWith(dateStr)) return;
+                if (filterCourtId !== 'all' && ev.court_id != filterCourtId) return;
+                
+                const evDate = new Date(ev.start);
+                const top = (evDate.getHours() * 60) + evDate.getMinutes();
+                const height = 90; // Default 1.5 hours
+                
+                const evDiv = document.createElement('div');
+                evDiv.className = `ol-event ${ev.is_mine ? 'mine' : 'occupied'}`;
+                evDiv.style.top = `${top}px`;
+                evDiv.style.height = `${height}px`;
+                evDiv.innerHTML = `<strong>${ev.title}</strong><br><small>${evDate.getHours()}:${evDate.getMinutes().toString().padStart(2, '0')} - Quadra: ${ev.court_name}</small>`;
+                timeGrid.appendChild(evDiv);
+            });
+            
+        } else if (currentView === 'week') {
+            // Simplified week view generation
+            const startOfWeek = new Date(currentDate);
+            startOfWeek.setDate(currentDate.getDate() - currentDate.getDay()); // Sunday
+            
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            
+            document.getElementById('main-date-title').innerText = `${startOfWeek.getDate()}-${endOfWeek.getDate()} de ${monthNames[currentDate.getMonth()]} de ${currentDate.getFullYear()}`;
+            
+            let headers = '';
+            let columns = '';
+            
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(startOfWeek);
+                d.setDate(d.getDate() + i);
+                headers += `<div style="flex: 1; text-align: center; padding: 10px 0; border-left: 1px solid var(--ol-border);">
+                    <div style="font-size: 1.2rem; font-weight: ${d.getDate() === new Date().getDate() ? 'bold' : 'normal'}; color: ${d.getDate() === new Date().getDate() ? 'var(--ol-primary)' : 'inherit'};">${d.getDate()}</div>
+                    <div style="font-size: 0.8rem; color: var(--ol-text-muted);">${dayNames[i]}</div>
+                </div>`;
+                
+                let cells = '';
+                for (let h = 0; h < 24; h++) {
+                    cells += `
+                    <div class="ol-time-cell" style="height: 60px; border-bottom: 1px solid var(--ol-border);">
+                        <div class="ol-half-hour" onclick="selectSlot(this)" ondblclick="openScheduleModal('${d.toISOString().split('T')[0]}', '${h}:00')"></div>
+                        <div class="ol-half-hour" style="border-top: 1px dashed var(--ol-border);" onclick="selectSlot(this)" ondblclick="openScheduleModal('${d.toISOString().split('T')[0]}', '${h}:30')"></div>
+                    </div>`;
+                }
+                columns += `<div style="flex: 1; position: relative;">${cells}</div>`;
+            }
+            
+            document.getElementById('week-header').innerHTML = headers;
+            
+            let timeLabels = '';
+            for (let h = 0; h < 24; h++) {
+                timeLabels += `<div style="height: 60px; text-align: right; padding-right: 10px; font-size: 0.75rem; color: var(--ol-text-muted); position: relative; top: 2px;">${h}:00</div>`;
+            }
+            document.getElementById('week-time-labels').innerHTML = timeLabels;
+            document.getElementById('week-columns').innerHTML = columns;
+            
+            // Note: In a full implementation, we'd add events to the columns here.
+        }
+        
+        updateCurrentTimeLine();
+    }
+    
+    function updateCurrentTimeLine() {
+        const now = new Date();
+        if (currentView === 'day' && 
+            currentDate.getDate() === now.getDate() && 
+            currentDate.getMonth() === now.getMonth() && 
+            currentDate.getFullYear() === now.getFullYear()) {
+            
+            const top = (now.getHours() * 60) + now.getMinutes();
+            document.getElementById('current-time-line').style.display = 'block';
+            document.getElementById('current-time-circle').style.display = 'block';
+            document.getElementById('current-time-line').style.top = `${top}px`;
+            document.getElementById('current-time-circle').style.top = `${top}px`;
+        } else {
+            if (document.getElementById('current-time-line')) {
+                document.getElementById('current-time-line').style.display = 'none';
+                document.getElementById('current-time-circle').style.display = 'none';
+            }
+        }
+    }
+    
+    
+    function selectSlot(el) {
+        document.querySelectorAll('.ol-half-hour').forEach(slot => slot.classList.remove('selected-slot'));
+        el.classList.add('selected-slot');
+    }
+
+
+</script>
+
+{% endblock %}
