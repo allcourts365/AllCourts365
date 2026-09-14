@@ -1003,7 +1003,13 @@ def athlete_calendar(request):
                 if a is not None and b is not None:
                     sets_scores.append(f"{a}-{b}")
             score_text = ", ".join(sets_scores)
-            score_str = f"Vencedor: {winner_name} {f'({score_text})' if score_text else ''}".strip()
+            
+            if score_text and m.sets_a is not None and m.sets_b is not None:
+                score_str = f"Vencedor: {winner_name} ({m.sets_a}x{m.sets_b} | {score_text})"
+            elif m.sets_a is not None and m.sets_b is not None:
+                score_str = f"Vencedor: {winner_name} ({m.sets_a}x{m.sets_b})"
+            else:
+                score_str = f"Vencedor: {winner_name} (W.O.)"
             
         matches_json.append({
             'id': m.id,
@@ -1056,7 +1062,13 @@ def athlete_calendar(request):
                 if a is not None and b is not None:
                     sets_scores.append(f"{a}-{b}")
             score_text = ", ".join(sets_scores)
-            score_str = f"Vencedor: {winner_name} {f'({score_text})' if score_text else ''}".strip()
+            
+            if score_text and m.sets_a is not None and m.sets_b is not None:
+                score_str = f"Vencedor: {winner_name} ({m.sets_a}x{m.sets_b} | {score_text})"
+            elif m.sets_a is not None and m.sets_b is not None:
+                score_str = f"Vencedor: {winner_name} ({m.sets_a}x{m.sets_b})"
+            else:
+                score_str = f"Vencedor: {winner_name} (W.O.)"
             
         all_matches_json.append({
             'id': m.id,
