@@ -1209,6 +1209,8 @@
             let miniMiddleText = `${startStr} às ${endStr}`;
             if (ev.is_completed) {
                 miniMiddleText = `REALIZADO ${ev.date_str_br} das ${startStr} às ${endStr}`;
+            } else if (ev.match_status === 'pending') {
+                miniMiddleText = `RESULTADO PENDENTE ${startStr} às ${endStr}`;
             }
             let htmlContent = `<strong>${ev.title}</strong><br>${miniMiddleText} - ${ev.status_display}`;
             if (ev.is_completed && ev.score_str) {
@@ -1920,6 +1922,8 @@
                 let middleText = `${startStr} às ${endStr} na ${ev.court_name}`;
                 if (ev.is_completed) {
                     middleText = `REALIZADO ${ev.date_str_br} das ${startStr} às ${endStr} na ${ev.court_name}`;
+                } else if (ev.match_status === 'pending') {
+                    middleText = `RESULTADO PENDENTE ${startStr} às ${endStr} na ${ev.court_name}`;
                 }
                 let htmlContent = `<strong>${ev.title}</strong> - <small>${middleText}</small> - <strong>${ev.status_display}</strong>`;
                 if (ev.is_completed && ev.score_str) {
@@ -2060,6 +2064,8 @@
                 let timeSpanText = `${startStr}-${endStr} na ${ev.court_name}`;
                 if (ev.is_completed) {
                     timeSpanText = `REALIZADO ${ev.date_str_br} das ${startStr}-${endStr} na ${ev.court_name}`;
+                } else if (ev.match_status === 'pending') {
+                    timeSpanText = `RESULTADO PENDENTE ${startStr}-${endStr} na ${ev.court_name}`;
                 }
                 let htmlContent = `<strong style="display:block;">${ev.title}</strong><span style="opacity:0.9;">${timeSpanText} - <strong>${ev.status_display}</strong></span>`;
                 if (ev.is_completed && ev.score_str) {
@@ -2138,6 +2144,8 @@
                     let monthMiddleText = timeStr;
                     if (ev.is_completed) {
                         monthMiddleText = `REALIZADO ${ev.date_str_br} às ${timeStr}`;
+                    } else if (ev.match_status === 'pending') {
+                        monthMiddleText = `RESULTADO PENDENTE ${timeStr}`;
                     }
                     let htmlContent = `${monthMiddleText} - ${ev.title} - ${ev.status_display}`;
                     if (ev.is_completed && ev.score_str) {

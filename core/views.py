@@ -984,11 +984,11 @@ def athlete_calendar(request):
         court_name_str = f' na {court.name}' if court else ''
         tourn_name = m.tournament.name if m.tournament else 'Amistoso'
         club_name = m.tournament.club.name if m.tournament and m.tournament.club else (linked_club.name if linked_club else '')
-        
-        status_display = m.schedule_status.upper().replace('_', ' ') if m.schedule_status else 'AGENDADO PELO ADM'
-        if status_display.lower() == 'unagendado':
+        if m.schedule_status in ['agendado', 'aguardando_adversario']:
+            status_display = m.schedule_status.upper().replace('_', ' ')
+        else:
             status_display = 'AGENDADO PELO ADM'
-            
+
         title = f"{m.player_a.name} vs {m.player_b.name} - {tourn_name} - {club_name}"
         duration = m.tournament.match_duration if m.tournament and m.tournament.match_duration else 90
         local_dt = timezone.localtime(dt)
@@ -1012,6 +1012,7 @@ def athlete_calendar(request):
             'start': local_dt.isoformat(),
             'end': (local_dt + timedelta(minutes=duration)).isoformat(),
             'status': m.schedule_status,
+            'match_status': m.status,
             'is_mine': True,
             'is_completed': is_completed,
             'score_str': score_str,
@@ -1036,11 +1037,11 @@ def athlete_calendar(request):
         court = m.court if m.court else m.proposed_court
         tourn_name = m.tournament.name if m.tournament else 'Amistoso'
         club_name = m.tournament.club.name if m.tournament and m.tournament.club else ''
-        
-        status_display = m.schedule_status.upper().replace('_', ' ') if m.schedule_status else 'AGENDADO PELO ADM'
-        if status_display.lower() == 'unagendado':
+        if m.schedule_status in ['agendado', 'aguardando_adversario']:
+            status_display = m.schedule_status.upper().replace('_', ' ')
+        else:
             status_display = 'AGENDADO PELO ADM'
-            
+
         title = f"{m.player_a.name} vs {m.player_b.name} - {tourn_name} - {club_name}"
         duration = m.tournament.match_duration if m.tournament and m.tournament.match_duration else 90
         local_dt = timezone.localtime(dt)
@@ -1064,6 +1065,7 @@ def athlete_calendar(request):
             'start': local_dt.isoformat(),
             'end': (local_dt + timedelta(minutes=duration)).isoformat(),
             'status': m.schedule_status,
+            'match_status': m.status,
             'is_mine': is_mine,
             'is_completed': is_completed,
             'score_str': score_str,
