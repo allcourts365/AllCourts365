@@ -539,8 +539,14 @@
                         <select name="match_id" id="modal-match-id" onchange="onMatchSelected()" required style="flex: 1; background: transparent; border: none; color: white; font-size: 1.2rem; outline: none;">
                             <option value="" style="background: #1e1e1e; color: #888;">Adicionar jogo (Rodada Atual)</option>
                             {% for sm in standby_matches %}
-                            <option value="{{ sm.id }}" data-adversary="{{ sm.adversary }}" data-duration="{{ sm.duration }}" data-club="{{ sm.club_id }}" data-allow-scheduling="{{ sm.allow_player_scheduling|yesno:'true,false' }}" style="background: #1e1e1e; color: white;">
-                                {{ sm.title }} ({{ sm.tournament }})
+                            <option value="{{ sm.id }}" 
+                                    data-adversary="{{ sm.adversary }}" 
+                                    data-duration="{{ sm.duration }}" 
+                                    data-club="{{ sm.club_id }}" 
+                                    data-allow-scheduling="{{ sm.allow_player_scheduling|yesno:'true,false' }}" 
+                                    style="background: #1e1e1e; color: {% if sm.allow_player_scheduling %}white{% else %}#555{% endif %};"
+                                    {% if not sm.allow_player_scheduling %}disabled{% endif %}>
+                                {{ sm.title }} ({{ sm.tournament }}) {% if not sm.allow_player_scheduling %}- Apenas Admin{% endif %}
                             </option>
                             {% empty %}
                             <option value="" disabled style="background: #1e1e1e; color: #888;">Nenhum jogo da rodada atual disponível</option>
