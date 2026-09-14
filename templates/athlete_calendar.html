@@ -1206,7 +1206,7 @@
             const endMins = (evDate.getHours() * 60) + evDate.getMinutes() + height;
             const endStr = pxToTime(endMins);
             
-            evDiv.innerHTML = `<strong>${ev.title}</strong><br>${startStr} às ${endStr}`;
+            evDiv.innerHTML = `<strong>${ev.title}</strong><br>${startStr} às ${endStr} - ${ev.status_display}`;
             grid.appendChild(evDiv);
         });
     }
@@ -1909,7 +1909,7 @@
                 evDiv.className = `ol-event ${ev.is_mine ? 'mine' : 'occupied'} ${statusClass}`;
                 evDiv.style.top = `${top}px`;
                 evDiv.style.height = `${height}px`;
-                evDiv.innerHTML = `<strong>${ev.title}</strong> - <small>${startStr} às ${endStr} na ${ev.court_name}</small>`;
+                evDiv.innerHTML = `<strong>${ev.title}</strong> - <small>${startStr} às ${endStr} na ${ev.court_name}</small> - <strong>${ev.status_display}</strong>`;
                 evDiv.id = 'ev-div-' + ev.id;
                 // Click to edit own matches
                 if (ev.is_mine && (ev.status === 'aguardando_adversario' || ev.status === 'agendado')) {
@@ -2041,7 +2041,7 @@
                 evDiv.style.overflow = 'hidden';
                 evDiv.style.padding = '2px 4px';
 
-                evDiv.innerHTML = `<strong style="display:block;">${ev.title}</strong><span style="opacity:0.9;">${startStr}–${endStr}</span>`;
+                evDiv.innerHTML = `<strong style="display:block;">${ev.title}</strong><span style="opacity:0.9;">${startStr}-${endStr} na ${ev.court_name} - <strong>${ev.status_display}</strong></span>`;
                 
                 evDiv.id = 'ev-div-' + ev.id;
                 // Click to edit own matches
@@ -2111,7 +2111,7 @@
                     evDiv.style.overflow = 'hidden';
                     evDiv.style.textOverflow = 'ellipsis';
                     evDiv.style.boxShadow = 'none';
-                    evDiv.innerHTML = `${timeStr} - ${ev.title}`;
+                    evDiv.innerHTML = `${timeStr} - ${ev.title} - ${ev.status_display}`;
                     
                     evDiv.id = 'ev-div-' + ev.id;
                     const evLocalDateStr2 = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;

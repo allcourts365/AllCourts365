@@ -984,13 +984,18 @@ def athlete_calendar(request):
         court_name_str = f' na {court.name}' if court else ''
         tourn_name = m.tournament.name if m.tournament else 'Amistoso'
         club_name = m.tournament.club.name if m.tournament and m.tournament.club else (linked_club.name if linked_club else '')
-        status_display = m.schedule_status.upper().replace('_', ' ')
-        title = f"{m.player_a.name} vs {m.player_b.name}{court_name_str} - {tourn_name} - {club_name} - {status_display}"
+        
+        status_display = m.schedule_status.upper().replace('_', ' ') if m.schedule_status else 'AGENDADO PELO ADM'
+        if status_display.lower() == 'unagendado':
+            status_display = 'AGENDADO PELO ADM'
+            
+        title = f"{m.player_a.name} vs {m.player_b.name} - {tourn_name} - {club_name}"
         duration = m.tournament.match_duration if m.tournament and m.tournament.match_duration else 90
         local_dt = timezone.localtime(dt)
         matches_json.append({
             'id': m.id,
             'title': title,
+            'status_display': status_display,
             'start': local_dt.isoformat(),
             'end': (local_dt + timedelta(minutes=duration)).isoformat(),
             'status': m.schedule_status,
@@ -1015,17 +1020,18 @@ def athlete_calendar(request):
         court = m.court if m.court else m.proposed_court
         tourn_name = m.tournament.name if m.tournament else 'Amistoso'
         club_name = m.tournament.club.name if m.tournament and m.tournament.club else ''
-        if is_mine:
-            status_display = m.schedule_status.upper().replace('_', ' ')
-            title = f"{m.player_a.name} vs {m.player_b.name} - {tourn_name} - {club_name} - {status_display}"
-        else:
-            status_str = 'Aguardando Adversário' if m.schedule_status == 'aguardando_adversario' else ('Agendado' if m.schedule_status == 'agendado' else m.schedule_status.capitalize())
-            title = f"Horário Reservado (Status {status_str}) - Jogo do {tourn_name} - ({m.player_a.name} x {m.player_b.name}) - {club_name}"
+        
+        status_display = m.schedule_status.upper().replace('_', ' ') if m.schedule_status else 'AGENDADO PELO ADM'
+        if status_display.lower() == 'unagendado':
+            status_display = 'AGENDADO PELO ADM'
+            
+        title = f"{m.player_a.name} vs {m.player_b.name} - {tourn_name} - {club_name}"
         duration = m.tournament.match_duration if m.tournament and m.tournament.match_duration else 90
         local_dt = timezone.localtime(dt)
         all_matches_json.append({
             'id': m.id,
             'title': title,
+            'status_display': status_display,
             'start': local_dt.isoformat(),
             'end': (local_dt + timedelta(minutes=duration)).isoformat(),
             'status': m.schedule_status,
