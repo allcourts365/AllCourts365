@@ -287,14 +287,23 @@
     .mobile-only {
         display: none !important;
     }
+    .mobile-only-inline {
+        display: none !important;
+    }
     
     @media (max-width: 768px) {
         .desktop-only {
             display: none !important;
         }
+        .desktop-only-inline {
+            display: none !important;
+        }
         
         .mobile-only {
             display: block !important;
+        }
+        .mobile-only-inline {
+            display: inline !important;
         }
 
         .ol-mobile-header.mobile-only {
@@ -1980,7 +1989,11 @@
             // Build header
             let headerHTML = '';
             for (let i = 0; i < 7; i++) {
-                headerHTML += `<div style="flex: 1; text-align: center; padding: 10px 0; border-left: 1px solid var(--ol-border); font-weight: 500;">${dayNames[i]}</div>`;
+                const shortName = dayNames[i].substring(0, 3);
+                headerHTML += `<div style="flex: 1; text-align: center; padding: 10px 0; border-left: 1px solid var(--ol-border); font-weight: 500;">
+                    <span class="desktop-only-inline">${dayNames[i]}</span>
+                    <span class="mobile-only-inline">${shortName}</span>
+                </div>`;
             }
             document.getElementById('month-header').innerHTML = headerHTML;
             
