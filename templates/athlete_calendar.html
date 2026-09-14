@@ -1019,6 +1019,9 @@
     }
     
     function editExistingSchedule(matchId, title, dateStr, timeStr, courtId, status, duration, clubId, canAccept) {
+        if (!dragBlock) {
+            initDragLogic();
+        }
         let select = document.getElementById('modal-match-id');
         let optionExists = Array.from(select.options).some(opt => opt.value == matchId);
         if (!optionExists) {
