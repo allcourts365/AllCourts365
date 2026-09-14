@@ -283,10 +283,267 @@
         transform: translateY(-4px);
     }
 
+    /* Mobile Specific Styles */
+    .mobile-only {
+        display: none !important;
+    }
+    
+    @media (max-width: 768px) {
+        .desktop-only {
+            display: none !important;
+        }
+        
+        .mobile-only {
+            display: block !important;
+        }
+
+        .ol-mobile-header.mobile-only {
+            display: flex !important;
+        }
+
+        .ol-mobile-week-strip.mobile-only {
+            display: grid !important;
+        }
+
+        .ol-fab-container.mobile-only {
+            display: flex !important;
+        }
+
+        .ol-bottom-sheet.mobile-only {
+            display: flex !important;
+        }
+
+        .mobile-only-block {
+            display: block !important;
+        }
+
+        /* Mobile Header */
+        .ol-mobile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background-color: var(--ol-bg);
+            border-bottom: none;
+        }
+        
+        .ol-mobile-header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .ol-mobile-profile-pic {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #555; /* placeholder */
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .ol-mobile-month-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .ol-mobile-header-right {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* Mobile Week Strip */
+        .ol-mobile-week-strip {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            background-color: var(--ol-bg);
+            padding: 10px 0;
+            border-bottom: 1px solid var(--ol-border);
+        }
+        
+        .ol-mobile-week-day-label {
+            font-size: 0.7rem;
+            color: var(--ol-text-muted);
+            margin-bottom: 8px;
+        }
+        
+        .ol-mobile-week-date {
+            width: 36px;
+            height: 36px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        
+        .ol-mobile-week-date.selected {
+            background-color: white;
+            color: black;
+        }
+
+        /* FABs */
+        .ol-fab-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .ol-fab {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: var(--ol-bg);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            border: 1px solid #444;
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: transform 0.1s;
+        }
+        
+        .ol-fab:active {
+            transform: scale(0.95);
+        }
+
+        .ol-fab-primary {
+            background-color: var(--ol-primary);
+            border: none;
+        }
+
+        /* Bottom Sheet for Standby */
+        .ol-bottom-sheet {
+            position: fixed;
+            bottom: -100%;
+            left: 0;
+            right: 0;
+            height: 70vh;
+            background-color: var(--ol-header-bg);
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            z-index: 2000;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+            transition: bottom 0.3s ease-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ol-bottom-sheet.open {
+            bottom: 0;
+        }
+
+        .ol-bottom-sheet-header {
+            padding: 15px;
+            border-bottom: 1px solid var(--ol-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .ol-bottom-sheet-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+        
+        /* Modal tweaks */
+        .ol-modal-content {
+            flex-direction: column !important;
+            height: 90vh !important;
+            max-height: none !important;
+            margin: 5vh auto !important;
+        }
+        .ol-modal-left {
+            width: 100% !important;
+            flex: 1 1 auto !important;
+            border-right: none !important;
+            border-bottom: none !important;
+            padding: 10px !important;
+        }
+        
+        .ol-modal-right {
+            display: none !important;
+        }
+
+        #scheduleModal {
+            background: var(--ol-bg) !important;
+            align-items: flex-start !important;
+        }
+
+        #scheduleModal .ol-modal-content {
+            width: 100vw !important;
+            height: 100vh !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            background: var(--ol-bg) !important;
+        }
+
+        .ol-main {
+            /* Force day view to take full remaining height */
+            flex: 1;
+            height: calc(100vh - 170px); /* Adjust based on new top bars */
+        }
+    }
+
+    /* Mobile Only Flex helper class */
+    .mobile-only-flex {
+        display: none !important;
+    }
+    @media (max-width: 768px) {
+        .mobile-only-flex {
+            display: flex !important;
+        }
+    }
+
 </style>
 
 <div class="ol-container">
-    <div class="ol-toolbar">
+    <!-- Mobile Header -->
+    <div class="ol-mobile-header mobile-only">
+        <div class="ol-mobile-header-left">
+            <div class="ol-mobile-profile-pic">
+                {% if active_profile and active_profile.user.avatar %}
+                    <img src="{{ active_profile.user.avatar.url }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                {% endif %}
+            </div>
+            <div class="ol-mobile-month-title" id="mobile-month-title">Setembro</div>
+        </div>
+        <div class="ol-mobile-header-right" style="gap: 20px;">
+            <div style="position: relative;">
+                <div id="mobile-view-selector-icon" onclick="toggleMobileViewDropdown()" style="cursor: pointer; display: flex; align-items: center; justify-content: center; color: white;">
+                    <i class="fas fa-columns" style="font-size: 1.2rem;"></i>
+                </div>
+                <div id="mobile-view-dropdown" style="display: none; position: absolute; right: -10px; top: 30px; background: #2d2d2d; border: 1px solid #444; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); width: 140px; z-index: 2000;">
+                    <div onclick="changeView('day'); toggleMobileViewDropdown();" class="ol-filter-item" style="padding: 12px 15px; color: white; cursor: pointer; display: flex; align-items: center; gap: 10px;">
+                        <i class="far fa-square" style="width: 20px; text-align: center;"></i> Dia
+                    </div>
+                    <div onclick="changeView('week'); toggleMobileViewDropdown();" class="ol-filter-item" style="padding: 12px 15px; color: white; cursor: pointer; display: flex; align-items: center; gap: 10px; border-top: 1px solid #444;">
+                        <i class="fas fa-columns" style="width: 20px; text-align: center;"></i> 3 Dias
+                    </div>
+                    <div onclick="changeView('month'); toggleMobileViewDropdown();" class="ol-filter-item" style="padding: 12px 15px; color: white; cursor: pointer; display: flex; align-items: center; gap: 10px; border-top: 1px solid #444;">
+                        <i class="fas fa-th" style="width: 20px; text-align: center;"></i> Mês
+                    </div>
+                </div>
+            </div>
+            <i class="fas fa-search" style="font-size: 1.2rem; cursor: pointer; color: white;" onclick="toggleFilterDropdown()"></i>
+        </div>
+    </div>
+
+    <!-- Desktop Toolbar -->
+    <div class="desktop-only">
+        <div class="ol-toolbar">
         <a href="{% url 'athlete_dashboard' %}" class="ol-btn" style="text-decoration: none;"><i class="fas fa-arrow-left"></i> Voltar</a>
         <button class="ol-btn ol-btn-primary" onclick="openEmptyScheduleModal()"><i class="fas fa-plus"></i> Agendar</button>
         <div style="width: 1px; height: 20px; background: var(--ol-border); margin: 0 10px;"></div>
@@ -395,11 +652,13 @@
                 {% endfor %}
             </select>
         </div>
+        </div>
     </div>
 
     <div class="ol-body">
         <!-- Sidebar -->
-        <div class="ol-sidebar">
+        <div class="desktop-only" style="display: flex; flex-direction: column; height: 100%;">
+            <div class="ol-sidebar" style="flex: 1;">
             <div class="ol-mini-cal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: bold; font-size: 0.95rem;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <i class="fas fa-chevron-down" style="font-size: 0.75rem; cursor: pointer; color: var(--ol-text-muted);"></i>
@@ -451,9 +710,10 @@
                     {% endfor %}
                 </div>
             </div>
+            </div>
         </div>
 
-        <!-- Main Calendar -->
+        <!-- Main Content -->
         <div class="ol-main">
             <div class="ol-main-header">
                 <button class="ol-btn" onclick="goToToday()" style="border: 1px solid var(--ol-border);">Hoje</button>
@@ -499,38 +759,85 @@
     </div>
 </div>
 
+<!-- Mobile FAB Container -->
+<div class="ol-fab-container mobile-only">
+    <!-- Standby matches button -->
+    <button class="ol-fab" onclick="toggleStandbyBottomSheet()">
+        <i class="fas fa-list-ul"></i>
+    </button>
+    <!-- Add schedule button -->
+    <button class="ol-fab ol-fab-primary" onclick="openEmptyScheduleModal()">
+        <i class="fas fa-plus"></i>
+    </button>
+</div>
+
+<!-- Mobile Bottom Sheet for Standby Matches -->
+<div class="ol-bottom-sheet mobile-only" id="standbyBottomSheet">
+    <div class="ol-bottom-sheet-header">
+        <span>Jogos Aguardando Agendamento</span>
+        <i class="fas fa-times" style="font-size: 1.2rem; cursor: pointer; color: var(--ol-text-muted);" onclick="toggleStandbyBottomSheet()"></i>
+    </div>
+    <div class="ol-bottom-sheet-content">
+        <div id="mobile-standby-list">
+            {% for sm in standby_matches %}
+            <div class="ol-standby-item" onclick="selectStandbyMatch('{{ sm.id }}', '{{ sm.title|escapejs }}', {{ sm.allow_player_scheduling|yesno:'true,false' }}); toggleStandbyBottomSheet();">
+                <strong>{{ sm.title }}</strong><br>
+                <span style="color: var(--ol-text-muted);">{{ sm.tournament }} (Rodada {{ sm.round }}) {% if not sm.allow_player_scheduling %}- Apenas Admin{% endif %}</span>
+            </div>
+            {% empty %}
+            <p style="font-size: 0.9rem; color: var(--ol-text-muted); text-align: center; margin-top: 20px;">Nenhum jogo pendente.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
 
 <!-- Novo Modal Estilo Outlook -->
 <div id="scheduleModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-    <div style="background: #1e1e1e; border: 1px solid #333; border-radius: 6px; width: 850px; height: 550px; color: white; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+    <div class="ol-modal-content" style="background: #1e1e1e; border: 1px solid #333; border-radius: 6px; width: 850px; height: 550px; color: white; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
         
-        <!-- Top Toolbar -->
-        <div style="display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid #333; gap: 15px;">
-            <button id="modal-save-btn" type="button" onclick="submitScheduleForm()" style="background: #0f6cbd; border: none; color: white; padding: 6px 15px; border-radius: 4px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                <i class="far fa-save"></i> <span id="modal-save-btn-text">Salvar</span>
-            </button>
-            <button id="modal-accept-btn" type="button" onclick="submitAcceptSchedule()" style="background: #10b981; border: none; color: white; padding: 6px 15px; border-radius: 4px; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 6px;">
-                <i class="fas fa-check"></i> Aceitar
-            </button>
-            <button id="modal-delete-btn" type="button" onclick="submitDeleteSchedule()" style="background: #d13438; border: none; color: white; padding: 6px 15px; border-radius: 4px; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 6px;">
-                <i class="far fa-trash-alt"></i> Excluir
-            </button>
-            <button type="button" onclick="document.getElementById('scheduleModal').style.display='none'" style="background: none; border: none; color: #ccc; cursor: pointer;">Descartar</button>
-            <div style="flex: 1;"></div>
-            <i class="fas fa-times" style="cursor: pointer; color: #ccc;" onclick="document.getElementById('scheduleModal').style.display='none'"></i>
+        <!-- Desktop Toolbar -->
+        <div class="desktop-only">
+            <div style="display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid #333; gap: 15px;">
+                <button id="modal-save-btn" type="button" onclick="submitScheduleForm()" style="background: #0f6cbd; border: none; color: white; padding: 6px 15px; border-radius: 4px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i class="far fa-save"></i> <span id="modal-save-btn-text">Salvar</span>
+                </button>
+                <button id="modal-accept-btn" type="button" onclick="submitAcceptSchedule()" style="background: #10b981; border: none; color: white; padding: 6px 15px; border-radius: 4px; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 6px;">
+                    <i class="fas fa-check"></i> Aceitar
+                </button>
+                <button id="modal-delete-btn" type="button" onclick="submitDeleteSchedule()" style="background: #d13438; border: none; color: white; padding: 6px 15px; border-radius: 4px; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 6px;">
+                    <i class="far fa-trash-alt"></i> Excluir
+                </button>
+                <button type="button" onclick="document.getElementById('scheduleModal').style.display='none'" style="background: none; border: none; color: #ccc; cursor: pointer;">Descartar</button>
+                <div style="flex: 1;"></div>
+                <i class="fas fa-times" style="cursor: pointer; color: #ccc;" onclick="document.getElementById('scheduleModal').style.display='none'"></i>
+            </div>
+        </div>
+
+        <!-- Mobile Toolbar -->
+        <div class="mobile-only-flex" style="align-items: center; padding: 15px; border-bottom: 1px solid #333; justify-content: space-between;">
+            <i class="fas fa-times" style="font-size: 1.5rem; color: white; cursor: pointer;" onclick="document.getElementById('scheduleModal').style.display='none'"></i>
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <div style="font-size: 1.1rem; font-weight: bold; color: white;" id="mobile-modal-title">Novo Evento</div>
+                <div style="font-size: 0.75rem; color: #888;">AllCourts365</div>
+            </div>
+            <i class="fas fa-check" id="mobile-modal-save-icon" style="font-size: 1.5rem; color: white; cursor: pointer;" onclick="submitScheduleForm()"></i>
         </div>
         
         <!-- Modal Body: Split Pane -->
         <div style="display: flex; flex: 1; overflow: hidden;">
             
             <!-- Left Side: Form -->
-            <div style="flex: 1; padding: 20px; overflow-y: auto;">
+            <div class="ol-modal-left" style="flex: 1; padding: 20px; overflow-y: auto;">
                 <form id="scheduleForm" method="post" action="{% url 'athlete_calendar' %}">
                     {% csrf_token %}
                     <input type="hidden" name="schedule_match" value="1">
                     
                     <div id="modal-accept-helper" style="display: none; background: rgba(16,185,129,0.15); border-left: 4px solid #10b981; padding: 10px; margin-bottom: 15px; border-radius: 4px; font-size: 0.9rem; color: #a7f3d0;">
                         Você pode clicar em <strong>Aceitar</strong> para confirmar este horário, ou escolher um novo horário e clicar em <strong>Salvar Alteração</strong> para fazer uma contra-proposta.
+                    </div>
+                    
+                    <div id="modal-edit-helper" style="display: none; background: rgba(15,108,189,0.15); border-left: 4px solid #0f6cbd; padding: 10px; margin-bottom: 15px; border-radius: 4px; font-size: 0.9rem; color: #93c5fd;">
+                        Ao alterar os dados e salvar, o agendamento atual será cancelado e uma <strong>nova proposta</strong> será enviada para o seu adversário.
                     </div>
                     
                     <!-- Adicionar Jogo -->
@@ -587,11 +894,21 @@
                         <i class="fas fa-align-left" style="width: 30px; text-align: center; color: #888; margin-top: 5px;"></i>
                         <textarea placeholder="Adicione uma descrição..." style="flex: 1; background: transparent; border: none; color: white; font-size: 0.95rem; outline: none; resize: none; height: 100px; font-family: inherit;"></textarea>
                     </div>
+
+                    <!-- Mobile Bottom Buttons -->
+                    <div class="mobile-only-flex" style="flex-direction: column; gap: 10px; margin-top: 20px; padding-bottom: 40px;">
+                        <button id="mobile-bottom-accept-btn" type="button" onclick="submitAcceptSchedule()" style="background: #10b981; border: none; color: white; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; display: none; align-items: center; justify-content: center; gap: 8px;">
+                            <i class="fas fa-check"></i> Aceitar Agendamento
+                        </button>
+                        <button id="mobile-bottom-delete-btn" type="button" onclick="submitDeleteSchedule()" style="background: #d13438; border: none; color: white; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; display: none; align-items: center; justify-content: center; gap: 8px;">
+                            <i class="far fa-trash-alt"></i> Excluir Evento
+                        </button>
+                    </div>
                 </form>
             </div>
             
             <!-- Right Side: Mini Grid (Day View) -->
-            <div style="width: 280px; border-left: 1px solid #333; background: #252525; display: flex; flex-direction: column;">
+            <div class="ol-modal-right" style="width: 280px; border-left: 1px solid #333; background: #252525; display: flex; flex-direction: column;">
                 <div style="padding: 10px 15px; border-bottom: 1px solid #333; font-weight: 600; font-size: 0.9rem;" id="modal-right-date-title">
                     Dia Selecionado
                 </div>
@@ -959,6 +1276,7 @@
 
         document.getElementById('modal-accept-btn').style.display = 'none';
         document.getElementById('modal-accept-helper').style.display = 'none';
+        document.getElementById('modal-edit-helper').style.display = 'none';
         document.getElementById('modal-delete-btn').style.display = 'none';
         document.getElementById('modal-save-btn-text').innerText = 'Salvar';
 
@@ -1000,8 +1318,14 @@
 
         document.getElementById('modal-accept-btn').style.display = 'none';
         document.getElementById('modal-accept-helper').style.display = 'none';
+        document.getElementById('modal-edit-helper').style.display = 'none';
         document.getElementById('modal-delete-btn').style.display = 'none';
+        const mobileDelBtn = document.getElementById('mobile-bottom-delete-btn');
+        if (mobileDelBtn) mobileDelBtn.style.display = 'none';
+        const mobileAccBtn = document.getElementById('mobile-bottom-accept-btn');
+        if (mobileAccBtn) mobileAccBtn.style.display = 'none';
         document.getElementById('modal-save-btn-text').innerText = 'Salvar';
+        document.getElementById('mobile-modal-title').innerText = 'Novo Evento';
 
         // Set default date and time to the current system date and time
         const now = new Date();
@@ -1109,6 +1433,7 @@
             opt.value = matchId;
             opt.text = title;
             opt.setAttribute('data-duration', duration || 90);
+            opt.setAttribute('data-allow-scheduling', allowScheduling ? 'true' : 'false');
             if (clubId) opt.setAttribute('data-club', clubId);
             select.appendChild(opt);
         }
@@ -1127,14 +1452,22 @@
         syncFromInputs();
         
         document.getElementById('modal-save-btn-text').innerText = status === 'agendado' ? 'Reagendar' : 'Salvar Alteração';
+        document.getElementById('mobile-modal-title').innerText = 'Editar Evento';
         document.getElementById('modal-delete-btn').style.display = 'flex';
+        const mobileDelBtn = document.getElementById('mobile-bottom-delete-btn');
+        if (mobileDelBtn) mobileDelBtn.style.display = 'flex';
         
+        const mobileAccBtn = document.getElementById('mobile-bottom-accept-btn');
         if (canAccept) {
             document.getElementById('modal-accept-btn').style.display = 'flex';
             document.getElementById('modal-accept-helper').style.display = 'block';
+            document.getElementById('modal-edit-helper').style.display = 'none';
+            if (mobileAccBtn) mobileAccBtn.style.display = 'flex';
         } else {
             document.getElementById('modal-accept-btn').style.display = 'none';
             document.getElementById('modal-accept-helper').style.display = 'none';
+            document.getElementById('modal-edit-helper').style.display = 'block';
+            if (mobileAccBtn) mobileAccBtn.style.display = 'none';
         }
         
         document.getElementById('scheduleModal').style.display = 'flex';
@@ -1161,9 +1494,31 @@
     }
 
     
+    // Mobile UI state
+    let isBottomSheetOpen = false;
+    
+    function toggleStandbyBottomSheet() {
+        const sheet = document.getElementById('standbyBottomSheet');
+        if (isBottomSheetOpen) {
+            sheet.classList.remove('open');
+        } else {
+            sheet.classList.add('open');
+        }
+        isBottomSheetOpen = !isBottomSheetOpen;
+    }
+
+    const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    const dayNames = ["D", "S", "T", "Q", "Q", "S", "S"];
+
+    function toggleMobileViewDropdown() {
+        const dropdown = document.getElementById('mobile-view-dropdown');
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    }
+
     // Mount the initial layout
     document.addEventListener('DOMContentLoaded', () => {
         renderMiniCalendar();
+        renderMainCalendar();
         renderMainCalendar();
         updateCurrentTimeLine();
         setInterval(updateCurrentTimeLine, 60000); // update every minute
@@ -1181,7 +1536,20 @@
         
         // Dont set active on the filter button
         if(view !== 'filter') {
-            document.getElementById(`btn-view-${view}`).classList.add('active');
+            const btn = document.getElementById(`btn-view-${view}`);
+            if (btn) btn.classList.add('active');
+        }
+
+        // Update mobile view icon and title
+        const mobileIcon = document.getElementById('mobile-view-selector-icon');
+        if (mobileIcon) {
+            if (view === 'day') {
+                mobileIcon.innerHTML = '<i class="far fa-square" style="font-size: 1.2rem;"></i>';
+            } else if (view === 'week') {
+                mobileIcon.innerHTML = '<i class="fas fa-columns" style="font-size: 1.2rem;"></i>';
+            } else if (view === 'month') {
+                mobileIcon.innerHTML = '<i class="fas fa-th" style="font-size: 1.2rem;"></i>';
+            }
         }
 
         if (view === 'day') {
@@ -1238,7 +1606,8 @@
         if (currentView === 'day') {
             currentDate.setDate(currentDate.getDate() + delta);
         } else if (currentView === 'week') {
-            currentDate.setDate(currentDate.getDate() + (delta * 7));
+            const numDays = window.innerWidth <= 768 ? 3 : 7;
+            currentDate.setDate(currentDate.getDate() + (delta * numDays));
         } else if (currentView === 'month') {
             currentDate.setMonth(currentDate.getMonth() + delta);
         }
@@ -1396,25 +1765,53 @@
             });
             
         } else if (currentView === 'week') {
-            // Simplified week view generation
+            const isMobile = window.innerWidth <= 768;
+            const numDays = isMobile ? 3 : 7;
+            
             const startOfWeek = new Date(currentDate);
-            startOfWeek.setDate(currentDate.getDate() - currentDate.getDay()); // Sunday
+            if (!isMobile) {
+                // Desktop: week starts on Sunday
+                startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+            }
+            // Mobile: 3-days view starts on currentDate
             
             const endOfWeek = new Date(startOfWeek);
-            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            endOfWeek.setDate(startOfWeek.getDate() + (numDays - 1));
             
-            document.getElementById('main-date-title').innerText = `${startOfWeek.getDate()}-${endOfWeek.getDate()} de ${monthNames[currentDate.getMonth()]} de ${currentDate.getFullYear()}`;
+            if (isMobile) {
+                const month1 = monthNames[startOfWeek.getMonth()];
+                const month2 = monthNames[endOfWeek.getMonth()];
+                if (month1 === month2) {
+                    document.getElementById('main-date-title').innerText = `${month1}`;
+                } else {
+                    document.getElementById('main-date-title').innerText = `${month1} - ${month2}`;
+                }
+            } else {
+                document.getElementById('main-date-title').innerText = `${startOfWeek.getDate()}-${endOfWeek.getDate()} de ${monthNames[currentDate.getMonth()]} de ${currentDate.getFullYear()}`;
+            }
             
             let headers = '';
             let columns = '';
             
-            for (let i = 0; i < 7; i++) {
+            const dayNamesShort = ['dom.', 'seg.', 'ter.', 'qua.', 'qui.', 'sex.', 'sáb.'];
+
+            for (let i = 0; i < numDays; i++) {
                 const d = new Date(startOfWeek);
                 d.setDate(d.getDate() + i);
-                headers += `<div style="flex: 1; text-align: center; padding: 10px 0; border-left: 1px solid var(--ol-border);">
-                    <div style="font-size: 1.2rem; font-weight: ${d.getDate() === new Date().getDate() ? 'bold' : 'normal'}; color: ${d.getDate() === new Date().getDate() ? 'var(--ol-primary)' : 'inherit'};">${d.getDate()}</div>
-                    <div style="font-size: 0.8rem; color: var(--ol-text-muted);">${dayNames[i]}</div>
-                </div>`;
+                const isToday = (d.getDate() === new Date().getDate() && d.getMonth() === new Date().getMonth() && d.getFullYear() === new Date().getFullYear());
+                
+                if (isMobile) {
+                    headers += `<div style="flex: 1; text-align: center; padding: 10px 0; border-left: 1px solid var(--ol-border); border-bottom: 1px solid var(--ol-border);">
+                        <div style="font-size: 0.85rem; color: ${isToday ? 'var(--ol-text)' : 'var(--ol-text-muted)'}; background-color: ${isToday ? 'white' : 'transparent'}; color: ${isToday ? 'black' : 'inherit'}; border-radius: 12px; display: inline-block; padding: 2px 8px; font-weight: ${isToday ? 'bold' : 'normal'};">
+                            ${dayNamesShort[d.getDay()]} ${d.getDate()}
+                        </div>
+                    </div>`;
+                } else {
+                    headers += `<div style="flex: 1; text-align: center; padding: 10px 0; border-left: 1px solid var(--ol-border);">
+                        <div style="font-size: 1.2rem; font-weight: ${isToday ? 'bold' : 'normal'}; color: ${isToday ? 'var(--ol-primary)' : 'inherit'};">${d.getDate()}</div>
+                        <div style="font-size: 0.8rem; color: var(--ol-text-muted);">${dayNames[d.getDay()]}</div>
+                    </div>`;
+                }
                 
                 let cells = '';
                 for (let h = 0; h < 24; h++) {
@@ -1431,7 +1828,7 @@
             
             let timeLabels = '';
             for (let h = 0; h < 24; h++) {
-                timeLabels += `<div style="height: 60px; text-align: right; padding-right: 10px; font-size: 0.75rem; color: var(--ol-text-muted); position: relative; top: 2px;">${h}:00</div>`;
+                timeLabels += `<div style="height: 60px; text-align: right; padding-right: 10px; font-size: 0.75rem; color: var(--ol-text-muted); position: relative; top: 2px;">${h.toString().padStart(2, '0')}:00</div>`;
             }
             document.getElementById('week-time-labels').innerHTML = timeLabels;
             document.getElementById('week-columns').innerHTML = columns;
@@ -1447,7 +1844,7 @@
                 
                 // Find which day column this event belongs to — compare LOCAL dates
                 let dayIndex = -1;
-                for (let i = 0; i < 7; i++) {
+                for (let i = 0; i < numDays; i++) {
                     const d = new Date(startOfWeek);
                     d.setDate(d.getDate() + i);
                     const dLocal = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
