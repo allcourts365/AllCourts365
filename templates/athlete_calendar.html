@@ -281,6 +281,11 @@
         border-left: 4px solid #16a34a !important;
         color: #064e3b !important;
     }
+    .ol-event.finalizado {
+        background-color: #86efac !important;
+        border-left: 4px solid #16a34a !important;
+        color: #064e3b !important;
+    }
 
     #modal-drag-time-label,
     #modal-drag-block,
@@ -1214,7 +1219,7 @@
             }
             let htmlContent = `<strong>${ev.title}</strong><br>${miniMiddleText} - ${ev.status_display}`;
             if (ev.is_completed && ev.score_str) {
-                htmlContent += `<br><small style="color: #4ade80;">${ev.score_str}</small>`;
+                htmlContent += `<br><small style="font-weight: bold;">${ev.score_str}</small>`;
             }
             evDiv.innerHTML = htmlContent;
             grid.appendChild(evDiv);
@@ -1905,7 +1910,9 @@
                 const height = ev.duration || 90;
                 
                 let statusClass = '';
-                if (ev.status === 'aguardando_adversario') {
+                if (ev.is_completed) {
+                    statusClass = 'finalizado';
+                } else if (ev.status === 'aguardando_adversario') {
                     statusClass = 'aguardando';
                 } else if (ev.status === 'agendado') {
                     statusClass = 'agendado';
@@ -1927,7 +1934,7 @@
                 }
                 let htmlContent = `<strong>${ev.title}</strong> - <small>${middleText}</small> - <strong>${ev.status_display}</strong>`;
                 if (ev.is_completed && ev.score_str) {
-                    htmlContent += `<br><small style="color: #4ade80;">${ev.score_str}</small>`;
+                    htmlContent += `<br><small style="font-weight: bold;">${ev.score_str}</small>`;
                 }
                 evDiv.innerHTML = htmlContent;
                 evDiv.id = 'ev-div-' + ev.id;
@@ -2038,7 +2045,8 @@
                 const height = ev.duration || 90;
                 
                 let statusClass = '';
-                if (ev.status === 'aguardando_adversario') statusClass = 'aguardando';
+                if (ev.is_completed) statusClass = 'finalizado';
+                else if (ev.status === 'aguardando_adversario') statusClass = 'aguardando';
                 else if (ev.status === 'agendado') statusClass = 'agendado';
                 
                 const startStr = `${evDate.getHours().toString().padStart(2,'0')}:${evDate.getMinutes().toString().padStart(2,'0')}`;
@@ -2069,7 +2077,7 @@
                 }
                 let htmlContent = `<strong style="display:block;">${ev.title}</strong><span style="opacity:0.9;">${timeSpanText} - <strong>${ev.status_display}</strong></span>`;
                 if (ev.is_completed && ev.score_str) {
-                    htmlContent += `<br><span style="color: #4ade80;">${ev.score_str}</span>`;
+                    htmlContent += `<br><span style="font-weight: bold;">${ev.score_str}</span>`;
                 }
                 evDiv.innerHTML = htmlContent;
                 
@@ -2123,7 +2131,8 @@
                 let eventsHTML = '';
                 dayEvents.forEach(ev => {
                     let statusClass = '';
-                    if (ev.status === 'aguardando_adversario') statusClass = 'aguardando';
+                    if (ev.is_completed) statusClass = 'finalizado';
+                    else if (ev.status === 'aguardando_adversario') statusClass = 'aguardando';
                     else if (ev.status === 'agendado') statusClass = 'agendado';
                     
                     const d = new Date(ev.start);
@@ -2149,7 +2158,7 @@
                     }
                     let htmlContent = `${monthMiddleText} - ${ev.title} - ${ev.status_display}`;
                     if (ev.is_completed && ev.score_str) {
-                        htmlContent += ` | <span style="color: #4ade80;">${ev.score_str}</span>`;
+                        htmlContent += ` | <span style="font-weight: bold;">${ev.score_str}</span>`;
                     }
                     evDiv.innerHTML = htmlContent;
                     
