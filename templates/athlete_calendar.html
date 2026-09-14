@@ -171,6 +171,7 @@
         display: flex;
         flex-direction: column;
         position: relative;
+        min-width: 0; /* Override flex minimum size constraint */
     }
 
     .ol-main-header {
@@ -301,6 +302,23 @@
         }
         .ol-container {
             height: 100vh !important;
+        }
+        
+        .ol-main-header {
+            padding: 0 5px !important;
+            gap: 5px !important;
+        }
+        
+        .ol-main-header .ol-btn {
+            padding: 4px 8px !important;
+            font-size: 0.8rem !important;
+        }
+        
+        .ol-date-title {
+            font-size: 1rem !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .desktop-only {
