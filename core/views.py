@@ -969,6 +969,7 @@ def athlete_calendar(request):
                 'tournament': m.tournament.name if m.tournament else '',
                 'duration': m.tournament.match_duration if m.tournament and m.tournament.match_duration else 90,
                 'club_id': m.tournament.club_id if m.tournament else None,
+                'allow_player_scheduling': m.tournament.allow_player_scheduling if m.tournament else True,
             })
 
     # Build matches_json (user's own matches for calendar display)
@@ -999,6 +1000,7 @@ def athlete_calendar(request):
             'duration': duration,
             'adversary': m.player_b.name if m.player_a_id in my_profile_ids else m.player_a.name,
             'can_accept': m.schedule_status == 'aguardando_adversario' and m.proposed_by_id and m.proposed_by_id not in my_profile_ids,
+            'allow_player_scheduling': m.tournament.allow_player_scheduling if m.tournament else True,
         })
 
     # Build all_matches_json (all club matches for occupation display)
@@ -1031,6 +1033,7 @@ def athlete_calendar(request):
             'club_id': m.tournament.club_id if m.tournament else None,
             'duration': duration,
             'can_accept': m.schedule_status == 'aguardando_adversario' and m.proposed_by_id and m.proposed_by_id not in my_profile_ids,
+            'allow_player_scheduling': m.tournament.allow_player_scheduling if m.tournament else True,
         })
 
     # Club opening hours for frontend validation

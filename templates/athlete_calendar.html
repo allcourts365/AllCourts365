@@ -442,7 +442,7 @@
                 <div class="ol-standby-title">Jogos Aguardando Agendamento</div>
                 <div id="standby-list">
                     {% for sm in standby_matches %}
-                    <div class="ol-standby-item" onclick="selectStandbyMatch('{{ sm.id }}', '{{ sm.title }}')">
+                    <div class="ol-standby-item" onclick="selectStandbyMatch('{{ sm.id }}', '{{ sm.title|escapejs }}', {{ sm.allow_player_scheduling|yesno:'true,false' }})">
                         <strong>{{ sm.title }}</strong><br>
                         <span style="color: var(--ol-text-muted);">{{ sm.tournament }} (Rodada {{ sm.round }})</span>
                     </div>
@@ -539,7 +539,7 @@
                         <select name="match_id" id="modal-match-id" onchange="onMatchSelected()" required style="flex: 1; background: transparent; border: none; color: white; font-size: 1.2rem; outline: none;">
                             <option value="" style="background: #1e1e1e; color: #888;">Adicionar jogo (Rodada Atual)</option>
                             {% for sm in standby_matches %}
-                            <option value="{{ sm.id }}" data-adversary="{{ sm.adversary }}" data-duration="{{ sm.duration }}" data-club="{{ sm.club_id }}" style="background: #1e1e1e; color: white;">
+                            <option value="{{ sm.id }}" data-adversary="{{ sm.adversary }}" data-duration="{{ sm.duration }}" data-club="{{ sm.club_id }}" data-allow-scheduling="{{ sm.allow_player_scheduling|yesno:'true,false' }}" style="background: #1e1e1e; color: white;">
                                 {{ sm.title }} ({{ sm.tournament }})
                             </option>
                             {% empty %}
@@ -891,6 +891,14 @@
         const opt = sel.options[sel.selectedIndex];
         
         if (opt && opt.value) {
+            const allowScheduling = opt.getAttribute('data-allow-scheduling') === 'true';
+            if (!allowScheduling) {
+                alert('O agendamento deste jogo só é realizado pelo Administrador.');
+                sel.value = '';
+                document.getElementById('scheduleModal').style.display = 'none';
+                return;
+            }
+
             const adversary = opt.getAttribute('data-adversary');
             const duration = parseInt(opt.getAttribute('data-duration') || 90);
             const clubId = opt.getAttribute('data-club');
@@ -964,7 +972,12 @@
         }
     }
 
-    function selectStandbyMatch(id, title) {
+    function selectStandbyMatch(id, title, allowScheduling) {
+        if (allowScheduling === false) {
+            alert('O agendamento deste jogo só é realizado pelo Administrador.');
+            return;
+        }
+
         if (!dragBlock) {
             initDragLogic();
         }
@@ -1055,7 +1068,12 @@
         form.submit();
     }
     
-    function editExistingSchedule(matchId, title, dateStr, timeStr, courtId, status, duration, clubId, canAccept) {
+    function editExistingSchedule(matchId, title, dateStr, timeStr, courtId, status, duration, clubId, canAccept, allowScheduling) {
+        if (allowScheduling === false) {
+            alert('O agendamento deste jogo só é realizado pelo Administrador.');
+            return;
+        }
+        
         if (!dragBlock) {
             initDragLogic();
         }
@@ -1347,7 +1365,7 @@
                 if (ev.is_mine && (ev.status === 'aguardando_adversario' || ev.status === 'agendado')) {
                     evDiv.style.cursor = 'pointer';
                     evDiv.title = 'Clique para editar ou excluir este agendamento';
-                    evDiv.onclick = () => editExistingSchedule(ev.id, ev.title, dateStr, startStr, ev.court_id, ev.status, ev.duration || 90, ev.club_id, ev.can_accept);
+                    evDiv.onclick = () => editExistingSchedule(ev.id, ev.title, dateStr, startStr, ev.court_id, ev.status, ev.duration || 90, ev.club_id, ev.can_accept, ev.allow_player_scheduling);
                 }
                 timeGrid.appendChild(evDiv);
             });
@@ -1451,7 +1469,7 @@
                     evDiv.title = 'Clique para editar ou excluir este agendamento';
                     const evLocalDateStr2 = `${evDate.getFullYear()}-${String(evDate.getMonth()+1).padStart(2,'0')}-${String(evDate.getDate()).padStart(2,'0')}`;
                     const evStartStr2 = `${evDate.getHours().toString().padStart(2,'0')}:${evDate.getMinutes().toString().padStart(2,'0')}`;
-                    evDiv.onclick = () => editExistingSchedule(ev.id, ev.title, evLocalDateStr2, evStartStr2, ev.court_id, ev.status, ev.duration || 90, ev.club_id, ev.can_accept);
+                    evDiv.onclick = () => editExistingSchedule(ev.id, ev.title, evLocalDateStr2, evStartStr2, ev.court_id, ev.status, ev.duration || 90, ev.club_id, ev.can_accept, ev.allow_player_scheduling);
                 }
                 
                 weekCols[dayIndex].appendChild(evDiv);
@@ -1516,7 +1534,7 @@
                         evDiv.style.cursor = 'pointer';
                         evDiv.title = 'Clique para editar ou excluir este agendamento';
                         const evLocalDateStr2 = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                        evDiv.onclick = () => editExistingSchedule(ev.id, ev.title, evLocalDateStr2, timeStr, ev.court_id, ev.status, ev.duration || 90, ev.club_id, ev.can_accept);
+                        evDiv.onclick = () => editExistingSchedule(ev.id, ev.title, evLocalDateStr2, timeStr, ev.court_id, ev.status, ev.duration || 90, ev.club_id, ev.can_accept, ev.allow_player_scheduling);
                     }
                     eventsHTML += evDiv.outerHTML;
                 });
