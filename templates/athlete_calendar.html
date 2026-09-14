@@ -296,6 +296,13 @@
     }
     
     @media (max-width: 768px) {
+        nav.glass-nav {
+            display: none !important;
+        }
+        .ol-container {
+            height: 100vh !important;
+        }
+
         .desktop-only {
             display: none !important;
         }
@@ -526,6 +533,9 @@
     <!-- Mobile Header -->
     <div class="ol-mobile-header mobile-only">
         <div class="ol-mobile-header-left">
+            <a href="javascript:history.back()" style="color: white; margin-right: 15px; text-decoration: none; display: flex; align-items: center;">
+                <i class="fas fa-chevron-left" style="font-size: 1.2rem;"></i>
+            </a>
             <div class="ol-mobile-profile-pic">
                 {% if active_profile and active_profile.user.avatar %}
                     <img src="{{ active_profile.user.avatar.url }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
