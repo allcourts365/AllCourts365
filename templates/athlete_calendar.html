@@ -1040,6 +1040,13 @@
     
     function submitAcceptSchedule() {
         let form = document.getElementById('scheduleForm');
+        
+        // Disable the schedule_match input so backend doesn't trigger the scheduling logic
+        const scheduleMatchInput = form.querySelector('input[name="schedule_match"]');
+        if (scheduleMatchInput) {
+            scheduleMatchInput.disabled = true;
+        }
+
         let input = document.createElement('input');
         input.type = 'hidden';
         input.name = 'accept_schedule';
