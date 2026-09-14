@@ -1284,7 +1284,7 @@
                 if (evLocalDate !== dateStr) return;
                 
                 const top = (evDate.getHours() * 60) + evDate.getMinutes();
-                const height = 90; // Default 1.5 hours
+                const height = ev.duration || 90;
                 
                 let statusClass = '';
                 if (ev.status === 'aguardando_adversario') {
