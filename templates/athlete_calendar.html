@@ -821,10 +821,37 @@
             let endPx = timeToPx(end);
             if(endPx <= startPx) endPx = startPx + 30; // minimum 30 min block if invalid
             
+            let bg = '#60a5fa'; // default blue
+            let borderLeft = '';
+            let color = 'white';
+            let title = '';
+
+            const currentEditingMatchId = document.getElementById('modal-match-id').value;
+            if (currentEditingMatchId) {
+                const match = allMatchesJson.find(m => m.id == currentEditingMatchId);
+                if (match) {
+                    title = `<strong>${match.title}</strong><br>`;
+                    if (match.status === 'aguardando_adversario') {
+                        bg = 'rgba(220, 38, 38, 0.4)';
+                        borderLeft = '4px solid #dc2626';
+                    } else if (match.status === 'agendado') {
+                        bg = '#86efac';
+                        borderLeft = '4px solid #16a34a';
+                        color = '#064e3b';
+                    } else {
+                        bg = '#4b5563';
+                        borderLeft = '4px solid #374151';
+                    }
+                }
+            }
+
+            dragBlock.style.backgroundColor = bg;
+            dragBlock.style.borderLeft = borderLeft;
+            dragBlock.style.color = color;
             dragBlock.style.display = 'block';
             dragBlock.style.top = startPx + 'px';
             dragBlock.style.height = (endPx - startPx) + 'px';
-            document.getElementById('modal-drag-time-label').innerText = `${start} às ${pxToTime(endPx)}`;
+            document.getElementById('modal-drag-time-label').innerHTML = `${title}${start} às ${pxToTime(endPx)}`;
         }
     }
 
