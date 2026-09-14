@@ -1994,9 +1994,8 @@
             let headerHTML = '';
             for (let i = 0; i < 7; i++) {
                 const shortName = dayNames[i].substring(0, 3);
-                headerHTML += `<div style="flex: 1; text-align: center; padding: 10px 0; border-left: 1px solid var(--ol-border); font-weight: 500;">
-                    <span class="desktop-only-inline">${dayNames[i]}</span>
-                    <span class="mobile-only-inline">${shortName}</span>
+                headerHTML += `<div style="flex: 1; text-align: center; padding: 10px 0; border-left: 1px solid var(--ol-border); font-weight: 500; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    ${shortName}
                 </div>`;
             }
             document.getElementById('month-header').innerHTML = headerHTML;
