@@ -967,6 +967,8 @@ def athlete_calendar(request):
                 'title': f"{m.player_a.name} vs {m.player_b.name}",
                 'adversary': adversary,
                 'tournament': m.tournament.name if m.tournament else '',
+                'round': m.round_number if hasattr(m, 'round_number') else '',
+                'club_name': m.tournament.club.name if m.tournament and m.tournament.club else '',
                 'duration': m.tournament.match_duration if m.tournament and m.tournament.match_duration else 90,
                 'club_id': m.tournament.club_id if m.tournament else None,
                 'allow_player_scheduling': m.tournament.allow_player_scheduling if m.tournament else True,
