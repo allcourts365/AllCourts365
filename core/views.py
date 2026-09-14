@@ -864,6 +864,59 @@ def athlete_calendar(request):
 
             return redirect('athlete_calendar')
 
+        elif 'accept_schedule' in request.POST:
+            match_id = request.POST.get('match_id')
+            try:
+                match = Match.objects.get(id=match_id)
+                active_profile = match.player_a if match.player_a and match.player_a.user == user else (match.player_b if match.player_b and match.player_b.user == user else active_profile)
+
+                # Marcar mensagens relacionadas como lidas
+                from core.models import Message
+                Message.objects.filter(related_match=match, recipient=user, is_read=False).update(is_read=True)
+
+                # Verifica se a pessoa logada é realmente do jogo
+                if active_profile not in [match.player_a, match.player_b]:
+                    messages.error(request, 'Permissão negada.')
+                    return redirect('athlete_calendar')
+
+                if match.schedule_status != 'aguardando_adversario':
+                    messages.error(request, 'Não há proposta pendente para este jogo.')
+                    return redirect('athlete_calendar')
+
+                # Checa conflitos
+                conflict_start = match.proposed_datetime - timedelta(minutes=89)
+                conflict_end = match.proposed_datetime + timedelta(minutes=89)
+
+                conflicts = Match.objects.filter(
+                    court=match.proposed_court,
+                    scheduled_datetime__range=(conflict_start, conflict_end)
+                ).exclude(id=match.id)
+
+                if conflicts.exists():
+                    messages.error(request, 'A quadra não está mais disponível neste horário. Por favor, recuse e proponha um novo horário.')
+                else:
+                    match.scheduled_datetime = match.proposed_datetime
+                    match.court = match.proposed_court
+                    match.schedule_status = 'agendado'
+                    match.save()
+
+                    if match.proposed_by and match.proposed_by.user:
+                        local_dt = timezone.localtime(match.scheduled_datetime)
+                        Message.objects.create(
+                            sender=user,
+                            recipient=match.proposed_by.user,
+                            subject="Agendamento Aceito!",
+                            body=f"{active_profile.name} aceitou sua proposta! O jogo {match.tournament.name} do {match.tournament.club.name} foi marcado para {local_dt.strftime('%d/%m/%Y às %H:%M')} na quadra {match.court.name}.",
+                            related_match=match
+                        )
+                    messages.success(request, 'Agendamento confirmado com sucesso!')
+            except Match.DoesNotExist:
+                messages.error(request, 'Jogo não encontrado.')
+            except Exception as e:
+                messages.error(request, f'Erro: {str(e)}')
+
+            return redirect('athlete_calendar')
+
 
         elif 'delete_schedule' in request.POST:
             match_id = request.POST.get('match_id')
@@ -945,6 +998,7 @@ def athlete_calendar(request):
             'club_id': m.tournament.club_id if m.tournament else None,
             'duration': duration,
             'adversary': m.player_b.name if m.player_a_id in my_profile_ids else m.player_a.name,
+            'can_accept': m.schedule_status == 'aguardando_adversario' and m.proposed_by_id and m.proposed_by_id not in my_profile_ids,
         })
 
     # Build all_matches_json (all club matches for occupation display)
@@ -976,6 +1030,7 @@ def athlete_calendar(request):
             'court_name': court.name if court else '',
             'club_id': m.tournament.club_id if m.tournament else None,
             'duration': duration,
+            'can_accept': m.schedule_status == 'aguardando_adversario' and m.proposed_by_id and m.proposed_by_id not in my_profile_ids,
         })
 
     # Club opening hours for frontend validation

@@ -1222,23 +1222,8 @@
                             <div style="display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; align-items: center;">
                                 {% if msg.related_match and msg.related_match.schedule_status == 'aguardando_adversario' and msg.related_match.proposed_by != my_player_profile %}
                                     {% if msg.subject == 'Proposta de Agendamento' or msg.subject == 'Reagendamento Proposto' %}
-                                        <form method="post" style="display: inline; margin: 0;">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="match_id" value="{{ msg.related_match.id }}">
-                                            <button type="submit" name="decline_schedule" style="height: 38px; padding: 0 18px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 700; background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.5);">Recusar e Propor Novo</button>
-                                        </form>
-                                        <form method="post" style="display: inline; margin: 0;">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="match_id" value="{{ msg.related_match.id }}">
-                                            <button type="submit" name="accept_schedule" style="height: 38px; padding: 0 18px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 700; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.5);">Aceitar Agendamento</button>
-                                        </form>
-                                    {% endif %}
-                                {% endif %}
-                                
-                                {% if msg.related_match and msg.related_match.schedule_status == 'unagendado' and msg.related_match.status == 'pending' %}
-                                    {% if msg.subject == 'Proposta de Agendamento' or msg.subject == 'Reagendamento Proposto' %}
-                                        <button onclick="window.location.href='{% url 'athlete_calendar' %}'" style="height: 38px; padding: 0 18px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 700; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.5);">
-                                            <i class="fas fa-calendar-plus"></i> Propor Novo Horário
+                                        <button onclick="window.location.href='{% url 'athlete_calendar' %}?open_match_id={{ msg.related_match.id }}'" style="height: 38px; padding: 0 18px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; font-weight: 700; background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.5);">
+                                            <i class="fas fa-calendar-alt"></i> Ir para o agendamento
                                         </button>
                                     {% endif %}
                                 {% endif %}

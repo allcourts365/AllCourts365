@@ -509,6 +509,9 @@
             <button id="modal-save-btn" type="button" onclick="submitScheduleForm()" style="background: #0f6cbd; border: none; color: white; padding: 6px 15px; border-radius: 4px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                 <i class="far fa-save"></i> <span id="modal-save-btn-text">Salvar</span>
             </button>
+            <button id="modal-accept-btn" type="button" onclick="submitAcceptSchedule()" style="background: #10b981; border: none; color: white; padding: 6px 15px; border-radius: 4px; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 6px;">
+                <i class="fas fa-check"></i> Aceitar
+            </button>
             <button id="modal-delete-btn" type="button" onclick="submitDeleteSchedule()" style="background: #d13438; border: none; color: white; padding: 6px 15px; border-radius: 4px; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 6px;">
                 <i class="far fa-trash-alt"></i> Excluir
             </button>
@@ -525,6 +528,10 @@
                 <form id="scheduleForm" method="post" action="{% url 'athlete_calendar' %}">
                     {% csrf_token %}
                     <input type="hidden" name="schedule_match" value="1">
+                    
+                    <div id="modal-accept-helper" style="display: none; background: rgba(16,185,129,0.15); border-left: 4px solid #10b981; padding: 10px; margin-bottom: 15px; border-radius: 4px; font-size: 0.9rem; color: #a7f3d0;">
+                        Você pode clicar em <strong>Aceitar</strong> para confirmar este horário, ou escolher um novo horário e clicar em <strong>Salvar Alteração</strong> para fazer uma contra-proposta.
+                    </div>
                     
                     <!-- Adicionar Jogo -->
                     <div style="display: flex; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px;">
@@ -896,6 +903,11 @@
             initDragLogic();
         }
 
+        document.getElementById('modal-accept-btn').style.display = 'none';
+        document.getElementById('modal-accept-helper').style.display = 'none';
+        document.getElementById('modal-delete-btn').style.display = 'none';
+        document.getElementById('modal-save-btn-text').innerText = 'Salvar';
+
         document.getElementById('modal-date').value = dateStr;
         document.getElementById('modal-time').value = timeStr;
         
@@ -926,6 +938,11 @@
         if (!dragBlock) {
             initDragLogic();
         }
+
+        document.getElementById('modal-accept-btn').style.display = 'none';
+        document.getElementById('modal-accept-helper').style.display = 'none';
+        document.getElementById('modal-delete-btn').style.display = 'none';
+        document.getElementById('modal-save-btn-text').innerText = 'Salvar';
 
         // Set default date and time to the current system date and time
         const now = new Date();
@@ -991,7 +1008,17 @@
         form.submit();
     }
     
-    function editExistingSchedule(matchId, title, dateStr, timeStr, courtId, status, duration, clubId) {
+    function submitAcceptSchedule() {
+        let form = document.getElementById('scheduleForm');
+        let input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'accept_schedule';
+        input.value = '1';
+        form.appendChild(input);
+        form.submit();
+    }
+    
+    function editExistingSchedule(matchId, title, dateStr, timeStr, courtId, status, duration, clubId, canAccept) {
         let select = document.getElementById('modal-match-id');
         let optionExists = Array.from(select.options).some(opt => opt.value == matchId);
         if (!optionExists) {
@@ -1018,6 +1045,14 @@
         
         document.getElementById('modal-save-btn-text').innerText = status === 'agendado' ? 'Reagendar' : 'Salvar Alteração';
         document.getElementById('modal-delete-btn').style.display = 'flex';
+        
+        if (canAccept) {
+            document.getElementById('modal-accept-btn').style.display = 'flex';
+            document.getElementById('modal-accept-helper').style.display = 'block';
+        } else {
+            document.getElementById('modal-accept-btn').style.display = 'none';
+            document.getElementById('modal-accept-helper').style.display = 'none';
+        }
         
         document.getElementById('scheduleModal').style.display = 'flex';
         setTimeout(() => {
@@ -1267,11 +1302,12 @@
                 evDiv.style.top = `${top}px`;
                 evDiv.style.height = `${height}px`;
                 evDiv.innerHTML = `<strong>${ev.title}</strong> - <small>${startStr} às ${endStr} na ${ev.court_name}</small>`;
+                evDiv.id = 'ev-div-' + ev.id;
                 // Click to edit own matches
                 if (ev.is_mine && (ev.status === 'aguardando_adversario' || ev.status === 'agendado')) {
                     evDiv.style.cursor = 'pointer';
                     evDiv.title = 'Clique para editar ou excluir este agendamento';
-                    evDiv.onclick = () => editExistingSchedule(ev.id, ev.title, dateStr, startStr, ev.court_id, ev.status, ev.duration || 90, ev.club_id);
+                    evDiv.onclick = () => editExistingSchedule(ev.id, ev.title, dateStr, startStr, ev.court_id, ev.status, ev.duration || 90, ev.club_id, ev.can_accept);
                 }
                 timeGrid.appendChild(evDiv);
             });
@@ -1368,13 +1404,14 @@
 
                 evDiv.innerHTML = `<strong style="display:block;">${ev.title}</strong><span style="opacity:0.9;">${startStr}–${endStr}</span>`;
                 
+                evDiv.id = 'ev-div-' + ev.id;
                 // Click to edit own matches
                 if (ev.is_mine && (ev.status === 'aguardando_adversario' || ev.status === 'agendado')) {
                     evDiv.style.cursor = 'pointer';
                     evDiv.title = 'Clique para editar ou excluir este agendamento';
                     const evLocalDateStr2 = `${evDate.getFullYear()}-${String(evDate.getMonth()+1).padStart(2,'0')}-${String(evDate.getDate()).padStart(2,'0')}`;
                     const evStartStr2 = `${evDate.getHours().toString().padStart(2,'0')}:${evDate.getMinutes().toString().padStart(2,'0')}`;
-                    evDiv.onclick = () => editExistingSchedule(ev.id, ev.title, evLocalDateStr2, evStartStr2, ev.court_id, ev.status, ev.duration || 90, ev.club_id);
+                    evDiv.onclick = () => editExistingSchedule(ev.id, ev.title, evLocalDateStr2, evStartStr2, ev.court_id, ev.status, ev.duration || 90, ev.club_id, ev.can_accept);
                 }
                 
                 weekCols[dayIndex].appendChild(evDiv);
@@ -1419,7 +1456,29 @@
                     
                     const d = new Date(ev.start);
                     const timeStr = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-                    eventsHTML += `<div class="ol-event ${ev.is_mine ? 'mine' : 'occupied'} ${statusClass}" style="position: relative; left: 0; right: 0; padding: 2px 4px; margin-bottom: 2px; font-size: 0.65rem; border-radius: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: none;">${timeStr} - ${ev.title}</div>`;
+                    const evDiv = document.createElement('div');
+                    evDiv.className = `ol-event ${ev.is_mine ? 'mine' : 'occupied'} ${statusClass}`;
+                    evDiv.style.position = 'relative';
+                    evDiv.style.left = '0';
+                    evDiv.style.right = '0';
+                    evDiv.style.padding = '2px 4px';
+                    evDiv.style.marginBottom = '2px';
+                    evDiv.style.fontSize = '0.65rem';
+                    evDiv.style.borderRadius = '2px';
+                    evDiv.style.whiteSpace = 'nowrap';
+                    evDiv.style.overflow = 'hidden';
+                    evDiv.style.textOverflow = 'ellipsis';
+                    evDiv.style.boxShadow = 'none';
+                    evDiv.innerHTML = `${timeStr} - ${ev.title}`;
+                    
+                    evDiv.id = 'ev-div-' + ev.id;
+                    if (ev.is_mine && (ev.status === 'aguardando_adversario' || ev.status === 'agendado')) {
+                        evDiv.style.cursor = 'pointer';
+                        evDiv.title = 'Clique para editar ou excluir este agendamento';
+                        const evLocalDateStr2 = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                        evDiv.onclick = () => editExistingSchedule(ev.id, ev.title, evLocalDateStr2, timeStr, ev.court_id, ev.status, ev.duration || 90, ev.club_id, ev.can_accept);
+                    }
+                    eventsHTML += evDiv.outerHTML;
                 });
                 
                 gridHTML += `<div style="width: calc(100% / 7); border-left: 1px solid var(--ol-border); border-bottom: 1px solid var(--ol-border); padding: 5px; min-height: 100px; box-sizing: border-box;">
@@ -1468,7 +1527,26 @@
         el.classList.add('selected-slot');
     }
 
-
+    window.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const openMatchId = urlParams.get('open_match_id');
+        
+        if (openMatchId) {
+            const matchToOpen = matches_json.find(m => m.id == openMatchId);
+            if (matchToOpen && matchToOpen.start) {
+                const matchDate = new Date(matchToOpen.start);
+                currentDate = matchDate;
+                changeView('day'); // Renderiza a aba Dia com a data do jogo e abre modal
+                
+                setTimeout(() => {
+                    const evDiv = document.getElementById(`ev-div-${openMatchId}`);
+                    if (evDiv) {
+                        evDiv.click();
+                    }
+                }, 200);
+            }
+        }
+    });
 </script>
 
 {% endblock %}
