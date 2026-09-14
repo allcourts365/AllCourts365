@@ -1057,6 +1057,7 @@ def athlete_calendar(request):
         'matches_json': json.dumps(matches_json),
         'all_matches_json': json.dumps(all_matches_json),
         'standby_matches': standby_matches,
+        'standby_matches_json': json.dumps(standby_matches),
         'clubs_hours_json': json.dumps(clubs_hours_json),
     }
     return render(request, 'athlete_calendar.html', context)

@@ -619,6 +619,7 @@
 
     const matchesJson = {{ matches_json|safe }};
     const allMatchesJson = {{ all_matches_json|safe }};
+    const standbyMatchesJson = {{ standby_matches_json|safe }};
     const clubsHours = {{ clubs_hours_json|safe }};
     const activeClubIdStr = "{{ linked_club.id|default_if_none:'' }}";
 
@@ -937,6 +938,15 @@
     }
 
     function openScheduleModal(dateStr, timeStr) {
+        // Prevent opening if all standby matches are blocked by the admin
+        if (standbyMatchesJson && standbyMatchesJson.length > 0) {
+            const canScheduleAny = standbyMatchesJson.some(m => m.allow_player_scheduling !== false);
+            if (!canScheduleAny) {
+                alert('Você não tem jogos com permissão de agendamento. O agendamento é realizado pelo Administrador.');
+                return;
+            }
+        }
+
         if (!dragBlock) {
             initDragLogic();
         }
@@ -1009,6 +1019,15 @@
     }
 
     function openEmptyScheduleModal() {
+        // Prevent opening if all standby matches are blocked by the admin
+        if (standbyMatchesJson && standbyMatchesJson.length > 0) {
+            const canScheduleAny = standbyMatchesJson.some(m => m.allow_player_scheduling !== false);
+            if (!canScheduleAny) {
+                alert('Você não tem jogos com permissão de agendamento. O agendamento é realizado pelo Administrador.');
+                return;
+            }
+        }
+
         const now = new Date();
         const dateStr = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}`;
         // Add 1 hour so it's not automatically in the past
