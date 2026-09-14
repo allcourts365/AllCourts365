@@ -527,13 +527,28 @@
                 </div>
                 <div id="mobile-view-dropdown" style="display: none; position: absolute; right: -10px; top: 30px; background: #2d2d2d; border: 1px solid #444; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); width: 140px; z-index: 2000;">
                     <div onclick="changeView('day'); toggleMobileViewDropdown();" class="ol-filter-item" style="padding: 12px 15px; color: white; cursor: pointer; display: flex; align-items: center; gap: 10px;">
-                        <i class="far fa-square" style="width: 20px; text-align: center;"></i> Dia
+                        <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="2" width="14" height="12" rx="2" />
+                            <line x1="1" y1="6" x2="15" y2="6" />
+                            <rect x="4" y="9" width="8" height="2.5" rx="0.5" />
+                        </svg> Dia
                     </div>
                     <div onclick="changeView('week'); toggleMobileViewDropdown();" class="ol-filter-item" style="padding: 12px 15px; color: white; cursor: pointer; display: flex; align-items: center; gap: 10px; border-top: 1px solid #444;">
-                        <i class="fas fa-columns" style="width: 20px; text-align: center;"></i> 3 Dias
+                        <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="2" width="14" height="12" rx="2" />
+                            <line x1="5.5" y1="5" x2="5.5" y2="11" />
+                            <line x1="8" y1="5" x2="8" y2="11" />
+                            <line x1="10.5" y1="5" x2="10.5" y2="11" />
+                        </svg> 3 Dias
                     </div>
                     <div onclick="changeView('month'); toggleMobileViewDropdown();" class="ol-filter-item" style="padding: 12px 15px; color: white; cursor: pointer; display: flex; align-items: center; gap: 10px; border-top: 1px solid #444;">
-                        <i class="fas fa-th" style="width: 20px; text-align: center;"></i> Mês
+                        <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="2" width="14" height="12" rx="2" />
+                            <line x1="1" y1="6" x2="15" y2="6" />
+                            <line x1="6" y1="6" x2="6" y2="14" />
+                            <line x1="11" y1="6" x2="11" y2="14" />
+                            <line x1="1" y1="10" x2="15" y2="10" />
+                        </svg> Mês
                     </div>
                 </div>
             </div>
@@ -1005,6 +1020,7 @@
     let isNextMonthExpanded = false;
 
     // --- Nova Lógica do Modal Outlook ---
+    let initialEditState = null;
     let dragBlock = null;
     let gridContainer = null;
     let isDragging = false;
@@ -1261,6 +1277,7 @@
     }
 
     function openScheduleModal(dateStr, timeStr) {
+        initialEditState = null;
         // Prevent opening if all standby matches are blocked by the admin
         if (standbyMatchesJson && standbyMatchesJson.length > 0) {
             const canScheduleAny = standbyMatchesJson.some(m => m.allow_player_scheduling !== false);
@@ -1379,6 +1396,20 @@
             alert("Por favor, selecione uma quadra.");
             return;
         }
+        
+        if (initialEditState) {
+            const currentDate = document.getElementById('modal-date').value;
+            const currentTime = document.getElementById('modal-time').value;
+            const currentCourt = document.getElementById('modal-court').value;
+            
+            if (currentDate === initialEditState.date && 
+                currentTime === initialEditState.time && 
+                currentCourt === initialEditState.court) {
+                alert("Nenhuma alteração foi realizada.");
+                return;
+            }
+        }
+        
         document.getElementById('scheduleForm').submit();
     }
     
@@ -1418,6 +1449,15 @@
     }
     
     function editExistingSchedule(matchId, title, dateStr, timeStr, courtId, status, duration, clubId, canAccept, allowScheduling) {
+        if (dateStr && timeStr) {
+            const selectedDate = new Date(`${dateStr}T${timeStr}:00`);
+            const now = new Date();
+            if (selectedDate < now) {
+                alert('Não é possível modificar um agendamento que está no passado.');
+                return;
+            }
+        }
+        
         if (allowScheduling === false) {
             alert('O agendamento deste jogo só é realizado pelo Administrador.');
             return;
@@ -1451,7 +1491,13 @@
         }
         syncFromInputs();
         
-        document.getElementById('modal-save-btn-text').innerText = status === 'agendado' ? 'Reagendar' : 'Salvar Alteração';
+        initialEditState = {
+            date: document.getElementById('modal-date').value,
+            time: document.getElementById('modal-time').value,
+            court: document.getElementById('modal-court').value
+        };
+        
+        document.getElementById('modal-save-btn-text').innerText = 'Salvar Alteração';
         document.getElementById('mobile-modal-title').innerText = 'Editar Evento';
         document.getElementById('modal-delete-btn').style.display = 'flex';
         const mobileDelBtn = document.getElementById('mobile-bottom-delete-btn');
@@ -1544,11 +1590,26 @@
         const mobileIcon = document.getElementById('mobile-view-selector-icon');
         if (mobileIcon) {
             if (view === 'day') {
-                mobileIcon.innerHTML = '<i class="far fa-square" style="font-size: 1.2rem;"></i>';
+                mobileIcon.innerHTML = `<svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="2" width="14" height="12" rx="2" />
+                    <line x1="1" y1="6" x2="15" y2="6" />
+                    <rect x="4" y="9" width="8" height="2.5" rx="0.5" />
+                </svg>`;
             } else if (view === 'week') {
-                mobileIcon.innerHTML = '<i class="fas fa-columns" style="font-size: 1.2rem;"></i>';
+                mobileIcon.innerHTML = `<svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="2" width="14" height="12" rx="2" />
+                    <line x1="5.5" y1="5" x2="5.5" y2="11" />
+                    <line x1="8" y1="5" x2="8" y2="11" />
+                    <line x1="10.5" y1="5" x2="10.5" y2="11" />
+                </svg>`;
             } else if (view === 'month') {
-                mobileIcon.innerHTML = '<i class="fas fa-th" style="font-size: 1.2rem;"></i>';
+                mobileIcon.innerHTML = `<svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="2" width="14" height="12" rx="2" />
+                    <line x1="1" y1="6" x2="15" y2="6" />
+                    <line x1="6" y1="6" x2="6" y2="14" />
+                    <line x1="11" y1="6" x2="11" y2="14" />
+                    <line x1="1" y1="10" x2="15" y2="10" />
+                </svg>`;
             }
         }
 
@@ -1664,6 +1725,14 @@
         const month2 = nextDate.getMonth();
         document.getElementById('mini-cal-next-month-year').innerText = `${monthNames[month2]} ${year2}`;
         document.getElementById('mini-cal-next-days').innerHTML = generateMonthHTML(year2, month2);
+    }
+    
+    function navigateToDay(dateStr) {
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            currentDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            changeView('day');
+        }
     }
     
     function renderMainCalendar() {
@@ -1952,16 +2021,19 @@
                     evDiv.innerHTML = `${timeStr} - ${ev.title}`;
                     
                     evDiv.id = 'ev-div-' + ev.id;
+                    const evLocalDateStr2 = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
                     if (ev.is_mine && (ev.status === 'aguardando_adversario' || ev.status === 'agendado')) {
                         evDiv.style.cursor = 'pointer';
                         evDiv.title = 'Clique para editar ou excluir este agendamento';
-                        const evLocalDateStr2 = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                        evDiv.onclick = () => editExistingSchedule(ev.id, ev.title, evLocalDateStr2, timeStr, ev.court_id, ev.status, ev.duration || 90, ev.club_id, ev.can_accept, ev.allow_player_scheduling);
+                        const safeTitle = ev.title ? ev.title.replace(/'/g, "\\'") : '';
+                        evDiv.setAttribute('onclick', `event.stopPropagation(); navigateToDay('${evLocalDateStr2}'); setTimeout(function() { editExistingSchedule(${ev.id}, '${safeTitle}', '${evLocalDateStr2}', '${timeStr}', '${ev.court_id}', '${ev.status}', ${ev.duration || 90}, ${ev.club_id || 'null'}, ${ev.can_accept}, ${ev.allow_player_scheduling}); }, 100);`);
+                    } else {
+                        evDiv.setAttribute('onclick', `event.stopPropagation(); navigateToDay('${evLocalDateStr2}');`);
                     }
                     eventsHTML += evDiv.outerHTML;
                 });
                 
-                gridHTML += `<div style="width: calc(100% / 7); border-left: 1px solid var(--ol-border); border-bottom: 1px solid var(--ol-border); padding: 5px; min-height: 100px; box-sizing: border-box;">
+                gridHTML += `<div onclick="navigateToDay('${dateStr}')" style="cursor: pointer; width: calc(100% / 7); border-left: 1px solid var(--ol-border); border-bottom: 1px solid var(--ol-border); padding: 5px; min-height: 100px; box-sizing: border-box; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(255,255,255,0.05)'" onmouseout="this.style.backgroundColor='transparent'">
                     <div style="text-align: right; margin-bottom: 5px; font-weight: 500; font-size: 0.85rem;">${i}</div>
                     <div style="display: flex; flex-direction: column;">${eventsHTML}</div>
                 </div>`;
