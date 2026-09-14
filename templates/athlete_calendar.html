@@ -164,6 +164,25 @@
     .ol-standby-item:hover {
         border-color: var(--ol-primary);
     }
+    
+    .ol-standby-item[draggable="true"] {
+        cursor: grab;
+    }
+    .ol-standby-item[draggable="true"]:active {
+        cursor: grabbing;
+    }
+    
+    .ol-standby-item.not-draggable {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    /* Drag and Drop hover effect on calendar cells */
+    .ol-half-hour.drag-over, .ol-time-cell.drag-over {
+        background-color: rgba(59, 130, 246, 0.2) !important;
+        outline: 2px dashed var(--ol-primary);
+        outline-offset: -2px;
+    }
 
     /* Calendar Grid Area */
     .ol-main {
@@ -761,9 +780,14 @@
                 <div class="ol-standby-title">Jogos Aguardando Agendamento</div>
                 <div id="standby-list">
                     {% for sm in standby_matches %}
-                    <div class="ol-standby-item" onclick="selectStandbyMatch('{{ sm.id }}', '{{ sm.title|escapejs }}', {{ sm.allow_player_scheduling|yesno:'true,false' }})">
+                    <div class="ol-standby-item {% if not sm.allow_player_scheduling %}not-draggable{% endif %}" 
+                         onclick="selectStandbyMatch('{{ sm.id }}', '{{ sm.title|escapejs }}', {{ sm.allow_player_scheduling|yesno:'true,false' }})"
+                         {% if sm.allow_player_scheduling %}
+                         draggable="true" 
+                         ondragstart="handleDragStart(event, '{{ sm.id }}', '{{ sm.duration|default:90 }}')"
+                         {% endif %}>
                         <strong>{{ sm.title }}</strong><br>
-                        <span style="color: var(--ol-text-muted);">{{ sm.tournament }} - Rodada {{ sm.round }} {% if sm.club_name %}({{ sm.club_name }}){% endif %}</span>
+                        <span style="color: var(--ol-text-muted);">{{ sm.tournament }} - Rodada {{ sm.round }} {% if sm.club_name %}({{ sm.club_name }}){% endif %} {% if not sm.allow_player_scheduling %}- Apenas Admin{% endif %}</span>
                     </div>
                     {% empty %}
                     <p style="font-size: 0.8rem; color: var(--ol-text-muted);">Nenhum jogo pendente.</p>
@@ -1321,7 +1345,7 @@
         }
     }
 
-    function openScheduleModal(dateStr, timeStr) {
+    function openScheduleModal(dateStr, timeStr, prefillMatchId = null) {
         initialEditState = null;
         // Prevent opening if all standby matches are blocked by the admin
         if (standbyMatchesJson && standbyMatchesJson.length > 0) {
@@ -1350,6 +1374,14 @@
         document.getElementById('modal-adversary').value = '';
         document.getElementById('modal-court').value = '';
         document.getElementById('modal-time-end').value = pxToTime(timeToPx(timeStr) + 90); // temp default until match selected
+        
+        if (prefillMatchId) {
+            const selectEl = document.getElementById('modal-match-id');
+            selectEl.value = prefillMatchId;
+            if (selectEl.value === prefillMatchId) { // Check if valid
+                updateMatchInfo();
+            }
+        }
         
         syncFromInputs();
         
@@ -1780,6 +1812,13 @@
         }
     }
     
+    function getLocalDateStr(dateObj) {
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
     function renderMainCalendar() {
         const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
         const dayNames = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
@@ -1815,14 +1854,17 @@
         if (currentView === 'day') {
             document.getElementById('main-date-title').innerText = `${currentDate.getDate()} ${monthNames[currentDate.getMonth()]}, ${currentDate.getFullYear()}`;
             
+            const localDateStr = getLocalDateStr(currentDate);
             let html = '';
             for (let h = 0; h < 24; h++) {
+                const time00 = `${h.toString().padStart(2, '0')}:00`;
+                const time30 = `${h.toString().padStart(2, '0')}:30`;
                 html += `
                 <div class="ol-time-row">
                     <div class="ol-time-label">${h}:00</div>
                     <div class="ol-time-cell">
-                        <div class="ol-half-hour" onclick="selectSlot(this)" ondblclick="openScheduleModal('${currentDate.toISOString().split('T')[0]}', '${h.toString().padStart(2, '0')}:00')"></div>
-                        <div class="ol-half-hour" style="border-top: 1px dashed var(--ol-border);" onclick="selectSlot(this)" ondblclick="openScheduleModal('${currentDate.toISOString().split('T')[0]}', '${h.toString().padStart(2, '0')}:30')"></div>
+                        <div class="ol-half-hour" onclick="selectSlot(this)" ondblclick="openScheduleModal('${localDateStr}', '${time00}')" ondragover="allowDrop(event)" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropOnSlot(event, '${localDateStr}', '${time00}')"></div>
+                        <div class="ol-half-hour" style="border-top: 1px dashed var(--ol-border);" onclick="selectSlot(this)" ondblclick="openScheduleModal('${localDateStr}', '${time30}')" ondragover="allowDrop(event)" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropOnSlot(event, '${localDateStr}', '${time30}')"></div>
                     </div>
                 </div>`;
             }
@@ -1927,12 +1969,15 @@
                     </div>`;
                 }
                 
+                const localDateStr = getLocalDateStr(d);
                 let cells = '';
                 for (let h = 0; h < 24; h++) {
+                    const time00 = `${h.toString().padStart(2, '0')}:00`;
+                    const time30 = `${h.toString().padStart(2, '0')}:30`;
                     cells += `
                     <div class="ol-time-cell" style="height: 60px; border-bottom: 1px solid var(--ol-border);">
-                        <div class="ol-half-hour" onclick="selectSlot(this)" ondblclick="openScheduleModal('${d.toISOString().split('T')[0]}', '${h.toString().padStart(2, '0')}:00')"></div>
-                        <div class="ol-half-hour" style="border-top: 1px dashed var(--ol-border);" onclick="selectSlot(this)" ondblclick="openScheduleModal('${d.toISOString().split('T')[0]}', '${h.toString().padStart(2, '0')}:30')"></div>
+                        <div class="ol-half-hour" onclick="selectSlot(this)" ondblclick="openScheduleModal('${localDateStr}', '${time00}')" ondragover="allowDrop(event)" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropOnSlot(event, '${localDateStr}', '${time00}')"></div>
+                        <div class="ol-half-hour" style="border-top: 1px dashed var(--ol-border);" onclick="selectSlot(this)" ondblclick="openScheduleModal('${localDateStr}', '${time30}')" ondragover="allowDrop(event)" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropOnSlot(event, '${localDateStr}', '${time30}')"></div>
                     </div>`;
                 }
                 columns += `<div style="flex: 1; position: relative;">${cells}</div>`;
@@ -2147,6 +2192,38 @@
             }
         }
     });
+
+    // Drag and Drop Logic
+    let draggedMatchId = null;
+
+    function handleDragStart(event, matchId, duration) {
+        draggedMatchId = matchId;
+        event.dataTransfer.effectAllowed = 'copy';
+        event.dataTransfer.setData('text/plain', matchId);
+    }
+
+    function allowDrop(event) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+    }
+
+    function handleDragEnter(event) {
+        event.preventDefault();
+        event.currentTarget.classList.add('drag-over');
+    }
+
+    function handleDragLeave(event) {
+        event.currentTarget.classList.remove('drag-over');
+    }
+
+    function handleDropOnSlot(event, dateStr, timeStr) {
+        event.preventDefault();
+        event.currentTarget.classList.remove('drag-over');
+        if (draggedMatchId) {
+            openScheduleModal(dateStr, timeStr, draggedMatchId);
+            draggedMatchId = null;
+        }
+    }
 </script>
 
 {% endblock %}
