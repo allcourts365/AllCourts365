@@ -943,13 +943,13 @@ def athlete_calendar(request):
     # User's own matches
     my_matches = Match.objects.filter(
         Q(player_a=active_profile) | Q(player_b=active_profile)
-    ).select_related('tournament', 'player_a', 'player_b', 'court', 'proposed_court').order_by('-tournament__current_round', 'round_number') if active_profile else Match.objects.none()
+    ).select_related('tournament', 'player_a', 'player_b', 'court', 'proposed_court', 'winner').order_by('-tournament__current_round', 'round_number') if active_profile else Match.objects.none()
 
     # All scheduled matches at user's clubs (for occupation view)
     all_club_matches = Match.objects.filter(
         Q(tournament__club_id__in=my_club_ids) &
         (Q(scheduled_datetime__isnull=False) | Q(proposed_datetime__isnull=False))
-    ).select_related('tournament', 'tournament__club', 'player_a', 'player_b', 'court', 'proposed_court')
+    ).select_related('tournament', 'tournament__club', 'player_a', 'player_b', 'court', 'proposed_court', 'winner')
 
     # Standby matches: current round, not scheduled, not Bye
     standby_matches = []
@@ -992,6 +992,19 @@ def athlete_calendar(request):
         title = f"{m.player_a.name} vs {m.player_b.name} - {tourn_name} - {club_name}"
         duration = m.tournament.match_duration if m.tournament and m.tournament.match_duration else 90
         local_dt = timezone.localtime(dt)
+        
+        is_completed = m.status == 'completed'
+        score_str = ""
+        date_str_br = local_dt.strftime('%d/%m/%Y')
+        if is_completed:
+            winner_name = m.winner.name if m.winner else "Desconhecido"
+            sets_scores = []
+            for a, b in [(m.set1_a, m.set1_b), (m.set2_a, m.set2_b), (m.set3_a, m.set3_b), (m.set4_a, m.set4_b), (m.set5_a, m.set5_b)]:
+                if a is not None and b is not None:
+                    sets_scores.append(f"{a}-{b}")
+            score_text = ", ".join(sets_scores)
+            score_str = f"Vencedor: {winner_name} {f'({score_text})' if score_text else ''}".strip()
+            
         matches_json.append({
             'id': m.id,
             'title': title,
@@ -1000,6 +1013,9 @@ def athlete_calendar(request):
             'end': (local_dt + timedelta(minutes=duration)).isoformat(),
             'status': m.schedule_status,
             'is_mine': True,
+            'is_completed': is_completed,
+            'score_str': score_str,
+            'date_str_br': date_str_br,
             'court_id': court.id if court else None,
             'court_name': court.name if court else '',
             'tournament': tourn_name,
@@ -1028,6 +1044,19 @@ def athlete_calendar(request):
         title = f"{m.player_a.name} vs {m.player_b.name} - {tourn_name} - {club_name}"
         duration = m.tournament.match_duration if m.tournament and m.tournament.match_duration else 90
         local_dt = timezone.localtime(dt)
+        
+        is_completed = m.status == 'completed'
+        score_str = ""
+        date_str_br = local_dt.strftime('%d/%m/%Y')
+        if is_completed:
+            winner_name = m.winner.name if m.winner else "Desconhecido"
+            sets_scores = []
+            for a, b in [(m.set1_a, m.set1_b), (m.set2_a, m.set2_b), (m.set3_a, m.set3_b), (m.set4_a, m.set4_b), (m.set5_a, m.set5_b)]:
+                if a is not None and b is not None:
+                    sets_scores.append(f"{a}-{b}")
+            score_text = ", ".join(sets_scores)
+            score_str = f"Vencedor: {winner_name} {f'({score_text})' if score_text else ''}".strip()
+            
         all_matches_json.append({
             'id': m.id,
             'title': title,
@@ -1036,6 +1065,9 @@ def athlete_calendar(request):
             'end': (local_dt + timedelta(minutes=duration)).isoformat(),
             'status': m.schedule_status,
             'is_mine': is_mine,
+            'is_completed': is_completed,
+            'score_str': score_str,
+            'date_str_br': date_str_br,
             'court_id': court.id if court else None,
             'court_name': court.name if court else '',
             'club_id': m.tournament.club_id if m.tournament else None,
