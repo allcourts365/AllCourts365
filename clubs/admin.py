@@ -187,7 +187,7 @@ class RankingTournamentAdmin(TournamentAdmin):
         ('Informações do Ranking', {
             'fields': ('club', 'name', 'competition_type', 'set_format',
                        'current_round', 'start_date', 'end_date', 'number_of_brackets',
-                       'allow_player_scheduling', 'allow_player_results',
+                       'allow_player_scheduling', 'allow_player_results', 'match_duration',
                        'is_active', 'is_finished')
         }),
         ('Upload de Atletas (Gera as rodadas Automaticamente)', {
@@ -410,7 +410,7 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
         ('Informações do Torneio', {
             'fields': ('club', 'name', 'competition_type', 'set_format',
                        'start_date', 'end_date', 'number_of_brackets',
-                       'allow_player_scheduling', 'allow_player_results',
+                       'allow_player_scheduling', 'allow_player_results', 'match_duration',
                        'is_active', 'is_finished')
         }),
         ('Upload de Atletas (Gera as Chaves Automaticamente)', {

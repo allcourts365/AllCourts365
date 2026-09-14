@@ -914,7 +914,7 @@ def athlete_calendar(request):
                 'title': f"{m.player_a.name} vs {m.player_b.name}",
                 'adversary': adversary,
                 'tournament': m.tournament.name if m.tournament else '',
-                'duration': m.duration if hasattr(m, 'duration') and m.duration else 90,
+                'duration': m.tournament.match_duration if m.tournament and m.tournament.match_duration else 90,
                 'club_id': m.tournament.club_id if m.tournament else None,
             })
 
@@ -930,7 +930,7 @@ def athlete_calendar(request):
         club_name = m.tournament.club.name if m.tournament and m.tournament.club else (linked_club.name if linked_club else '')
         status_display = m.schedule_status.upper().replace('_', ' ')
         title = f"{m.player_a.name} vs {m.player_b.name}{court_name_str} - {tourn_name} - {club_name} - {status_display}"
-        duration = m.duration if hasattr(m, 'duration') and m.duration else 90
+        duration = m.tournament.match_duration if m.tournament and m.tournament.match_duration else 90
         local_dt = timezone.localtime(dt)
         matches_json.append({
             'id': m.id,
@@ -963,7 +963,7 @@ def athlete_calendar(request):
         else:
             status_str = 'Aguardando Adversário' if m.schedule_status == 'aguardando_adversario' else ('Agendado' if m.schedule_status == 'agendado' else m.schedule_status.capitalize())
             title = f"Horário Reservado (Status {status_str}) - Jogo do {tourn_name} - ({m.player_a.name} x {m.player_b.name}) - {club_name}"
-        duration = m.duration if hasattr(m, 'duration') and m.duration else 90
+        duration = m.tournament.match_duration if m.tournament and m.tournament.match_duration else 90
         local_dt = timezone.localtime(dt)
         all_matches_json.append({
             'id': m.id,

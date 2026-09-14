@@ -110,6 +110,7 @@ class Tournament(models.Model):
     
     allow_player_scheduling = models.BooleanField(default=True, verbose_name="Atleta pode gerenciar agendamento?")
     allow_player_results = models.BooleanField(default=True, verbose_name="Atleta pode lançar resultados?")
+    match_duration = models.IntegerField(default=90, verbose_name="Duração estimada por jogo (minutos)", help_text="Tempo padrão usado no calendário de agendamento. Ex: 90 para 1h30min.")
 
     points_winner_2x0 = models.IntegerField(null=True, blank=True, default=3, verbose_name="Pontos (Vitória 2x0)")
     points_winner_2x1 = models.IntegerField(null=True, blank=True, default=2, verbose_name="Pontos (Vitória 2x1)")
