@@ -1532,7 +1532,7 @@
         const openMatchId = urlParams.get('open_match_id');
         
         if (openMatchId) {
-            const matchToOpen = matches_json.find(m => m.id == openMatchId);
+            const matchToOpen = matchesJson.find(m => m.id == openMatchId) || allMatchesJson.find(m => m.id == openMatchId);
             if (matchToOpen && matchToOpen.start) {
                 const matchDate = new Date(matchToOpen.start);
                 currentDate = matchDate;
