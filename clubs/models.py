@@ -294,6 +294,23 @@ class Match(models.Model):
     winner = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True, blank=True, related_name='won_matches')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
 
+    @property
+    def end_datetime(self):
+        from datetime import timedelta
+        if self.scheduled_datetime:
+            duration = 90
+            if self.tournament and self.tournament.match_duration:
+                duration = self.tournament.match_duration
+            return self.scheduled_datetime + timedelta(minutes=duration)
+        return None
+
+    @property
+    def is_past(self):
+        from django.utils import timezone
+        if self.scheduled_datetime:
+            return self.scheduled_datetime < timezone.now()
+        return False
+
     def __str__(self):
         pa = self.player_a.name if self.player_a else "TBD"
         pb = self.player_b.name if self.player_b else "TBD"

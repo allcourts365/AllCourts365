@@ -363,7 +363,18 @@
                         
                         {% if m.scheduled_datetime %}
                         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); text-align: center; font-size: 0.95rem; color: var(--subtitle-color);">
-                            <i class="fas fa-calendar-check" style="color: var(--highlight-color);"></i> Marcado para <strong>{{ m.scheduled_datetime|date:"d/m/Y \à\s H:i" }}</strong> na <strong>{{ m.court.name }}</strong>
+                            <i class="fas fa-calendar-check" style="color: var(--highlight-color);"></i>
+                            {% if m.status == 'pending' %}
+                                {% if m.is_past %}
+                                    Marcado para <strong>{{ m.scheduled_datetime|date:"d/m/Y" }}</strong> das <strong>{{ m.scheduled_datetime|time:"H:i" }}</strong> até <strong>{{ m.end_datetime|time:"H:i" }}</strong> na <strong>{{ m.court.name }}</strong> - EM ATRASO
+                                {% else %}
+                                    Marcado para <strong>{{ m.scheduled_datetime|date:"d/m/Y" }}</strong> das <strong>{{ m.scheduled_datetime|time:"H:i" }}</strong> até <strong>{{ m.end_datetime|time:"H:i" }}</strong> na <strong>{{ m.court.name }}</strong> - AGUARDANDO REALIZAÇÃO
+                                {% endif %}
+                            {% elif m.status == 'completed' and m.is_past %}
+                                Realizado dia <strong>{{ m.scheduled_datetime|date:"d/m/Y" }}</strong> das <strong>{{ m.scheduled_datetime|time:"H:i" }}</strong> até <strong>{{ m.end_datetime|time:"H:i" }}</strong> na <strong>{{ m.court.name }}</strong> - FINALIZADO
+                            {% else %}
+                                Marcado para <strong>{{ m.scheduled_datetime|date:"d/m/Y \à\s H:i" }}</strong> na <strong>{{ m.court.name }}</strong>
+                            {% endif %}
                         </div>
                         {% endif %}
                     </div>
