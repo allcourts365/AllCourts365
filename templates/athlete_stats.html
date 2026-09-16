@@ -278,11 +278,17 @@
                     <h3><i class="fas fa-play-circle" style="color: #10b981;"></i> Competições Ativas</h3>
                     <div style="max-height: 300px; overflow-y: auto; padding-right: 10px;">
                         {% for t in active_tournaments %}
-                        <div class="list-item">
-                            <div>
+                        <div class="list-item" style="display: flex; align-items: center;">
+                            <div style="flex: 1;">
                                 <strong style="display: block;">{{ t.category.tournament.name }}</strong>
                                 <span style="font-size: 0.85rem; color: #aaa;">{{ t.category.name }}</span>
                             </div>
+                            {% if t.current_rank %}
+                            <div style="margin-right: 15px; text-align: center;">
+                                <span style="font-size: 0.75rem; color: #aaa; display: block; text-transform: uppercase; letter-spacing: 0.5px;">Posição</span>
+                                <strong style="font-size: 1.1rem; color: #10b981;">{{ t.current_rank }}º</strong>
+                            </div>
+                            {% endif %}
                             <span class="badge-active">Ativo</span>
                         </div>
                         {% empty %}

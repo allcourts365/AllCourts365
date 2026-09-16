@@ -1271,7 +1271,17 @@ def athlete_stats(request):
         })
             
     cat_players = CategoryPlayer.objects.filter(player=active_profile).select_related('category', 'category__tournament')
-    active_tournaments = cat_players.filter(category__tournament__is_finished=False).order_by('-id')
+    active_tournaments = list(cat_players.filter(category__tournament__is_finished=False).order_by('-id'))
+    
+    for cp in active_tournaments:
+        if cp.category.tournament.tournament_type == 'ranking':
+            cp.current_rank = CategoryPlayer.objects.filter(category=cp.category).filter(
+                Q(points__gt=cp.points) | 
+                (Q(points=cp.points) & Q(wins__gt=cp.wins))
+            ).count() + 1
+        else:
+            cp.current_rank = None
+
     finished_tournaments = cat_players.filter(category__tournament__is_finished=True).order_by('-category__tournament__id')
     
     finished_data = []
