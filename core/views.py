@@ -1208,9 +1208,11 @@ def athlete_stats(request):
     losses = total_matches - wins
     win_rate = (wins / total_matches * 100) if total_matches > 0 else 0
 
-    last_15 = list(matches.filter(status='completed').order_by('-id')[:15])
+    completed_matches = list(matches.filter(status='completed'))
+    # Ordena: Torneios mais recentes primeiro (maior ID), depois rodadas mais recentes, e por fim ID do jogo
+    completed_matches.sort(key=lambda m: (m.tournament_id or 0, m.round_number or 0, m.id), reverse=True)
+    last_15 = completed_matches[:15]
     last_15.reverse()
-    
     chart_labels = []
     chart_data = []
     chart_details = []
