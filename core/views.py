@@ -808,7 +808,7 @@ def athlete_calendar(request):
                         c_start = c.scheduled_datetime or c.proposed_datetime
                         if not c_start: continue
                         c_duration = c.tournament.match_duration if c.tournament and c.tournament.match_duration else 90
-                        c_end = c.proposed_end_datetime or (c_start + timedelta(minutes=c_duration))
+                        c_end = c_start + timedelta(minutes=c_duration)
                         if max(scheduled_dt, c_start) < min(check_end_dt, c_end):
                             has_conflict = True
                             break
@@ -832,7 +832,6 @@ def athlete_calendar(request):
 
                 # Save new proposal
                 match.proposed_datetime = scheduled_dt
-                match.proposed_end_datetime = end_dt
                 if court_id:
                     match.proposed_court_id = court_id
                 match.proposed_by = active_profile
@@ -911,10 +910,8 @@ def athlete_calendar(request):
 
                 # Checa conflitos de forma precisa
                 check_start = match.proposed_datetime
-                check_end = match.proposed_end_datetime
-                if not check_end:
-                    duration = match.tournament.match_duration if match.tournament and match.tournament.match_duration else 90
-                    check_end = check_start + timedelta(minutes=duration)
+                duration = match.tournament.match_duration if match.tournament and match.tournament.match_duration else 90
+                check_end = check_start + timedelta(minutes=duration)
 
                 conflicts = Match.objects.filter(
                     Q(court=match.proposed_court) | Q(proposed_court=match.proposed_court)
@@ -925,7 +922,7 @@ def athlete_calendar(request):
                     c_start = c.scheduled_datetime or c.proposed_datetime
                     if not c_start: continue
                     c_duration = c.tournament.match_duration if c.tournament and c.tournament.match_duration else 90
-                    c_end = c.proposed_end_datetime or (c_start + timedelta(minutes=c_duration))
+                    c_end = c_start + timedelta(minutes=c_duration)
                     if max(check_start, c_start) < min(check_end, c_end):
                         has_conflict = True
                         break
@@ -962,9 +959,8 @@ def athlete_calendar(request):
                 match = Match.objects.get(id=match_id)
                 match.scheduled_datetime = None
                 match.proposed_datetime = None
-                match.proposed_end_datetime = None
                 match.proposed_court = None
-                match.schedule_status = 'pendente'
+                match.schedule_status = 'unagendado'
                 match.save()
                 messages.success(request, 'Agendamento excluído com sucesso.')
             except Match.DoesNotExist:
@@ -1050,11 +1046,11 @@ def athlete_calendar(request):
             score_text = ", ".join(sets_scores)
             
             if score_text and m.sets_a is not None and m.sets_b is not None:
-                score_str = f"Vencedor: {winner_name} ({m.sets_a}x{m.sets_b} | {score_text})"
+                score_str = f"VITÓRIA de {winner_name} por {m.sets_a}x{m.sets_b} | {score_text}"
             elif m.sets_a is not None and m.sets_b is not None:
-                score_str = f"Vencedor: {winner_name} ({m.sets_a}x{m.sets_b})"
+                score_str = f"VITÓRIA de {winner_name} por {m.sets_a}x{m.sets_b}"
             else:
-                score_str = f"Vencedor: {winner_name} (W.O.)"
+                score_str = f"VITÓRIA de {winner_name} por W.O."
             
         matches_json.append({
             'id': m.id,
@@ -1116,11 +1112,11 @@ def athlete_calendar(request):
             score_text = ", ".join(sets_scores)
             
             if score_text and m.sets_a is not None and m.sets_b is not None:
-                score_str = f"Vencedor: {winner_name} ({m.sets_a}x{m.sets_b} | {score_text})"
+                score_str = f"VITÓRIA de {winner_name} por {m.sets_a}x{m.sets_b} | {score_text}"
             elif m.sets_a is not None and m.sets_b is not None:
-                score_str = f"Vencedor: {winner_name} ({m.sets_a}x{m.sets_b})"
+                score_str = f"VITÓRIA de {winner_name} por {m.sets_a}x{m.sets_b}"
             else:
-                score_str = f"Vencedor: {winner_name} (W.O.)"
+                score_str = f"VITÓRIA de {winner_name} por W.O."
             
         all_matches_json.append({
             'id': m.id,

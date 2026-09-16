@@ -1,0 +1,1265 @@
+
+
+    const matchesJson = {{ matches_json|safe }};
+    const allMatchesJson = {{ all_matches_json|safe }};
+    const standbyMatchesJson = {{ standby_matches_json|safe }};
+    const clubsHours = {{ clubs_hours_json|safe }};
+    const activeClubIdStr = "{{ linked_club.id|default_if_none:'' }}";
+
+    function validateOpeningHours(dateStr, timeStr, clubId, endTimeStr = null) {
+        if (!dateStr || !timeStr || !clubId) return { valid: true };
+        const club = clubsHours[clubId];
+        if (!club) return { valid: true };
+        
+        const d = new Date(dateStr + 'T00:00:00');
+        const day = d.getDay(); // 0=Sunday, 6=Saturday
+        
+        let openTime, closeTime;
+        if (day === 0) {
+            openTime = club.sunday_open; closeTime = club.sunday_close;
+        } else if (day === 6) {
+            openTime = club.saturday_open; closeTime = club.saturday_close;
+        } else {
+            openTime = club.weekday_open; closeTime = club.weekday_close;
+        }
+        
+        if (!openTime || !closeTime) return { valid: false, reason: "closed" };
+        
+        const timePx = timeToPx(timeStr);
+        const openPx = timeToPx(openTime);
+        const closePx = timeToPx(closeTime);
+        
+        if (timePx < openPx || timePx >= closePx) {
+            return { valid: false, reason: "start_time" };
+        }
+        
+        if (endTimeStr) {
+            const endPx = timeToPx(endTimeStr);
+            if (endPx > closePx) {
+                return { valid: false, reason: "end_time", closeTime: closeTime };
+            }
+        }
+        
+        return { valid: true };
+    }
+
+    function checkHoursAndAlert() {
+        const dateStr = document.getElementById('modal-date').value;
+        const timeStr = document.getElementById('modal-time').value;
+        const endTimeStr = document.getElementById('modal-time-end').value;
+        const matchSel = document.getElementById('modal-match-id');
+        
+        if (!dateStr || !timeStr) return true;
+        
+        // Validação de horário no passado
+        const selectedDate = new Date(`${dateStr}T${timeStr}:00`);
+        const now = new Date();
+        if (selectedDate < now) {
+            alert(`Não é possível agendar um jogo em um horário no passado.`);
+            return false;
+        }
+        
+        let clubId = activeClubIdStr; // default to active club if none selected
+        if (matchSel && matchSel.selectedIndex > 0) {
+            const optClub = matchSel.options[matchSel.selectedIndex].getAttribute('data-club');
+            if (optClub) clubId = optClub;
+        }
+        
+        const validation = validateOpeningHours(dateStr, timeStr, clubId, endTimeStr);
+        if (validation && !validation.valid) {
+            if (validation.reason === "start_time") {
+                alert(`O horário de início (${timeStr}) está fora do expediente do clube para este dia.`);
+            } else if (validation.reason === "end_time") {
+                alert(`O horário de término do jogo (${endTimeStr}) extrapola o horário de funcionamento do clube (${validation.closeTime}).`);
+            } else if (validation.reason === "closed") {
+                alert(`O clube está fechado neste dia.`);
+            }
+            return false;
+        }
+        return true;
+    }
+    let currentDate = new Date(); // Main calendar date
+    let miniCalDate = new Date(); // Mini calendar date
+    let currentView = 'day';
+    let isNextMonthExpanded = false;
+
+    // --- Nova Lógica do Modal Outlook ---
+    let initialEditState = null;
+    let dragBlock = null;
+    let gridContainer = null;
+    let isDragging = false;
+    let dragStartY = 0;
+    let initialTop = 0;
+    const pxPerMinute = 1; // 60px per hour => 1px per min
+
+    function initDragLogic() {
+        dragBlock = document.getElementById('modal-drag-block');
+        gridContainer = document.getElementById('modal-mini-grid');
+        
+        dragBlock.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            dragStartY = e.clientY;
+            initialTop = parseInt(dragBlock.style.top || 0);
+            dragBlock.style.boxShadow = '0 5px 15px rgba(0,0,0,0.5)';
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            const deltaY = e.clientY - dragStartY;
+            let newTop = initialTop + deltaY;
+            
+            // Snap to 15 mins (15px) for smoother dragging than 30
+            newTop = Math.round(newTop / 15) * 15;
+            
+            if (newTop < 0) newTop = 0;
+            const maxTop = 1440 - parseInt(dragBlock.style.height || 0);
+            if (newTop > maxTop) newTop = maxTop;
+            
+            dragBlock.style.top = newTop + 'px';
+            syncToInputs(); // Update inputs as we drag
+        });
+        
+        document.addEventListener('mouseup', function(e) {
+            if (isDragging) {
+                isDragging = false;
+                dragBlock.style.boxShadow = '0 2px 5px rgba(0,0,0,0.3)';
+                syncToInputs();
+            }
+        });
+    }
+
+    function timeToPx(timeStr) {
+        if(!timeStr) return 0;
+        const parts = timeStr.split(':');
+        return (parseInt(parts[0]) * 60) + parseInt(parts[1]);
+    }
+    
+    function pxToTime(px) {
+        let totalMins = px;
+        let h = Math.floor(totalMins / 60);
+        let m = totalMins % 60;
+        return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+    }
+
+    function renderModalMiniGrid() {
+        const dateVal = document.getElementById('modal-date').value;
+        const courtVal = document.getElementById('modal-court').value;
+        const grid = document.getElementById('modal-mini-grid');
+        
+        // Remove existing old events
+        document.querySelectorAll('.modal-event').forEach(el => el.remove());
+        
+        if (!dateVal) return;
+        
+        allMatchesJson.forEach(ev => {
+            if (!ev.start || !dateVal) return;
+            // Compare using local date
+            const evDate0 = new Date(ev.start);
+            const evLocalDate0 = `${evDate0.getFullYear()}-${String(evDate0.getMonth()+1).padStart(2,'0')}-${String(evDate0.getDate()).padStart(2,'0')}`;
+            if (evLocalDate0 !== dateVal) return;
+            // Show all events, but we could optionally filter by court if desired
+            if (courtVal && ev.court_id && ev.court_id != courtVal) return;
+            
+            const currentEditingMatchId = document.getElementById('modal-match-id').value;
+            if (currentEditingMatchId && ev.id == currentEditingMatchId) return;
+            
+            const evDate = new Date(ev.start);
+            const top = (evDate.getHours() * 60) + evDate.getMinutes();
+            const height = ev.duration || 90;
+            
+            let bg = '#4b5563'; // Occupied gray
+            let borderLeft = '4px solid #374151';
+            let color = 'white';
+            
+            if (ev.status === 'aguardando_adversario') {
+                bg = 'rgba(220, 38, 38, 0.4)';
+                borderLeft = '4px solid #dc2626';
+            } else if (ev.status === 'agendado') {
+                bg = '#86efac';
+                borderLeft = '4px solid #16a34a';
+                color = '#064e3b';
+            }
+            
+            const evDiv = document.createElement('div');
+            evDiv.className = 'modal-event';
+            evDiv.style.position = 'absolute';
+            evDiv.style.left = '41px';
+            evDiv.style.right = '10px';
+            evDiv.style.top = top + 'px';
+            evDiv.style.height = height + 'px';
+            evDiv.style.backgroundColor = bg;
+            evDiv.style.borderLeft = borderLeft;
+            evDiv.style.color = color;
+            evDiv.style.borderRadius = '0px';
+            evDiv.style.padding = '2px 5px';
+            evDiv.style.fontSize = '0.7rem';
+            evDiv.style.overflow = 'hidden';
+            evDiv.style.boxSizing = 'border-box';
+            
+            const startStr = `${evDate.getHours().toString().padStart(2, '0')}:${evDate.getMinutes().toString().padStart(2, '0')}`;
+            const endMins = (evDate.getHours() * 60) + evDate.getMinutes() + height;
+            const endStr = pxToTime(endMins);
+            
+            let miniMiddleText = `${startStr} às ${endStr}`;
+            if (ev.is_completed) {
+                miniMiddleText = `REALIZADO ${ev.date_str_br} das ${startStr} às ${endStr}`;
+            } else if (ev.match_status === 'pending') {
+                miniMiddleText = `RESULTADO PENDENTE ${startStr} às ${endStr}`;
+            }
+            let htmlContent = `<strong>${ev.title}</strong><br>${miniMiddleText} - ${ev.status_display}`;
+            if (ev.is_completed && ev.score_str) {
+                htmlContent += `<br><small style="font-weight: bold;">${ev.score_str}</small>`;
+            }
+            evDiv.innerHTML = htmlContent;
+            grid.appendChild(evDiv);
+        });
+    }
+
+    function syncFromInputs() {
+        const start = document.getElementById('modal-time').value;
+        const end = document.getElementById('modal-time-end').value;
+        const dateVal = document.getElementById('modal-date').value;
+        
+        if (dateVal) {
+            const d = new Date(dateVal + 'T00:00:00');
+            const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            document.getElementById('modal-right-date-title').innerText = `${dayNames[d.getDay()]}, ${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+        }
+        
+        renderModalMiniGrid();
+
+        if (start && end && dragBlock) {
+            const startPx = timeToPx(start);
+            let endPx = timeToPx(end);
+            if(endPx <= startPx) endPx = startPx + 30; // minimum 30 min block if invalid
+            
+            let bg = '#60a5fa'; // default blue
+            let borderLeft = '';
+            let color = 'white';
+            let title = '';
+
+            const currentEditingMatchId = document.getElementById('modal-match-id').value;
+            if (currentEditingMatchId) {
+                const match = allMatchesJson.find(m => m.id == currentEditingMatchId);
+                if (match) {
+                    title = `<strong>${match.title}</strong><br>`;
+                    if (match.status === 'aguardando_adversario') {
+                        bg = 'rgba(220, 38, 38, 0.4)';
+                        borderLeft = '4px solid #dc2626';
+                    } else if (match.status === 'agendado') {
+                        bg = '#86efac';
+                        borderLeft = '4px solid #16a34a';
+                        color = '#064e3b';
+                    } else {
+                        bg = '#4b5563';
+                        borderLeft = '4px solid #374151';
+                    }
+                }
+            }
+
+            dragBlock.style.backgroundColor = bg;
+            dragBlock.style.borderLeft = borderLeft;
+            dragBlock.style.color = color;
+            dragBlock.style.display = 'block';
+            dragBlock.style.top = startPx + 'px';
+            dragBlock.style.height = (endPx - startPx) + 'px';
+            document.getElementById('modal-drag-time-label').innerHTML = `${title}${start} às ${pxToTime(endPx)}`;
+        }
+    }
+
+    function syncToInputs() {
+        const topPx = parseInt(dragBlock.style.top || 0);
+        const heightPx = parseInt(dragBlock.style.height || 0);
+        
+        const start = pxToTime(topPx);
+        const end = pxToTime(topPx + heightPx);
+        
+        document.getElementById('modal-time').value = start;
+        document.getElementById('modal-time-end').value = end;
+        document.getElementById('modal-drag-time-label').innerText = `${start} às ${end}`;
+    }
+
+    function onStartTimeChanged() {
+        const sel = document.getElementById('modal-match-id');
+        let duration = 90; // Default
+        if (sel && sel.selectedIndex > 0) {
+            const opt = sel.options[sel.selectedIndex];
+            duration = parseInt(opt.getAttribute('data-duration') || 90);
+        }
+        
+        const startTimeStr = document.getElementById('modal-time').value;
+        if (startTimeStr) {
+            let startMins = timeToPx(startTimeStr);
+            let endMins = startMins + duration;
+            if (endMins > 1440) endMins = 1440;
+            document.getElementById('modal-time-end').value = pxToTime(endMins);
+        }
+        
+        syncFromInputs();
+    }
+
+    function onMatchSelected() {
+        const sel = document.getElementById('modal-match-id');
+        const opt = sel.options[sel.selectedIndex];
+        
+        if (opt && opt.value) {
+            const allowScheduling = opt.getAttribute('data-allow-scheduling') === 'true';
+            if (!allowScheduling) {
+                alert('O agendamento deste jogo só é realizado pelo Administrador.');
+                sel.value = '';
+                document.getElementById('scheduleModal').style.display = 'none';
+                return;
+            }
+
+            const adversary = opt.getAttribute('data-adversary');
+            const duration = parseInt(opt.getAttribute('data-duration') || 90);
+            const clubId = opt.getAttribute('data-club');
+            
+            document.getElementById('modal-adversary').value = adversary;
+            
+            // Calculate end time based on start time + duration
+            const startTimeStr = document.getElementById('modal-time').value;
+            if (startTimeStr) {
+                let startMins = timeToPx(startTimeStr);
+                let endMins = startMins + duration;
+                if(endMins > 1440) endMins = 1440;
+                document.getElementById('modal-time-end').value = pxToTime(endMins);
+                syncFromInputs();
+            }
+            
+            // Filter Courts by club
+            const courtSel = document.getElementById('modal-court');
+            let firstValid = null;
+            for(let i=0; i<courtSel.options.length; i++) {
+                const cOpt = courtSel.options[i];
+                if(cOpt.value === "") continue;
+                if(cOpt.getAttribute('data-club') === clubId) {
+                    cOpt.style.display = 'block';
+                    if(!firstValid) firstValid = cOpt.value;
+                } else {
+                    cOpt.style.display = 'none';
+                }
+            }
+            if (firstValid) {
+                courtSel.value = firstValid;
+            } else {
+                courtSel.value = "";
+            }
+        }
+    }
+
+    function openScheduleModal(dateStr, timeStr, prefillMatchId = null) {
+        initialEditState = null;
+        // Prevent opening if all standby matches are blocked by the admin
+        if (standbyMatchesJson && standbyMatchesJson.length > 0) {
+            const canScheduleAny = standbyMatchesJson.some(m => m.allow_player_scheduling !== false);
+            if (!canScheduleAny) {
+                alert('Você não tem jogos com permissão de agendamento. O agendamento é realizado pelo Administrador.');
+                return;
+            }
+        }
+
+        if (!dragBlock) {
+            initDragLogic();
+        }
+
+        document.getElementById('modal-accept-btn').style.display = 'none';
+        document.getElementById('modal-accept-helper').style.display = 'none';
+        document.getElementById('modal-edit-helper').style.display = 'none';
+        document.getElementById('modal-delete-btn').style.display = 'none';
+        document.getElementById('modal-save-btn-text').innerText = 'Salvar';
+
+        document.getElementById('modal-date').value = dateStr;
+        document.getElementById('modal-time').value = timeStr;
+        
+        // Reset match select and end time
+        document.getElementById('modal-match-id').value = '';
+        document.getElementById('modal-adversary').value = '';
+        document.getElementById('modal-court').value = '';
+        document.getElementById('modal-time-end').value = pxToTime(timeToPx(timeStr) + 90); // temp default until match selected
+        
+        if (prefillMatchId) {
+            const selectEl = document.getElementById('modal-match-id');
+            selectEl.value = prefillMatchId;
+            if (selectEl.value === prefillMatchId) { // Check if valid
+                onMatchSelected();
+            }
+        }
+        
+        syncFromInputs();
+        
+        // Show modal and scroll mini-grid to time
+        document.getElementById('scheduleModal').style.display = 'flex';
+        setTimeout(() => {
+            document.getElementById('modal-mini-grid-container').scrollTop = timeToPx(timeStr) - 100;
+        }, 10);
+        
+        // Alert if clicking outside of hours, but only if they explicitly clicked a slot (not via 'Agendar Jogo' button)
+        if (arguments.length < 3 || arguments[2] !== false) {
+            if (!checkHoursAndAlert()) {
+                document.getElementById('scheduleModal').style.display = 'none';
+                return;
+            }
+        }
+    }
+
+    function selectStandbyMatch(id, title, allowScheduling) {
+        if (allowScheduling === false) {
+            alert('O agendamento deste jogo só é realizado pelo Administrador.');
+            return;
+        }
+
+        if (!dragBlock) {
+            initDragLogic();
+        }
+
+        document.getElementById('modal-accept-btn').style.display = 'none';
+        document.getElementById('modal-accept-helper').style.display = 'none';
+        document.getElementById('modal-edit-helper').style.display = 'none';
+        document.getElementById('modal-delete-btn').style.display = 'none';
+        const mobileDelBtn = document.getElementById('mobile-bottom-delete-btn');
+        if (mobileDelBtn) mobileDelBtn.style.display = 'none';
+        const mobileAccBtn = document.getElementById('mobile-bottom-accept-btn');
+        if (mobileAccBtn) mobileAccBtn.style.display = 'none';
+        document.getElementById('modal-save-btn-text').innerText = 'Salvar';
+        document.getElementById('mobile-modal-title').innerText = 'Novo Evento';
+
+        // Set default date and time to the current system date and time
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}`;
+        const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+        document.getElementById('modal-date').value = dateStr;
+        document.getElementById('modal-time').value = timeStr;
+        
+        // Select the match and trigger its logic
+        const matchSelect = document.getElementById('modal-match-id');
+        matchSelect.value = id;
+        onMatchSelected(); // This fills adversary, duration, court, and end_time
+        
+        syncFromInputs();
+        
+        // Show modal
+        document.getElementById('scheduleModal').style.display = 'flex';
+        setTimeout(() => {
+            document.getElementById('modal-mini-grid-container').scrollTop = timeToPx(timeStr) - 100;
+        }, 10);
+    }
+
+    function openEmptyScheduleModal() {
+        // Prevent opening if all standby matches are blocked by the admin
+        if (standbyMatchesJson && standbyMatchesJson.length > 0) {
+            const canScheduleAny = standbyMatchesJson.some(m => m.allow_player_scheduling !== false);
+            if (!canScheduleAny) {
+                alert('Você não tem jogos com permissão de agendamento. O agendamento é realizado pelo Administrador.');
+                return;
+            }
+        }
+
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}`;
+        // Add 1 hour so it's not automatically in the past
+        let h = now.getHours() + 1;
+        if (h > 23) h = 23;
+        const timeStr = `${h.toString().padStart(2,'0')}:00`;
+        openScheduleModal(dateStr, timeStr, false);
+    }
+
+    function submitScheduleForm() {
+        if(!checkHoursAndAlert(false)) {
+            return;
+        }
+        if(!document.getElementById('modal-match-id').value) {
+            alert("Por favor, selecione um jogo para agendar.");
+            return;
+        }
+        if(!document.getElementById('modal-court').value) {
+            alert("Por favor, selecione uma quadra.");
+            return;
+        }
+        
+        if (initialEditState) {
+            const currentDate = document.getElementById('modal-date').value;
+            const currentTime = document.getElementById('modal-time').value;
+            const currentCourt = document.getElementById('modal-court').value;
+            
+            if (currentDate === initialEditState.date && 
+                currentTime === initialEditState.time && 
+                currentCourt === initialEditState.court) {
+                alert("Nenhuma alteração foi realizada.");
+                return;
+            }
+        }
+        
+        document.getElementById('scheduleForm').submit();
+    }
+    
+    function submitDeleteSchedule() {
+        if(!confirm("Tem certeza que deseja excluir este agendamento/proposta?")) return;
+        const form = document.getElementById('scheduleForm');
+        
+        // Disable the schedule_match input so backend doesn't trigger the scheduling logic
+        const scheduleMatchInput = form.querySelector('input[name="schedule_match"]');
+        if (scheduleMatchInput) {
+            scheduleMatchInput.disabled = true;
+        }
+        
+        let input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'delete_schedule';
+        input.value = '1';
+        form.appendChild(input);
+        form.submit();
+    }
+    
+    function submitAcceptSchedule() {
+        let form = document.getElementById('scheduleForm');
+        
+        // Disable the schedule_match input so backend doesn't trigger the scheduling logic
+        const scheduleMatchInput = form.querySelector('input[name="schedule_match"]');
+        if (scheduleMatchInput) {
+            scheduleMatchInput.disabled = true;
+        }
+
+        let input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'accept_schedule';
+        input.value = '1';
+        form.appendChild(input);
+        form.submit();
+    }
+    
+    function editExistingSchedule(matchId, title, dateStr, timeStr, courtId, status, duration, clubId, canAccept, allowScheduling) {
+        if (dateStr && timeStr) {
+            const selectedDate = new Date(`${dateStr}T${timeStr}:00`);
+            const now = new Date();
+            if (selectedDate < now) {
+                alert('Não é possível modificar um agendamento que está no passado.');
+                return;
+            }
+        }
+        
+        if (allowScheduling === false) {
+            alert('O agendamento deste jogo só é realizado pelo Administrador.');
+            return;
+        }
+        
+        if (!dragBlock) {
+            initDragLogic();
+        }
+        let select = document.getElementById('modal-match-id');
+        let optionExists = Array.from(select.options).some(opt => opt.value == matchId);
+        if (!optionExists) {
+            let opt = document.createElement('option');
+            opt.value = matchId;
+            opt.text = title;
+            opt.setAttribute('data-duration', duration || 90);
+            opt.setAttribute('data-allow-scheduling', allowScheduling ? 'true' : 'false');
+            if (clubId) opt.setAttribute('data-club', clubId);
+            select.appendChild(opt);
+        }
+        select.value = matchId;
+        select.style.pointerEvents = 'none';
+        select.style.opacity = '0.7';
+        
+        document.getElementById('modal-date').value = dateStr;
+        document.getElementById('modal-time').value = timeStr;
+        
+        onMatchSelected();
+        
+        if (courtId) {
+            document.getElementById('modal-court').value = courtId;
+        }
+        syncFromInputs();
+        
+        initialEditState = {
+            date: document.getElementById('modal-date').value,
+            time: document.getElementById('modal-time').value,
+            court: document.getElementById('modal-court').value
+        };
+        
+        document.getElementById('modal-save-btn-text').innerText = 'Salvar Alteração';
+        document.getElementById('mobile-modal-title').innerText = 'Editar Evento';
+        document.getElementById('modal-delete-btn').style.display = 'flex';
+        const mobileDelBtn = document.getElementById('mobile-bottom-delete-btn');
+        if (mobileDelBtn) mobileDelBtn.style.display = 'flex';
+        
+        const mobileAccBtn = document.getElementById('mobile-bottom-accept-btn');
+        if (canAccept) {
+            document.getElementById('modal-accept-btn').style.display = 'flex';
+            document.getElementById('modal-accept-helper').style.display = 'block';
+            document.getElementById('modal-edit-helper').style.display = 'none';
+            if (mobileAccBtn) mobileAccBtn.style.display = 'flex';
+        } else {
+            document.getElementById('modal-accept-btn').style.display = 'none';
+            document.getElementById('modal-accept-helper').style.display = 'none';
+            document.getElementById('modal-edit-helper').style.display = 'block';
+            if (mobileAccBtn) mobileAccBtn.style.display = 'none';
+        }
+        
+        document.getElementById('scheduleModal').style.display = 'flex';
+        setTimeout(() => {
+            document.getElementById('modal-mini-grid-container').scrollTop = timeToPx(timeStr) - 100;
+        }, 10);
+    }
+    // --- Fim Nova Lógica ---
+
+    
+    function toggleNextMonth() {
+        isNextMonthExpanded = !isNextMonthExpanded;
+        const container = document.getElementById('mini-cal-next-month-container');
+        const icon = document.getElementById('icon-toggle-next-month');
+        if (isNextMonthExpanded) {
+            container.style.display = 'block';
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        } else {
+            container.style.display = 'none';
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        }
+    }
+
+    
+    // Mobile UI state
+    let isBottomSheetOpen = false;
+    
+    function toggleStandbyBottomSheet() {
+        const sheet = document.getElementById('standbyBottomSheet');
+        if (isBottomSheetOpen) {
+            sheet.classList.remove('open');
+        } else {
+            sheet.classList.add('open');
+        }
+        isBottomSheetOpen = !isBottomSheetOpen;
+    }
+
+    const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    const dayNames = ["D", "S", "T", "Q", "Q", "S", "S"];
+
+    function toggleMobileViewDropdown() {
+        const dropdown = document.getElementById('mobile-view-dropdown');
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Mount the initial layout
+    document.addEventListener('DOMContentLoaded', () => {
+        renderMiniCalendar();
+        renderMainCalendar();
+        renderMainCalendar();
+        updateCurrentTimeLine();
+        setInterval(updateCurrentTimeLine, 60000); // update every minute
+        
+        // Scroll to 14:00 by default as in the screenshot
+        const dayView = document.getElementById('day-view-container');
+        if (dayView) {
+            dayView.scrollTop = 14 * 60 - 20;
+        }
+    });
+    
+    function changeView(view) {
+        currentView = view;
+        document.querySelectorAll('.ol-toolbar .ol-btn').forEach(btn => btn.classList.remove('active'));
+        
+        // Dont set active on the filter button
+        if(view !== 'filter') {
+            const btn = document.getElementById(`btn-view-${view}`);
+            if (btn) btn.classList.add('active');
+        }
+
+        // Update mobile view icon and title
+        const mobileIcon = document.getElementById('mobile-view-selector-icon');
+        if (mobileIcon) {
+            if (view === 'day') {
+                mobileIcon.innerHTML = `<svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="2" width="14" height="12" rx="2" />
+                    <line x1="1" y1="6" x2="15" y2="6" />
+                    <rect x="4" y="9" width="8" height="2.5" rx="0.5" />
+                </svg>`;
+            } else if (view === 'week') {
+                mobileIcon.innerHTML = `<svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="2" width="14" height="12" rx="2" />
+                    <line x1="5.5" y1="5" x2="5.5" y2="11" />
+                    <line x1="8" y1="5" x2="8" y2="11" />
+                    <line x1="10.5" y1="5" x2="10.5" y2="11" />
+                </svg>`;
+            } else if (view === 'month') {
+                mobileIcon.innerHTML = `<svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="2" width="14" height="12" rx="2" />
+                    <line x1="1" y1="6" x2="15" y2="6" />
+                    <line x1="6" y1="6" x2="6" y2="14" />
+                    <line x1="11" y1="6" x2="11" y2="14" />
+                    <line x1="1" y1="10" x2="15" y2="10" />
+                </svg>`;
+            }
+        }
+
+        if (view === 'day') {
+            document.getElementById('day-view-container').style.display = 'block';
+            document.getElementById('week-view-container').style.display = 'none';
+            document.getElementById('month-view-container').style.display = 'none';
+        } else if (view === 'week') {
+            document.getElementById('day-view-container').style.display = 'none';
+            document.getElementById('week-view-container').style.display = 'flex';
+            document.getElementById('month-view-container').style.display = 'none';
+        } else if (view === 'month') {
+            document.getElementById('day-view-container').style.display = 'none';
+            document.getElementById('week-view-container').style.display = 'none';
+            document.getElementById('month-view-container').style.display = 'flex';
+        }
+        renderMainCalendar();
+    }
+    
+    function toggleFilterDropdown() {
+        const dropdown = document.getElementById('filterDropdown');
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    }
+    
+    function toggleSubmenu(id) {
+        const el = document.getElementById(id);
+        const allSubmenus = ['submenu-clubes', 'submenu-quadras', 'submenu-status'];
+        allSubmenus.forEach(s => {
+            if (s !== id) document.getElementById(s).style.display = 'none';
+        });
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function clearAllFilters() {
+        document.querySelectorAll('.filter-cb-clube, .filter-cb-quadra, .filter-cb-status').forEach(cb => cb.checked = true);
+        renderMainCalendar();
+    }
+    
+    document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('filterDropdown');
+        const btn = document.getElementById('btn-filter');
+        if (dropdown && dropdown.style.display === 'block' && !dropdown.contains(event.target) && !btn.contains(event.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+    
+    function goToToday() {
+        currentDate = new Date();
+        miniCalDate = new Date();
+        renderMiniCalendar();
+        renderMainCalendar();
+    }
+    
+    function changeMainDate(delta) {
+        if (currentView === 'day') {
+            currentDate.setDate(currentDate.getDate() + delta);
+        } else if (currentView === 'week') {
+            const numDays = window.innerWidth <= 768 ? 3 : 7;
+            currentDate.setDate(currentDate.getDate() + (delta * numDays));
+        } else if (currentView === 'month') {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+        }
+        renderMainCalendar();
+    }
+    
+    function changeMiniMonth(delta) {
+        miniCalDate.setMonth(miniCalDate.getMonth() + delta);
+        renderMiniCalendar();
+    }
+    
+    function selectMiniDate(year, month, day) {
+        currentDate = new Date(year, month, day);
+        renderMainCalendar();
+        renderMiniCalendar();
+    }
+    
+    function renderMiniCalendar() {
+        const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        
+        function generateMonthHTML(year, month) {
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            let html = '';
+            const prevMonthDays = new Date(year, month, 0).getDate();
+            for (let i = 0; i < firstDay; i++) {
+                html += `<div class="empty" style="opacity: 0.3;">${prevMonthDays - firstDay + i + 1}</div>`;
+            }
+            
+            const today = new Date();
+            for (let i = 1; i <= daysInMonth; i++) {
+                let classes = [];
+                if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) classes.push('today');
+                if (i === currentDate.getDate() && month === currentDate.getMonth() && year === currentDate.getFullYear()) classes.push('selected');
+                
+                html += `<div class="${classes.join(' ')}" onclick="selectMiniDate(${year}, ${month}, ${i})">${i}</div>`;
+            }
+            
+            const remaining = 42 - (firstDay + daysInMonth);
+            for (let i = 1; i <= remaining; i++) {
+                html += `<div class="empty" style="opacity: 0.3;">${i}</div>`;
+            }
+            return html;
+        }
+
+        const year1 = miniCalDate.getFullYear();
+        const month1 = miniCalDate.getMonth();
+        document.getElementById('mini-cal-month-year').innerText = `${monthNames[month1]} ${year1}`;
+        document.getElementById('mini-cal-days').innerHTML = generateMonthHTML(year1, month1);
+
+        let nextDate = new Date(year1, month1 + 1, 1);
+        const year2 = nextDate.getFullYear();
+        const month2 = nextDate.getMonth();
+        document.getElementById('mini-cal-next-month-year').innerText = `${monthNames[month2]} ${year2}`;
+        document.getElementById('mini-cal-next-days').innerHTML = generateMonthHTML(year2, month2);
+    }
+    
+    function navigateToDay(dateStr) {
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            currentDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            changeView('day');
+        }
+    }
+    
+    function getLocalDateStr(dateObj) {
+        const y = dateObj.getFullYear();
+        const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    function renderMainCalendar() {
+        const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        const dayNames = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+        
+        const uncheckedClubes = Array.from(document.querySelectorAll('.filter-cb-clube:not(:checked)')).map(cb => cb.value);
+        
+        // Hide/show courts in the filter dropdown based on club selection
+        document.querySelectorAll('.quadra-filter-item').forEach(item => {
+            const clubId = item.getAttribute('data-club-id');
+            if (clubId && uncheckedClubes.includes(clubId)) {
+                item.style.display = 'none';
+            } else {
+                item.style.display = 'flex';
+            }
+        });
+
+        const uncheckedQuadras = Array.from(document.querySelectorAll('.filter-cb-quadra:not(:checked)')).map(cb => cb.value);
+        const uncheckedStatus = Array.from(document.querySelectorAll('.filter-cb-status:not(:checked)')).map(cb => cb.value);
+        
+        const filteredMatches = allMatchesJson.filter(ev => {
+            // Se o status está na lista de DESMARCADOS, esconde
+            if (ev.status && uncheckedStatus.includes(ev.status)) return false;
+            
+            // Se o clube do evento está na lista de DESMARCADOS, esconde
+            if (ev.club_id && uncheckedClubes.includes(String(ev.club_id))) return false;
+            
+            // Se a quadra está na lista de DESMARCADAS, esconde
+            if (ev.court_id && uncheckedQuadras.includes(String(ev.court_id))) return false;
+            
+            return true;
+        });
+        
+        if (currentView === 'day') {
+            document.getElementById('main-date-title').innerText = `${currentDate.getDate()} ${monthNames[currentDate.getMonth()]}, ${currentDate.getFullYear()}`;
+            
+            const localDateStr = getLocalDateStr(currentDate);
+            let html = '';
+            for (let h = 0; h < 24; h++) {
+                const time00 = `${h.toString().padStart(2, '0')}:00`;
+                const time30 = `${h.toString().padStart(2, '0')}:30`;
+                html += `
+                <div class="ol-time-row">
+                    <div class="ol-time-label">${h}:00</div>
+                    <div class="ol-time-cell">
+                        <div class="ol-half-hour" onclick="selectSlot(this)" ondblclick="openScheduleModal('${localDateStr}', '${time00}')" ondragover="allowDrop(event)" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropOnSlot(event, '${localDateStr}', '${time00}')"></div>
+                        <div class="ol-half-hour" style="border-top: 1px dashed var(--ol-border);" onclick="selectSlot(this)" ondblclick="openScheduleModal('${localDateStr}', '${time30}')" ondragover="allowDrop(event)" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropOnSlot(event, '${localDateStr}', '${time30}')"></div>
+                    </div>
+                </div>`;
+            }
+            
+            // Add events
+            const timeGrid = document.getElementById('time-grid');
+            timeGrid.innerHTML = `
+                <div class="ol-current-time-line" id="current-time-line" style="display: none;"></div>
+                <div class="ol-current-time-circle" id="current-time-circle" style="display: none;"></div>
+            ` + html;
+            
+            // Filter events for this day — compare LOCAL dates
+            const ly = currentDate.getFullYear();
+            const lm = String(currentDate.getMonth() + 1).padStart(2, '0');
+            const ld = String(currentDate.getDate()).padStart(2, '0');
+            const dateStr = `${ly}-${lm}-${ld}`;
+            
+            filteredMatches.forEach(ev => {
+                if (!ev.start) return;
+                const evDate = new Date(ev.start);
+                const evY = evDate.getFullYear();
+                const evM = String(evDate.getMonth() + 1).padStart(2, '0');
+                const evD = String(evDate.getDate()).padStart(2, '0');
+                const evLocalDate = `${evY}-${evM}-${evD}`;
+                if (evLocalDate !== dateStr) return;
+                
+                const top = (evDate.getHours() * 60) + evDate.getMinutes();
+                const height = ev.duration || 90;
+                
+                let statusClass = '';
+                if (ev.is_completed) {
+                    statusClass = 'finalizado';
+                } else if (ev.status === 'aguardando_adversario') {
+                    statusClass = 'aguardando';
+                } else if (ev.status === 'agendado') {
+                    statusClass = 'agendado';
+                }
+                
+                const endDate = new Date(evDate.getTime() + height * 60000);
+                const startStr = `${evDate.getHours().toString().padStart(2, '0')}:${evDate.getMinutes().toString().padStart(2, '0')}`;
+                const endStr = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
+                
+                const evDiv = document.createElement('div');
+                evDiv.className = `ol-event ${ev.is_mine ? 'mine' : 'occupied'} ${statusClass}`;
+                evDiv.style.top = `${top}px`;
+                evDiv.style.height = `${height}px`;
+                let middleText = `${startStr} às ${endStr} na ${ev.court_name}`;
+                if (ev.is_completed) {
+                    middleText = `REALIZADO ${ev.date_str_br} das ${startStr} às ${endStr} na ${ev.court_name}`;
+                } else if (ev.match_status === 'pending') {
+                    middleText = `RESULTADO PENDENTE ${startStr} às ${endStr} na ${ev.court_name}`;
+                }
+                let htmlContent = `<strong>${ev.title}</strong> - <small>${middleText}</small> - <strong>${ev.status_display}</strong>`;
+                if (ev.is_completed && ev.score_str) {
+                    htmlContent += `<br><small style="font-weight: bold;">${ev.score_str}</small>`;
+                }
+                evDiv.innerHTML = htmlContent;
+                evDiv.id = 'ev-div-' + ev.id;
+                // Click to edit own matches
+                if (ev.is_mine && (ev.status === 'aguardando_adversario' || ev.status === 'agendado')) {
+                    evDiv.style.cursor = 'pointer';
+                    evDiv.title = 'Clique para editar ou excluir este agendamento';
+                    evDiv.onclick = () => editExistingSchedule(ev.id, ev.title, dateStr, startStr, ev.court_id, ev.status, ev.duration || 90, ev.club_id, ev.can_accept, ev.allow_player_scheduling);
+                }
+                timeGrid.appendChild(evDiv);
+            });
+            
+        } else if (currentView === 'week') {
+            const isMobile = window.innerWidth <= 768;
+            const numDays = isMobile ? 3 : 7;
+            
+            const startOfWeek = new Date(currentDate);
+            if (!isMobile) {
+                // Desktop: week starts on Sunday
+                startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+            }
+            // Mobile: 3-days view starts on currentDate
+            
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + (numDays - 1));
+            
+            if (isMobile) {
+                const month1 = monthNames[startOfWeek.getMonth()];
+                const month2 = monthNames[endOfWeek.getMonth()];
+                if (month1 === month2) {
+                    document.getElementById('main-date-title').innerText = `${month1}`;
+                } else {
+                    document.getElementById('main-date-title').innerText = `${month1} - ${month2}`;
+                }
+            } else {
+                document.getElementById('main-date-title').innerText = `${startOfWeek.getDate()}-${endOfWeek.getDate()} de ${monthNames[currentDate.getMonth()]} de ${currentDate.getFullYear()}`;
+            }
+            
+            let headers = '';
+            let columns = '';
+            
+            const dayNamesShort = ['dom.', 'seg.', 'ter.', 'qua.', 'qui.', 'sex.', 'sáb.'];
+
+            for (let i = 0; i < numDays; i++) {
+                const d = new Date(startOfWeek);
+                d.setDate(d.getDate() + i);
+                const isToday = (d.getDate() === new Date().getDate() && d.getMonth() === new Date().getMonth() && d.getFullYear() === new Date().getFullYear());
+                
+                if (isMobile) {
+                    headers += `<div style="flex: 1; text-align: center; padding: 10px 0; border-left: 1px solid var(--ol-border); border-bottom: 1px solid var(--ol-border);">
+                        <div style="font-size: 0.85rem; color: ${isToday ? 'var(--ol-text)' : 'var(--ol-text-muted)'}; background-color: ${isToday ? 'white' : 'transparent'}; color: ${isToday ? 'black' : 'inherit'}; border-radius: 12px; display: inline-block; padding: 2px 8px; font-weight: ${isToday ? 'bold' : 'normal'};">
+                            ${dayNamesShort[d.getDay()]} ${d.getDate()}
+                        </div>
+                    </div>`;
+                } else {
+                    headers += `<div style="flex: 1; text-align: center; padding: 10px 0; border-left: 1px solid var(--ol-border);">
+                        <div style="font-size: 1.2rem; font-weight: ${isToday ? 'bold' : 'normal'}; color: ${isToday ? 'var(--ol-primary)' : 'inherit'};">${d.getDate()}</div>
+                        <div style="font-size: 0.8rem; color: var(--ol-text-muted);">${dayNames[d.getDay()]}</div>
+                    </div>`;
+                }
+                
+                const localDateStr = getLocalDateStr(d);
+                let cells = '';
+                for (let h = 0; h < 24; h++) {
+                    const time00 = `${h.toString().padStart(2, '0')}:00`;
+                    const time30 = `${h.toString().padStart(2, '0')}:30`;
+                    cells += `
+                    <div class="ol-time-cell" style="height: 60px; border-bottom: 1px solid var(--ol-border);">
+                        <div class="ol-half-hour" onclick="selectSlot(this)" ondblclick="openScheduleModal('${localDateStr}', '${time00}')" ondragover="allowDrop(event)" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropOnSlot(event, '${localDateStr}', '${time00}')"></div>
+                        <div class="ol-half-hour" style="border-top: 1px dashed var(--ol-border);" onclick="selectSlot(this)" ondblclick="openScheduleModal('${localDateStr}', '${time30}')" ondragover="allowDrop(event)" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)" ondrop="handleDropOnSlot(event, '${localDateStr}', '${time30}')"></div>
+                    </div>`;
+                }
+                columns += `<div style="flex: 1; position: relative;">${cells}</div>`;
+            }
+            
+            document.getElementById('week-header').innerHTML = headers;
+            
+            let timeLabels = '';
+            for (let h = 0; h < 24; h++) {
+                timeLabels += `<div style="height: 60px; text-align: right; padding-right: 10px; font-size: 0.75rem; color: var(--ol-text-muted); position: relative; top: 2px;">${h.toString().padStart(2, '0')}:00</div>`;
+            }
+            document.getElementById('week-time-labels').innerHTML = timeLabels;
+            document.getElementById('week-columns').innerHTML = columns;
+            
+            // Render events in week view columns
+            const weekCols = document.getElementById('week-columns').children;
+            
+            filteredMatches.forEach(ev => {
+                if (!ev.start) return;
+                const evDate = new Date(ev.start);
+                // Use LOCAL date of the event
+                const evLocalDateStr = `${evDate.getFullYear()}-${String(evDate.getMonth()+1).padStart(2,'0')}-${String(evDate.getDate()).padStart(2,'0')}`;
+                
+                // Find which day column this event belongs to — compare LOCAL dates
+                let dayIndex = -1;
+                for (let i = 0; i < numDays; i++) {
+                    const d = new Date(startOfWeek);
+                    d.setDate(d.getDate() + i);
+                    const dLocal = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                    if (dLocal === evLocalDateStr) {
+                        dayIndex = i;
+                        break;
+                    }
+                }
+                if (dayIndex === -1 || !weekCols[dayIndex]) return;
+                
+                const top = (evDate.getHours() * 60) + evDate.getMinutes();
+                const height = ev.duration || 90;
+                
+                let statusClass = '';
+                if (ev.is_completed) statusClass = 'finalizado';
+                else if (ev.status === 'aguardando_adversario') statusClass = 'aguardando';
+                else if (ev.status === 'agendado') statusClass = 'agendado';
+                
+                const startStr = `${evDate.getHours().toString().padStart(2,'0')}:${evDate.getMinutes().toString().padStart(2,'0')}`;
+                const endDate = new Date(evDate.getTime() + height * 60000);
+                const endStr = `${endDate.getHours().toString().padStart(2,'0')}:${endDate.getMinutes().toString().padStart(2,'0')}`;
+                
+                const evDiv = document.createElement('div');
+                evDiv.className = `ol-event ${ev.is_mine ? 'mine' : 'occupied'} ${statusClass}`;
+                evDiv.style.top = `${top}px`;
+                evDiv.style.height = `${height}px`;
+                evDiv.style.left = '0';
+                evDiv.style.right = '0';
+                // Dynamic font size: calibrated at 0.73rem for 90min (90px).
+                // Scale proportionally, capped between 0.55rem and 0.92rem.
+                const dynamicFontSize = Math.min(0.92, Math.max(0.55, 0.73 * (height / 90)));
+                evDiv.style.fontSize = `${dynamicFontSize.toFixed(2)}rem`;
+                evDiv.style.lineHeight = '1.25';
+                evDiv.style.wordBreak = 'break-word';
+                evDiv.style.whiteSpace = 'normal';
+                evDiv.style.overflow = 'hidden';
+                evDiv.style.padding = '2px 4px';
+
+                let timeSpanText = `${startStr}-${endStr} na ${ev.court_name}`;
+                if (ev.is_completed) {
+                    timeSpanText = `REALIZADO ${ev.date_str_br} das ${startStr}-${endStr} na ${ev.court_name}`;
+                } else if (ev.match_status === 'pending') {
+                    timeSpanText = `RESULTADO PENDENTE ${startStr}-${endStr} na ${ev.court_name}`;
+                }
+                let htmlContent = `<strong style="display:block;">${ev.title}</strong><span style="opacity:0.9;">${timeSpanText} - <strong>${ev.status_display}</strong></span>`;
+                if (ev.is_completed && ev.score_str) {
+                    htmlContent += `<br><span style="font-weight: bold;">${ev.score_str}</span>`;
+                }
+                evDiv.innerHTML = htmlContent;
+                
+                evDiv.id = 'ev-div-' + ev.id;
+                // Click to edit own matches
+                if (ev.is_mine && (ev.status === 'aguardando_adversario' || ev.status === 'agendado')) {
+                    evDiv.style.cursor = 'pointer';
+                    evDiv.title = 'Clique para editar ou excluir este agendamento';
+                    const evLocalDateStr2 = `${evDate.getFullYear()}-${String(evDate.getMonth()+1).padStart(2,'0')}-${String(evDate.getDate()).padStart(2,'0')}`;
+                    const evStartStr2 = `${evDate.getHours().toString().padStart(2,'0')}:${evDate.getMinutes().toString().padStart(2,'0')}`;
+                    evDiv.onclick = () => editExistingSchedule(ev.id, ev.title, evLocalDateStr2, evStartStr2, ev.court_id, ev.status, ev.duration || 90, ev.club_id, ev.can_accept, ev.allow_player_scheduling);
+                }
+                
+                weekCols[dayIndex].appendChild(evDiv);
+            });
+        } else if (currentView === 'month') {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            document.getElementById('main-date-title').innerText = `${monthNames[month]} ${year}`;
+            
+            // Build header
+            let headerHTML = '';
+            for (let i = 0; i < 7; i++) {
+                const shortName = dayNames[i].substring(0, 3);
+                headerHTML += `<div style="flex: 1; text-align: center; padding: 10px 0; border-left: 1px solid var(--ol-border); font-weight: 500; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    ${shortName}
+                </div>`;
+            }
+            document.getElementById('month-header').innerHTML = headerHTML;
+            
+            // Build grid
+            let gridHTML = '<div style="display: flex; flex-wrap: wrap; flex: 1;">';
+            for (let i = 0; i < firstDay; i++) {
+                gridHTML += `<div style="width: calc(100% / 7); border-left: 1px solid var(--ol-border); border-bottom: 1px solid var(--ol-border); background: rgba(0,0,0,0.1);"></div>`;
+            }
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dateStr = `${year}-${(month+1).toString().padStart(2,'0')}-${i.toString().padStart(2,'0')}`;
+                
+                // Collect events for this day — compare LOCAL dates
+                const dayEvents = filteredMatches.filter(ev => {
+                    if (!ev.start) return false;
+                    const d = new Date(ev.start);
+                    const dStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                    return dStr === dateStr;
+                });
+                dayEvents.sort((a,b) => new Date(a.start) - new Date(b.start));
+                
+                let eventsHTML = '';
+                dayEvents.forEach(ev => {
+                    let statusClass = '';
+                    if (ev.is_completed) statusClass = 'finalizado';
+                    else if (ev.status === 'aguardando_adversario') statusClass = 'aguardando';
+                    else if (ev.status === 'agendado') statusClass = 'agendado';
+                    
+                    const d = new Date(ev.start);
+                    const timeStr = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+                    const evDiv = document.createElement('div');
+                    evDiv.className = `ol-event ${ev.is_mine ? 'mine' : 'occupied'} ${statusClass}`;
+                    evDiv.style.position = 'relative';
+                    evDiv.style.left = '0';
+                    evDiv.style.right = '0';
+                    evDiv.style.padding = '2px 4px';
+                    evDiv.style.marginBottom = '2px';
+                    evDiv.style.fontSize = '0.65rem';
+                    evDiv.style.borderRadius = '2px';
+                    evDiv.style.whiteSpace = 'nowrap';
+                    evDiv.style.overflow = 'hidden';
+                    evDiv.style.textOverflow = 'ellipsis';
+                    evDiv.style.boxShadow = 'none';
+                    let monthMiddleText = timeStr;
+                    if (ev.is_completed) {
+                        monthMiddleText = `REALIZADO ${ev.date_str_br} às ${timeStr}`;
+                    } else if (ev.match_status === 'pending') {
+                        monthMiddleText = `RESULTADO PENDENTE ${timeStr}`;
+                    }
+                    let htmlContent = `${monthMiddleText} - ${ev.title} - ${ev.status_display}`;
+                    if (ev.is_completed && ev.score_str) {
+                        htmlContent += ` | <span style="font-weight: bold;">${ev.score_str}</span>`;
+                    }
+                    evDiv.innerHTML = htmlContent;
+                    
+                    evDiv.id = 'ev-div-' + ev.id;
+                    const evLocalDateStr2 = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                    if (ev.is_mine && (ev.status === 'aguardando_adversario' || ev.status === 'agendado')) {
+                        evDiv.style.cursor = 'pointer';
+                        evDiv.title = 'Clique para editar ou excluir este agendamento';
+                        const safeTitle = ev.title ? ev.title.replace(/'/g, "\\'") : '';
+                        evDiv.setAttribute('onclick', `event.stopPropagation(); navigateToDay('${evLocalDateStr2}'); setTimeout(function() { editExistingSchedule(${ev.id}, '${safeTitle}', '${evLocalDateStr2}', '${timeStr}', '${ev.court_id}', '${ev.status}', ${ev.duration || 90}, ${ev.club_id || 'null'}, ${ev.can_accept}, ${ev.allow_player_scheduling}); }, 100);`);
+                    } else {
+                        evDiv.setAttribute('onclick', `event.stopPropagation(); navigateToDay('${evLocalDateStr2}');`);
+                    }
+                    eventsHTML += evDiv.outerHTML;
+                });
+                
+                gridHTML += `<div onclick="navigateToDay('${dateStr}')" style="cursor: pointer; width: calc(100% / 7); border-left: 1px solid var(--ol-border); border-bottom: 1px solid var(--ol-border); padding: 5px; min-height: 100px; box-sizing: border-box; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='rgba(255,255,255,0.05)'" onmouseout="this.style.backgroundColor='transparent'">
+                    <div style="text-align: right; margin-bottom: 5px; font-weight: 500; font-size: 0.85rem;">${i}</div>
+                    <div style="display: flex; flex-direction: column;">${eventsHTML}</div>
+                </div>`;
+            }
+            
+            // Fill remainder
+            const remainingDays = 42 - (firstDay + daysInMonth); // usually month grids are 6 rows x 7 days = 42 cells
+            for (let i = 0; i < remainingDays; i++) {
+                gridHTML += `<div style="width: calc(100% / 7); border-left: 1px solid var(--ol-border); border-bottom: 1px solid var(--ol-border); background: rgba(0,0,0,0.1);"></div>`;
+            }
+            gridHTML += '</div>';
+            
+            document.getElementById('month-grid').innerHTML = gridHTML;
+        }
+
+        
+        updateCurrentTimeLine();
+    }
+    
+    function updateCurrentTimeLine() {
+        const now = new Date();
+        if (currentView === 'day' && 
+            currentDate.getDate() === now.getDate() && 
+            currentDate.getMonth() === now.getMonth() && 
+            currentDate.getFullYear() === now.getFullYear()) {
+            
+            const top = (now.getHours() * 60) + now.getMinutes();
+            document.getElementById('current-time-line').style.display = 'block';
+            document.getElementById('current-time-circle').style.display = 'block';
+            document.getElementById('current-time-line').style.top = `${top}px`;
+            document.getElementById('current-time-circle').style.top = `${top}px`;
+        } else {
+            if (document.getElementById('current-time-line')) {
+                document.getElementById('current-time-line').style.display = 'none';
+                document.getElementById('current-time-circle').style.display = 'none';
+            }
+        }
+    }
+    
+    
+    function selectSlot(el) {
+        document.querySelectorAll('.ol-half-hour').forEach(slot => slot.classList.remove('selected-slot'));
+        el.classList.add('selected-slot');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const openMatchId = urlParams.get('open_match_id');
+        
+        if (openMatchId) {
+            const matchToOpen = matchesJson.find(m => m.id == openMatchId) || allMatchesJson.find(m => m.id == openMatchId);
+            if (matchToOpen && matchToOpen.start) {
+                const matchDate = new Date(matchToOpen.start);
+                currentDate = matchDate;
+                changeView('day'); // Renderiza a aba Dia com a data do jogo e abre modal
+                
+                setTimeout(() => {
+                    const evDiv = document.getElementById(`ev-div-${openMatchId}`);
+                    if (evDiv) {
+                        evDiv.click();
+                    }
+                }, 200);
+            }
+        }
+    });
+
+    // Drag and Drop Logic
+    let draggedMatchId = null;
+
+    function handleDragStart(event, matchId, duration) {
+        draggedMatchId = matchId;
+        event.dataTransfer.effectAllowed = 'copy';
+        event.dataTransfer.setData('text/plain', matchId);
+    }
+
+    function allowDrop(event) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+    }
+
+    function handleDragEnter(event) {
+        event.preventDefault();
+        event.currentTarget.classList.add('drag-over');
+    }
+
+    function handleDragLeave(event) {
+        event.currentTarget.classList.remove('drag-over');
+    }
+
+    function handleDropOnSlot(event, dateStr, timeStr) {
+        event.preventDefault();
+        event.currentTarget.classList.remove('drag-over');
+        if (draggedMatchId) {
+            openScheduleModal(dateStr, timeStr, draggedMatchId);
+            draggedMatchId = null;
+        }
+    }
