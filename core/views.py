@@ -987,18 +987,21 @@ def athlete_calendar(request):
 
     # Standby matches: current round, not scheduled, not Bye
     standby_matches = []
+    future_matches = []
     if active_profile:
         for m in my_matches:
-            if m.schedule_status not in ['pendente', 'aguardando_adversario', 'unagendado']:
+            if m.schedule_status not in ['pendente', 'unagendado']:
                 continue
-            if m.tournament and m.round_number != m.tournament.current_round:
+            p1_name = m.player_a.name if m.player_a else 'A definir'
+            p2_name = m.player_b.name if m.player_b else 'A definir'
+            
+            if 'bye' in p1_name.lower() or 'bye' in p2_name.lower():
                 continue
-            if 'bye' in m.player_a.name.lower() or 'bye' in m.player_b.name.lower():
-                continue
-            adversary = m.player_b.name if m.player_a_id in my_profile_ids else m.player_a.name
-            standby_matches.append({
+            adversary = p2_name if m.player_a_id in my_profile_ids else p1_name
+            
+            match_data = {
                 'id': m.id,
-                'title': f"{m.player_a.name} vs {m.player_b.name}",
+                'title': f"{p1_name} vs {p2_name}",
                 'adversary': adversary,
                 'tournament': m.tournament.name if m.tournament else '',
                 'round': m.round_number if hasattr(m, 'round_number') else '',
@@ -1006,7 +1009,12 @@ def athlete_calendar(request):
                 'duration': m.tournament.match_duration if m.tournament and m.tournament.match_duration else 90,
                 'club_id': m.tournament.club_id if m.tournament else None,
                 'allow_player_scheduling': m.tournament.allow_player_scheduling if m.tournament else True,
-            })
+            }
+            
+            if m.tournament and m.round_number != m.tournament.current_round:
+                future_matches.append(match_data)
+            else:
+                standby_matches.append(match_data)
 
     # Build matches_json (user's own matches for calendar display)
     matches_json = []
@@ -1030,7 +1038,9 @@ def athlete_calendar(request):
             elif getattr(m, 'round_number', None):
                 round_info = f" // Rodada {m.round_number}"
 
-        title = f"{m.player_a.name} vs {m.player_b.name} // {tourn_name}{round_info} // {club_name}"
+        p1_name = m.player_a.name if m.player_a else 'A definir'
+        p2_name = m.player_b.name if m.player_b else 'A definir'
+        title = f"{p1_name} vs {p2_name} // {tourn_name}{round_info} // {club_name}"
         duration = m.tournament.match_duration if m.tournament and m.tournament.match_duration else 90
         local_dt = timezone.localtime(dt)
         
@@ -1133,6 +1143,7 @@ def athlete_calendar(request):
             'court_id': court.id if court else None,
             'court_name': court.name if court else '',
             'club_id': m.tournament.club_id if m.tournament else None,
+            'club_name': club_name,
             'duration': duration,
             'can_accept': m.schedule_status == 'aguardando_adversario' and m.proposed_by_id and m.proposed_by_id not in my_profile_ids,
             'allow_player_scheduling': m.tournament.allow_player_scheduling if m.tournament else True,
@@ -1160,6 +1171,7 @@ def athlete_calendar(request):
         'all_matches_json': json.dumps(all_matches_json),
         'standby_matches': standby_matches,
         'standby_matches_json': json.dumps(standby_matches),
+        'future_matches_json': json.dumps(future_matches),
         'clubs_hours_json': json.dumps(clubs_hours_json),
     }
     return render(request, 'athlete_calendar.html', context)
@@ -1198,12 +1210,25 @@ def athlete_stats(request):
     
     chart_labels = []
     chart_data = []
+    chart_details = []
     for idx, m in enumerate(last_15):
         chart_labels.append(f"J{idx+1}")
         if m.winner == active_profile:
             chart_data.append(1)
+            result_text = "Vitória"
         else:
             chart_data.append(-1)
+            result_text = "Derrota"
+            
+        opponent = m.player_b if m.player_a == active_profile else m.player_a
+        opponent_name = opponent.name if opponent else "Desconhecido"
+        tournament_name = m.tournament.name if m.tournament else "Amistoso"
+        
+        chart_details.append({
+            'opponent': opponent_name,
+            'tournament': tournament_name,
+            'result': result_text
+        })
             
     cat_players = CategoryPlayer.objects.filter(player=active_profile).select_related('category', 'category__tournament')
     active_tournaments = cat_players.filter(category__tournament__is_finished=False).order_by('-id')
@@ -1276,6 +1301,7 @@ def athlete_stats(request):
         'titles': titles,
         'chart_labels': json.dumps(chart_labels),
         'chart_data': json.dumps(chart_data),
+        'chart_details': json.dumps(chart_details),
         'active_tournaments': active_tournaments,
         'finished_data': finished_data,
         'recurring_comparison': recurring_comparison,

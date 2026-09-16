@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Meus Jogos - AllCourts365{% endblock %}
+{% block title %}Calendário - AllCourts365{% endblock %}
 
 {% block content %}
 <style>
@@ -670,7 +670,7 @@
                     <line x1="4" y1="8" x2="12" y2="8"></line>
                     <line x1="6" y1="12" x2="10" y2="12"></line>
                 </svg>
-                <span style="font-weight: 600;">Filtro</span>
+                <span style="font-weight: 600;">Filtros</span>
                 <i class="fas fa-chevron-down" style="font-size: 0.7em; margin-left: 2px;"></i>
             </button>
             
@@ -678,6 +678,11 @@
                 <div style="padding: 10px 15px; border-bottom: 1px solid #444; display: flex; align-items: center; gap: 10px; color: #ccc; cursor: pointer;" onclick="clearAllFilters()">
                     <i class="fas fa-times" style="font-size: 1rem;"></i>
                     <span style="font-size: 0.9rem;">Limpar filtros</span>
+                </div>
+                
+                <div style="padding: 10px 15px; border-bottom: 1px solid #444; display: flex; align-items: center; justify-content: space-between; color: white;" onclick="event.stopPropagation()">
+                    <span style="font-size: 0.9rem;">Meus Jogos</span>
+                    <input type="checkbox" id="filter-meus-jogos" style="accent-color: #0f6cbd; cursor: pointer;" onchange="renderMainCalendar()">
                 </div>
                 
                 <div class="ol-filter-item" style="padding: 8px 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: white;" onclick="toggleSubmenu('submenu-clubes')">
@@ -785,7 +790,10 @@
             </div>
             
             <div class="ol-standby-section">
-                <div class="ol-standby-title">Jogos Aguardando Agendamento</div>
+                <div class="ol-standby-title" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleStandbyList()">
+                    <span>Jogos Aguardando Agendamento</span>
+                    <i id="standby-list-icon" class="fas fa-chevron-up" style="font-size: 0.8rem;"></i>
+                </div>
                 <div id="standby-list">
                     {% for sm in standby_matches %}
                     <div class="ol-standby-item {% if not sm.allow_player_scheduling %}not-draggable{% endif %}" 
@@ -800,6 +808,16 @@
                     {% empty %}
                     <p style="font-size: 0.8rem; color: var(--ol-text-muted);">Nenhum jogo pendente.</p>
                     {% endfor %}
+                </div>
+            </div>
+            
+            <div class="ol-standby-section" style="margin-top: 20px;">
+                <div class="ol-standby-title" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleAllMyMatchesList()">
+                    <span>Todos os meus jogos</span>
+                    <i id="all-my-matches-icon" class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
+                </div>
+                <div id="all-my-matches-list" style="display: none;">
+                    <!-- JS populated -->
                 </div>
             </div>
             </div>
@@ -1035,6 +1053,7 @@
     const matchesJson = {{ matches_json|safe }};
     const allMatchesJson = {{ all_matches_json|safe }};
     const standbyMatchesJson = {{ standby_matches_json|safe }};
+    const futureMatchesJson = {{ future_matches_json|safe }};
     const clubsHours = {{ clubs_hours_json|safe }};
     const activeClubIdStr = "{{ linked_club.id|default_if_none:'' }}";
 
@@ -1659,6 +1678,149 @@
         }
     }
 
+    function toggleStandbyList() {
+        const list = document.getElementById('standby-list');
+        const icon = document.getElementById('standby-list-icon');
+        if (list.style.display === 'none') {
+            list.style.display = 'block';
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        } else {
+            list.style.display = 'none';
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        }
+    }
+
+    function toggleAllMyMatchesList() {
+        const list = document.getElementById('all-my-matches-list');
+        const icon = document.getElementById('all-my-matches-icon');
+        if (list.style.display === 'none') {
+            list.style.display = 'block';
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        } else {
+            list.style.display = 'none';
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        }
+    }
+
+    function toggleSubSection(element) {
+        const target = element.nextElementSibling;
+        const icon = element.querySelector('i');
+        if (target.style.display === 'none') {
+            target.style.display = 'block';
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        } else {
+            target.style.display = 'none';
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        }
+    }
+
+    function renderAllMyMatches() {
+        const container = document.getElementById('all-my-matches-list');
+        if (!container) return;
+        
+        let allMatches = [];
+        
+        // Add scheduled / aguardando_adversario matches
+        const standbyIds = standbyMatchesJson.map(sm => sm.id);
+        let myMatches = allMatchesJson.filter(m => m.is_mine && !standbyIds.includes(m.id));
+        myMatches.forEach(m => {
+            let cat = "Agendado e Agendados pelo ADM";
+            if (m.status === 'aguardando_adversario') {
+                cat = "Aguardando Adversário";
+            }
+            allMatches.push({
+                ...m,
+                category: cat
+            });
+        });
+        
+        // Add future matches
+        futureMatchesJson.forEach(m => {
+            allMatches.push({
+                ...m,
+                category: "Não liberados para agendamento"
+            });
+        });
+        
+        if (allMatches.length === 0) {
+            container.innerHTML = '<p style="font-size: 0.8rem; color: var(--ol-text-muted); margin-top: 10px;">Nenhum jogo encontrado.</p>';
+            return;
+        }
+        
+        // Grouping: Club -> Category -> Court
+        let grouped = {};
+        allMatches.forEach(m => {
+            const club = m.club_name || 'Amistosos / Sem Clube';
+            const cat = m.category;
+            const court = m.court_name || 'Quadra a definir';
+            
+            if (!grouped[club]) grouped[club] = {};
+            if (!grouped[club][cat]) grouped[club][cat] = {};
+            if (!grouped[club][cat][court]) grouped[club][cat][court] = [];
+            
+            grouped[club][cat][court].push(m);
+        });
+        
+        // Categories order
+        const catOrder = ["Agendado e Agendados pelo ADM", "Aguardando Adversário", "Não liberados para agendamento"];
+        
+        let html = '';
+        for (let club in grouped) {
+            html += `<div style="margin-top: 15px; font-weight: bold; color: var(--ol-primary); font-size: 0.95rem; border-bottom: 1px solid var(--ol-border); padding-bottom: 3px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="toggleSubSection(this)">
+                <span>${club}</span> <i class="fas fa-chevron-up" style="font-size: 0.75rem;"></i>
+            </div>
+            <div style="display: block;">`; // Club wrapper
+            
+            catOrder.forEach(cat => {
+                if (grouped[club][cat]) {
+                    html += `<div style="margin-top: 10px; margin-left: 10px; font-weight: 600; font-size: 0.85rem; color: #fff; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="toggleSubSection(this)">
+                        <span>${cat}</span> <i class="fas fa-chevron-up" style="font-size: 0.7rem; color: #ccc;"></i>
+                    </div>
+                    <div style="display: block; margin-left: 10px;">`; // Cat wrapper
+                    
+                    if (cat === "Não liberados para agendamento") {
+                        // Don't group by court for future matches
+                        for (let court in grouped[club][cat]) {
+                            grouped[club][cat][court].forEach(m => {
+                                const roundStr = m.round ? ` - Rodada ${m.round}` : '';
+                                html += `<div class="ol-standby-item not-draggable" style="margin-top: 8px; opacity: 1; cursor: default; padding: 8px;">
+                                    <strong>${m.title}</strong><br>
+                                    <span style="color: var(--ol-text-muted); font-size: 0.8rem;">${m.tournament}${roundStr} - Aguardando Resultados Anteriores</span>
+                                </div>`;
+                            });
+                        }
+                    } else {
+                        // Group by court for scheduled / aguardando matches
+                        for (let court in grouped[club][cat]) {
+                            html += `<div style="margin-top: 8px; margin-left: 5px; font-weight: 600; font-size: 0.75rem; color: #ccc;"><i class="fas fa-map-marker-alt" style="margin-right: 5px;"></i>${court}</div>`;
+                            grouped[club][cat][court].sort((a, b) => new Date(a.start) - new Date(b.start));
+                            grouped[club][cat][court].forEach(m => {
+                                const d = new Date(m.start);
+                                const dateStr = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+                                const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+                                
+                                html += `<div class="ol-standby-item not-draggable" style="margin-left: 5px; margin-top: 5px; opacity: 1; cursor: default; padding: 8px;">
+                                    <strong>${m.title}</strong><br>
+                                    <span style="color: var(--ol-text-muted); font-size: 0.8rem;">${dateStr} às ${timeStr} - ${m.status_display}</span>
+                                </div>`;
+                            });
+                        }
+                    }
+                    html += `</div>`; // End Cat wrapper
+                }
+            });
+            html += `</div>`; // End Club wrapper
+        }
+        
+        container.innerHTML = html;
+    }
+
     
     // Mobile UI state
     let isBottomSheetOpen = false;
@@ -1685,7 +1847,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         renderMiniCalendar();
         renderMainCalendar();
-        renderMainCalendar();
+        renderAllMyMatches();
         updateCurrentTimeLine();
         setInterval(updateCurrentTimeLine, 60000); // update every minute
         
@@ -1765,6 +1927,7 @@
 
     function clearAllFilters() {
         document.querySelectorAll('.filter-cb-clube, .filter-cb-quadra, .filter-cb-status').forEach(cb => cb.checked = true);
+        if (document.getElementById('filter-meus-jogos')) document.getElementById('filter-meus-jogos').checked = false;
         renderMainCalendar();
     }
     
@@ -1881,7 +2044,12 @@
         const uncheckedQuadras = Array.from(document.querySelectorAll('.filter-cb-quadra:not(:checked)')).map(cb => cb.value);
         const uncheckedStatus = Array.from(document.querySelectorAll('.filter-cb-status:not(:checked)')).map(cb => cb.value);
         
+        const filterMeusJogos = document.getElementById('filter-meus-jogos') ? document.getElementById('filter-meus-jogos').checked : false;
+
         const filteredMatches = allMatchesJson.filter(ev => {
+            // Se "Meus Jogos" está marcado e o evento não é meu, esconde
+            if (filterMeusJogos && !ev.is_mine) return false;
+
             // Se o status está na lista de DESMARCADOS, esconde
             if (ev.status && uncheckedStatus.includes(ev.status)) return false;
             
