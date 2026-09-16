@@ -1212,7 +1212,6 @@ def athlete_stats(request):
     # Ordena: Torneios mais recentes primeiro (maior ID), depois rodadas mais recentes, e por fim ID do jogo
     completed_matches.sort(key=lambda m: (m.tournament_id or 0, m.round_number or 0, m.id), reverse=True)
     last_15 = completed_matches[:15]
-    last_15.reverse()
     
     # Preenche com None no FINAL da lista até ter 15 jogos
     while len(last_15) < 15:
