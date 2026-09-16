@@ -1730,7 +1730,7 @@
         
         // Add scheduled / aguardando_adversario matches
         const standbyIds = standbyMatchesJson.map(sm => sm.id);
-        let myMatches = allMatchesJson.filter(m => m.is_mine && !standbyIds.includes(m.id));
+        let myMatches = allMatchesJson.filter(m => m.is_mine && !standbyIds.includes(m.id) && !m.is_completed && !m.is_tournament_finished);
         myMatches.forEach(m => {
             let cat = "Agendado e Agendados pelo ADM";
             if (m.status === 'aguardando_adversario') {

@@ -992,6 +992,8 @@ def athlete_calendar(request):
         for m in my_matches:
             if m.schedule_status not in ['pendente', 'unagendado']:
                 continue
+            if m.status == 'completed' or (m.tournament and m.tournament.is_finished):
+                continue
             p1_name = m.player_a.name if m.player_a else 'A definir'
             p2_name = m.player_b.name if m.player_b else 'A definir'
             
@@ -1082,6 +1084,7 @@ def athlete_calendar(request):
             'adversary': m.player_b.name if m.player_a_id in my_profile_ids else m.player_a.name,
             'can_accept': m.schedule_status == 'aguardando_adversario' and m.proposed_by_id and m.proposed_by_id not in my_profile_ids,
             'allow_player_scheduling': m.tournament.allow_player_scheduling if m.tournament else True,
+            'is_tournament_finished': m.tournament.is_finished if m.tournament else False,
         })
 
     # Build all_matches_json (all club matches for occupation display)
