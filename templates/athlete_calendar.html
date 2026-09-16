@@ -1035,10 +1035,10 @@
     const clubsHours = {{ clubs_hours_json|safe }};
     const activeClubIdStr = "{{ linked_club.id|default_if_none:'' }}";
 
-    function validateOpeningHours(dateStr, timeStr, clubId) {
-        if (!dateStr || !timeStr || !clubId) return true;
+    function validateOpeningHours(dateStr, timeStr, clubId, endTimeStr = null) {
+        if (!dateStr || !timeStr || !clubId) return { valid: true };
         const club = clubsHours[clubId];
-        if (!club) return true;
+        if (!club) return { valid: true };
         
         const d = new Date(dateStr + 'T00:00:00');
         const day = d.getDay(); // 0=Sunday, 6=Saturday
@@ -1052,18 +1052,30 @@
             openTime = club.weekday_open; closeTime = club.weekday_close;
         }
         
-        if (!openTime || !closeTime) return false;
+        if (!openTime || !closeTime) return { valid: false, reason: "closed" };
         
         const timePx = timeToPx(timeStr);
         const openPx = timeToPx(openTime);
         const closePx = timeToPx(closeTime);
         
-        return timePx >= openPx && timePx <= closePx;
+        if (timePx < openPx || timePx >= closePx) {
+            return { valid: false, reason: "start_time" };
+        }
+        
+        if (endTimeStr) {
+            const endPx = timeToPx(endTimeStr);
+            if (endPx > closePx) {
+                return { valid: false, reason: "end_time", closeTime: closeTime };
+            }
+        }
+        
+        return { valid: true };
     }
 
     function checkHoursAndAlert() {
         const dateStr = document.getElementById('modal-date').value;
         const timeStr = document.getElementById('modal-time').value;
+        const endTimeStr = document.getElementById('modal-time-end').value;
         const matchSel = document.getElementById('modal-match-id');
         
         if (!dateStr || !timeStr) return true;
@@ -1082,8 +1094,15 @@
             if (optClub) clubId = optClub;
         }
         
-        if (!validateOpeningHours(dateStr, timeStr, clubId)) {
-            alert(`O horário de início (${timeStr}) está fora do expediente do clube para este dia.`);
+        const validation = validateOpeningHours(dateStr, timeStr, clubId, endTimeStr);
+        if (validation && !validation.valid) {
+            if (validation.reason === "start_time") {
+                alert(`O horário de início (${timeStr}) está fora do expediente do clube para este dia.`);
+            } else if (validation.reason === "end_time") {
+                alert(`O horário de término do jogo (${endTimeStr}) extrapola o horário de funcionamento do clube (${validation.closeTime}).`);
+            } else if (validation.reason === "closed") {
+                alert(`O clube está fechado neste dia.`);
+            }
             return false;
         }
         return true;
