@@ -92,7 +92,7 @@
         display: flex;
         flex-direction: column;
         padding: 15px;
-        overflow-y: auto;
+        overflow: hidden;
     }
 
     .ol-mini-cal-header {
@@ -789,35 +789,37 @@
                 </div>
             </div>
             
-            <div class="ol-standby-section">
-                <div class="ol-standby-title" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleStandbyList()">
-                    <span>Jogos Aguardando Agendamento</span>
-                    <i id="standby-list-icon" class="fas fa-chevron-up" style="font-size: 0.8rem;"></i>
-                </div>
-                <div id="standby-list">
-                    {% for sm in standby_matches %}
-                    <div class="ol-standby-item {% if not sm.allow_player_scheduling %}not-draggable{% endif %}" 
-                         onclick="selectStandbyMatch('{{ sm.id }}', '{{ sm.title|escapejs }}', {{ sm.allow_player_scheduling|yesno:'true,false' }})"
-                         {% if sm.allow_player_scheduling %}
-                         draggable="true" 
-                         ondragstart="handleDragStart(event, '{{ sm.id }}', '{{ sm.duration|default:90 }}')"
-                         {% endif %}>
-                        <strong>{{ sm.title }}</strong><br>
-                        <span style="color: var(--ol-text-muted);">{{ sm.tournament }} - Rodada {{ sm.round }} {% if sm.club_name %}({{ sm.club_name }}){% endif %} {% if not sm.allow_player_scheduling %}- Apenas Admin{% endif %}</span>
+            <div style="max-height: calc(100vh - 450px); overflow-y: auto; padding-right: 5px; margin-right: -5px;">
+                <div class="ol-standby-section">
+                    <div class="ol-standby-title" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleStandbyList()">
+                        <span>Jogos Aguardando Agendamento</span>
+                        <i id="standby-list-icon" class="fas fa-chevron-up" style="font-size: 0.8rem;"></i>
                     </div>
-                    {% empty %}
-                    <p style="font-size: 0.8rem; color: var(--ol-text-muted);">Nenhum jogo pendente.</p>
-                    {% endfor %}
+                    <div id="standby-list">
+                        {% for sm in standby_matches %}
+                        <div class="ol-standby-item {% if not sm.allow_player_scheduling %}not-draggable{% endif %}" 
+                             onclick="selectStandbyMatch('{{ sm.id }}', '{{ sm.title|escapejs }}', {{ sm.allow_player_scheduling|yesno:'true,false' }})"
+                             {% if sm.allow_player_scheduling %}
+                             draggable="true" 
+                             ondragstart="handleDragStart(event, '{{ sm.id }}', '{{ sm.duration|default:90 }}')"
+                             {% endif %}>
+                            <strong>{{ sm.title }}</strong><br>
+                            <span style="color: var(--ol-text-muted);">{{ sm.tournament }} - Rodada {{ sm.round }} {% if sm.club_name %}({{ sm.club_name }}){% endif %} {% if not sm.allow_player_scheduling %}- Apenas Admin{% endif %}</span>
+                        </div>
+                        {% empty %}
+                        <p style="font-size: 0.8rem; color: var(--ol-text-muted);">Nenhum jogo pendente.</p>
+                        {% endfor %}
+                    </div>
                 </div>
-            </div>
-            
-            <div class="ol-standby-section" style="margin-top: 20px;">
-                <div class="ol-standby-title" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleAllMyMatchesList()">
-                    <span>Todos os meus jogos</span>
-                    <i id="all-my-matches-icon" class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
-                </div>
-                <div id="all-my-matches-list" style="display: none;">
-                    <!-- JS populated -->
+                
+                <div class="ol-standby-section" style="margin-top: 20px;">
+                    <div class="ol-standby-title" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleAllMyMatchesList()">
+                        <span>Todos os meus jogos</span>
+                        <i id="all-my-matches-icon" class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
+                    </div>
+                    <div id="all-my-matches-list" style="display: none;">
+                        <!-- JS populated -->
+                    </div>
                 </div>
             </div>
             </div>
