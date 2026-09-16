@@ -277,14 +277,16 @@
         border-left: 4px solid #dc2626 !important;
     }
     .ol-event.agendado {
-        background-color: #86efac !important; /* Light green */
+        background-color: rgba(34, 197, 94, 0.4) !important; /* Verde transparente */
         border-left: 4px solid #16a34a !important;
-        color: #064e3b !important;
+    }
+    .ol-event.unagendado {
+        background-color: rgba(56, 189, 248, 0.4) !important; /* Azul claro transparente */
+        border-left: 4px solid #0284c7 !important;
     }
     .ol-event.finalizado {
-        background-color: #86efac !important;
+        background-color: rgba(34, 197, 94, 0.4) !important;
         border-left: 4px solid #16a34a !important;
-        color: #064e3b !important;
     }
 
     #modal-drag-time-label,
@@ -1205,9 +1207,15 @@
                 bg = 'rgba(220, 38, 38, 0.4)';
                 borderLeft = '4px solid #dc2626';
             } else if (ev.status === 'agendado') {
-                bg = '#86efac';
+                bg = 'rgba(34, 197, 94, 0.4)';
                 borderLeft = '4px solid #16a34a';
                 color = '#064e3b';
+            } else if (ev.status === 'unagendado') {
+                bg = 'rgba(56, 189, 248, 0.4)';
+                borderLeft = '4px solid #0284c7';
+            } else if (ev.is_completed) {
+                bg = 'rgba(34, 197, 94, 0.4)';
+                borderLeft = '4px solid #16a34a';
             }
             
             const evDiv = document.createElement('div');
@@ -1237,7 +1245,7 @@
                 miniMiddleText = `RESULTADO PENDENTE ${startStr} às ${endStr}`;
             }
             let htmlContent = `<strong>${ev.title}</strong><br>${miniMiddleText} - ${ev.status_display}`;
-            if (ev.is_completed && ev.score_str) {
+            if (ev.is_completed && ev.score_str && ev.status !== 'aguardando_adversario' && ev.status !== 'agendado' && ev.status !== 'unagendado') {
                 htmlContent += `<br><small style="font-weight: bold;">${ev.score_str}</small>`;
             }
             evDiv.innerHTML = htmlContent;
@@ -1962,7 +1970,7 @@
                 if (ev.is_completed && ev.status !== 'aguardando_adversario' && ev.status !== 'agendado' && ev.status !== 'unagendado') {
                     htmlContent = `<span style="display:block;">${middleText} - <strong>${statusText}</strong></span>`;
                 }
-                if (ev.is_completed && ev.score_str) {
+                if (ev.is_completed && ev.score_str && ev.status !== 'aguardando_adversario' && ev.status !== 'agendado' && ev.status !== 'unagendado') {
                     htmlContent += `<br><span style="font-weight: bold;">${ev.score_str}</span>`;
                 }
                 
@@ -2123,7 +2131,7 @@
                 if (ev.is_completed && ev.status !== 'aguardando_adversario' && ev.status !== 'agendado' && ev.status !== 'unagendado') {
                     htmlContent = `<span style="display:block;">${timeSpanText} - <strong>${statusText}</strong></span>`;
                 }
-                if (ev.is_completed && ev.score_str) {
+                if (ev.is_completed && ev.score_str && ev.status !== 'aguardando_adversario' && ev.status !== 'agendado' && ev.status !== 'unagendado') {
                     htmlContent += `<br><span style="font-weight: bold;">${ev.score_str}</span>`;
                 }
                 evDiv.innerHTML = htmlContent;
@@ -2213,7 +2221,7 @@
                     if (ev.is_completed && ev.status !== 'aguardando_adversario' && ev.status !== 'agendado' && ev.status !== 'unagendado') {
                         htmlContent = `<span style="display:block;">${monthMiddleText} - <strong>${statusText}</strong></span>`;
                     }
-                    if (ev.is_completed && ev.score_str) {
+                    if (ev.is_completed && ev.score_str && ev.status !== 'aguardando_adversario' && ev.status !== 'agendado' && ev.status !== 'unagendado') {
                         htmlContent += ` | <span style="font-weight: bold;">${ev.score_str}</span>`;
                     }
                     evDiv.innerHTML = htmlContent;
