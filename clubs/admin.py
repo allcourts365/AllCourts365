@@ -436,6 +436,7 @@ class RankingTournamentAdmin(TournamentAdmin):
 
 @admin.register(KnockoutTournament)
 class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
+    inlines = [CategoryInline]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request).filter(tournament_type='knockout')

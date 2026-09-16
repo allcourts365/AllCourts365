@@ -41,6 +41,16 @@
     }
     {% endif %}
 
+    @keyframes spin-ball {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .ball-spinning {
+        animation: spin-ball 2s linear infinite;
+    }
+    .ball-static {
+    }
+
     .ko-category-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -116,7 +126,18 @@
     <div class="ko-category-grid">
         {% for cat in categories %}
         <a href="{% url 'clubs:knockout_bracket' club.id tournament.id cat.id %}" class="ko-category-card glass-card">
-            <h3>{{ cat.name }}</h3>
+            <div>
+                {% if cat.is_finished %}
+                    <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); margin-bottom: 10px; width: fit-content; letter-spacing: 0.5px;">
+                        <img src="{% static 'bolinha.png' %}" class="ball-static" style="width:12px;height:12px;" alt="Encerrado"> ENCERRADO
+                    </div>
+                {% else %}
+                    <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); margin-bottom: 10px; width: fit-content; letter-spacing: 0.5px;">
+                        <img src="{% static 'bolinha.png' %}" class="ball-spinning" style="width:12px;height:12px;" alt="Em andamento"> EM ANDAMENTO
+                    </div>
+                {% endif %}
+                <h3>{{ cat.name }}</h3>
+            </div>
             <span class="ko-card-link">Ver Chave &rarr;</span>
         </a>
         {% endfor %}
