@@ -1209,9 +1209,30 @@ def athlete_stats(request):
     win_rate = (wins / total_matches * 100) if total_matches > 0 else 0
 
     completed_matches = list(matches.filter(status='completed'))
-    # Ordena: Torneios mais recentes primeiro (maior ID), depois rodadas mais recentes, e por fim ID do jogo
-    completed_matches.sort(key=lambda m: (m.tournament_id or 0, m.round_number or 0, m.id), reverse=True)
-    last_15 = completed_matches[:15]
+    
+    def get_chrono_key(m):
+        m_ord = 0
+        if getattr(m, 'scheduled_datetime', None):
+            m_ord = m.scheduled_datetime.toordinal()
+            
+        t_ord = 0
+        if m.tournament and getattr(m.tournament, 'start_date', None):
+            t_ord = m.tournament.start_date.toordinal()
+            
+        if not t_ord:
+            t_ord = m_ord
+            
+        if not t_ord:
+            # Fallback para torneios sem data: o usuário relatou que IDs maiores são mais antigos
+            t_ord = -(m.tournament_id or 0)
+            
+        r_num = getattr(m, 'round_number', 0) or 0
+        return (t_ord, m_ord, r_num, m.id)
+
+    # Ordena de forma crescente (Mais Antigo -> Mais Novo)
+    completed_matches.sort(key=get_chrono_key)
+    # Pega apenas os últimos 15 (que são os 15 mais novos) mantendo a ordem crescente
+    last_15 = completed_matches[-15:]
     
     # Preenche com None no FINAL da lista até ter 15 jogos
     while len(last_15) < 15:
