@@ -790,6 +790,32 @@ def athlete_calendar(request):
                         end_dt = timezone.make_aware(datetime.strptime(end_dt_str, "%Y-%m-%d %H:%M"))
                     except ValueError:
                         pass
+                
+                # Calcular end_dt se não existir (para checagem de conflitos)
+                check_end_dt = end_dt
+                if not check_end_dt:
+                    duration = match.tournament.match_duration if match.tournament and match.tournament.match_duration else 90
+                    check_end_dt = scheduled_dt + timedelta(minutes=duration)
+
+                # Checagem de conflitos
+                if court_id:
+                    conflicts = Match.objects.filter(
+                        Q(court_id=court_id) | Q(proposed_court_id=court_id)
+                    ).exclude(id=match.id).exclude(schedule_status='pendente')
+                    
+                    has_conflict = False
+                    for c in conflicts:
+                        c_start = c.scheduled_datetime or c.proposed_datetime
+                        if not c_start: continue
+                        c_duration = c.tournament.match_duration if c.tournament and c.tournament.match_duration else 90
+                        c_end = c.proposed_end_datetime or (c_start + timedelta(minutes=c_duration))
+                        if max(scheduled_dt, c_start) < min(check_end_dt, c_end):
+                            has_conflict = True
+                            break
+                            
+                    if has_conflict:
+                        messages.error(request, 'A quadra selecionada já possui um agendamento ou proposta neste horário.')
+                        return redirect('athlete_calendar')
 
                 is_reschedule = match.schedule_status in ['agendado', 'aguardando_adversario']
 
@@ -883,16 +909,28 @@ def athlete_calendar(request):
                     messages.error(request, 'Não há proposta pendente para este jogo.')
                     return redirect('athlete_calendar')
 
-                # Checa conflitos
-                conflict_start = match.proposed_datetime - timedelta(minutes=89)
-                conflict_end = match.proposed_datetime + timedelta(minutes=89)
+                # Checa conflitos de forma precisa
+                check_start = match.proposed_datetime
+                check_end = match.proposed_end_datetime
+                if not check_end:
+                    duration = match.tournament.match_duration if match.tournament and match.tournament.match_duration else 90
+                    check_end = check_start + timedelta(minutes=duration)
 
                 conflicts = Match.objects.filter(
-                    court=match.proposed_court,
-                    scheduled_datetime__range=(conflict_start, conflict_end)
-                ).exclude(id=match.id)
+                    Q(court=match.proposed_court) | Q(proposed_court=match.proposed_court)
+                ).exclude(id=match.id).exclude(schedule_status='pendente')
 
-                if conflicts.exists():
+                has_conflict = False
+                for c in conflicts:
+                    c_start = c.scheduled_datetime or c.proposed_datetime
+                    if not c_start: continue
+                    c_duration = c.tournament.match_duration if c.tournament and c.tournament.match_duration else 90
+                    c_end = c.proposed_end_datetime or (c_start + timedelta(minutes=c_duration))
+                    if max(check_start, c_start) < min(check_end, c_end):
+                        has_conflict = True
+                        break
+
+                if has_conflict:
                     messages.error(request, 'A quadra não está mais disponível neste horário. Por favor, recuse e proponha um novo horário.')
                 else:
                     match.scheduled_datetime = match.proposed_datetime
