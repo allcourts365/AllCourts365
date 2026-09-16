@@ -10,6 +10,7 @@ urlpatterns = [
     path('logout-redirect/', views.logout_and_redirect, name='logout_redirect'),
     path('redirecionar/', views.login_redirect, name='login_redirect'),
     path('painel-atleta/', views.athlete_dashboard, name='athlete_dashboard'),
+    path('painel-atleta/estatisticas/', views.athlete_stats, name='athlete_stats'),
     path('api/agenda/', views.api_court_agenda, name='api_court_agenda'),
     path('api/agenda/mensal/', views.api_monthly_agenda, name='api_monthly_agenda'),
     path('para-clubes/', views.club_landing_page, name='club_landing_page'),

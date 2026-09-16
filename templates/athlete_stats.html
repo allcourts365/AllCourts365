@@ -1,0 +1,417 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Estatísticas - AllCourts365{% endblock %}
+
+{% block content %}
+<style>
+    /* Premium Dark Theme */
+    :root {
+        --ol-bg: #111111;
+        --ol-border: #333333;
+        --ol-hover: #222222;
+        --ol-primary: #10b981;
+        --ol-text: #ffffff;
+        --ol-text-muted: #888888;
+        --ol-header-bg: #181818;
+    }
+
+    body {
+        overflow: hidden;
+    }
+
+    main.container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .ol-container {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 70px);
+        background-color: var(--ol-bg);
+        color: var(--ol-text);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Toolbar */
+    .ol-toolbar {
+        display: flex;
+        align-items: center;
+        height: 60px;
+        padding: 0 25px;
+        border-bottom: 1px solid var(--ol-border);
+        background-color: var(--ol-bg);
+        gap: 15px;
+    }
+    
+    .ol-btn {
+        background: transparent;
+        border: none;
+        color: var(--ol-text);
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .ol-btn:hover {
+        background-color: var(--ol-hover);
+        color: var(--ol-text);
+    }
+
+    .ol-body {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+    }
+
+    /* Sidebar */
+    .ol-sidebar {
+        width: 280px;
+        border-right: 1px solid var(--ol-border);
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        overflow-y: auto;
+        background: var(--ol-header-bg);
+    }
+
+    .stat-card-side {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    
+    .stat-card-side h4 {
+        color: var(--ol-text-muted);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin: 0 0 10px 0;
+    }
+
+    .stat-card-side .value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #fff;
+        margin: 0;
+        background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Main Content */
+    .ol-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: var(--ol-bg);
+        overflow-y: auto;
+        padding: 30px;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 25px;
+        margin-bottom: 25px;
+    }
+
+    .glass-panel {
+        background: rgba(30, 30, 30, 0.6);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    }
+
+    .glass-panel h3 {
+        margin-top: 0;
+        margin-bottom: 20px;
+        font-size: 1.2rem;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .list-item {
+        padding: 15px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .list-item:last-child {
+        border-bottom: none;
+    }
+
+    .badge-active {
+        background: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        border: 1px solid rgba(59, 130, 246, 0.5);
+    }
+
+    .badge-champion {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        border: 1px solid rgba(245, 158, 11, 0.5);
+    }
+    
+    .badge-normal {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ccc;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    .compare-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .compare-card {
+        background: rgba(20, 20, 20, 0.8);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 12px;
+        padding: 20px;
+    }
+
+    .compare-card h4 {
+        margin: 0 0 15px 0;
+        color: #3b82f6;
+        font-size: 1.1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding-bottom: 10px;
+    }
+
+    .compare-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+    }
+    
+    @media (max-width: 992px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+        .ol-sidebar {
+            display: none;
+        }
+    }
+</style>
+
+<div class="ol-container">
+    <div class="ol-toolbar">
+        <a href="{% url 'athlete_dashboard' %}" class="ol-btn">
+            <i class="fas fa-arrow-left"></i> Painel do Atleta
+        </a>
+        <a href="{% url 'athlete_calendar' %}" class="ol-btn">
+            <i class="fas fa-calendar-alt"></i> Meus Jogos
+        </a>
+        <div style="flex: 1;"></div>
+        <h2 style="margin: 0; font-size: 1.2rem; font-weight: bold;">Estatísticas: {{ active_profile.name }}</h2>
+    </div>
+
+    <div class="ol-body">
+        <!-- Sidebar Stats -->
+        <div class="ol-sidebar">
+            <div class="stat-card-side">
+                <h4>Total de Jogos</h4>
+                <p class="value">{{ total_matches }}</p>
+            </div>
+            <div class="stat-card-side">
+                <h4>Vitórias</h4>
+                <p class="value" style="background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); -webkit-background-clip: text;">{{ wins }}</p>
+            </div>
+            <div class="stat-card-side">
+                <h4>Derrotas</h4>
+                <p class="value" style="background: linear-gradient(135deg, #f87171 0%, #ef4444 100%); -webkit-background-clip: text;">{{ losses }}</p>
+            </div>
+            <div class="stat-card-side">
+                <h4>Aproveitamento</h4>
+                <p class="value" style="background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%); -webkit-background-clip: text;">{{ win_rate }}%</p>
+            </div>
+            <div class="stat-card-side">
+                <h4>Títulos</h4>
+                <p class="value" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); -webkit-background-clip: text;"><i class="fas fa-trophy" style="font-size: 1.8rem; vertical-align: middle; margin-right: 5px;"></i> {{ titles }}</p>
+            </div>
+        </div>
+
+        <!-- Main Area -->
+        <div class="ol-main">
+            
+            <div class="dashboard-grid">
+                <!-- Chart Area -->
+                <div class="glass-panel">
+                    <h3><i class="fas fa-chart-area" style="color: #3b82f6;"></i> Evolução (Últimos 15 Jogos)</h3>
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Active Tournaments -->
+                <div class="glass-panel">
+                    <h3><i class="fas fa-play-circle" style="color: #10b981;"></i> Competições Ativas</h3>
+                    <div style="max-height: 300px; overflow-y: auto; padding-right: 10px;">
+                        {% for t in active_tournaments %}
+                        <div class="list-item">
+                            <div>
+                                <strong style="display: block;">{{ t.category.tournament.name }}</strong>
+                                <span style="font-size: 0.85rem; color: #aaa;">{{ t.category.name }}</span>
+                            </div>
+                            <span class="badge-active">Ativo</span>
+                        </div>
+                        {% empty %}
+                        <p style="color: #888; text-align: center; padding: 20px;">Nenhuma competição ativa no momento.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Finished Tournaments -->
+            <div class="glass-panel" style="margin-bottom: 25px;">
+                <h3><i class="fas fa-flag-checkered" style="color: #a78bfa;"></i> Histórico de Competições Finalizadas</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 15px;">
+                    {% for f in finished_data %}
+                    <div class="list-item" style="background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                        <div>
+                            <strong style="display: block;">{{ f.tournament.name }}</strong>
+                            <span style="font-size: 0.85rem; color: #aaa;">{{ f.category.name }}</span>
+                        </div>
+                        {% if f.is_champion %}
+                            <span class="badge-champion"><i class="fas fa-trophy"></i> {{ f.phase }}</span>
+                        {% else %}
+                            <span class="badge-normal">{{ f.phase }}</span>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <p style="color: #888; text-align: center; width: 100%;">Nenhum histórico encontrado.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Recurring Comparison -->
+            {% if recurring_comparison %}
+            <div class="glass-panel">
+                <h3><i class="fas fa-history" style="color: #f43f5e;"></i> Comparativo Anual (Torneios Recorrentes)</h3>
+                <div class="compare-grid">
+                    {% for base_name, years in recurring_comparison.items %}
+                    <div class="compare-card">
+                        <h4>{{ base_name }}</h4>
+                        {% for y in years %}
+                        <div class="compare-row">
+                            <span style="color: #aaa; font-weight: bold;">{{ y.year }}</span>
+                            <span style="color: #fff;">{{ y.phase }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const ctx = document.getElementById('performanceChart').getContext('2d');
+        const labels = JSON.parse('{{ chart_labels|safe }}');
+        const data = JSON.parse('{{ chart_data|safe }}');
+
+        // Create gradient
+        let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(16, 185, 129, 0.5)'); // Green for wins
+        gradient.addColorStop(1, 'rgba(239, 68, 68, 0.5)');  // Red for losses
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Resultado (1 = Vitória, -1 = Derrota)',
+                    data: data,
+                    borderColor: '#3b82f6',
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    pointBackgroundColor: data.map(val => val > 0 ? '#10b981' : '#ef4444'),
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 8,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw > 0 ? 'Vitória' : 'Derrota';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        min: -1.5,
+                        max: 1.5,
+                        ticks: {
+                            stepSize: 1,
+                            callback: function(value) {
+                                if (value === 1) return 'Vitória';
+                                if (value === -1) return 'Derrota';
+                                return '';
+                            },
+                            color: '#aaa'
+                        },
+                        grid: {
+                            color: 'rgba(255,255,255,0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#aaa'
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

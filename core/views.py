@@ -1163,3 +1163,121 @@ def athlete_calendar(request):
         'clubs_hours_json': json.dumps(clubs_hours_json),
     }
     return render(request, 'athlete_calendar.html', context)
+
+@login_required
+def athlete_stats(request):
+    if hasattr(request.user, 'role') and request.user.role == 'club_admin':
+        return redirect('club_dashboard')
+
+    my_profiles = getattr(request.user, 'player_profiles', None)
+    if not my_profiles or not my_profiles.exists():
+        from django.contrib import messages
+        messages.info(request, "Você ainda não possui um perfil de atleta vinculado.")
+        return redirect('home')
+
+    profile_id = request.GET.get('profile_id')
+    if profile_id:
+        active_profile = get_object_or_404(Player, id=profile_id, user=request.user)
+    else:
+        active_profile = my_profiles.all().first()
+
+    from django.db.models import Q
+    from clubs.models import Match, CategoryPlayer, Tournament
+    import json
+    import re
+    
+    matches = Match.objects.filter(Q(player_a=active_profile) | Q(player_b=active_profile)).order_by('-id')
+    
+    total_matches = matches.filter(status='completed').count()
+    wins = matches.filter(status='completed', winner=active_profile).count()
+    losses = total_matches - wins
+    win_rate = (wins / total_matches * 100) if total_matches > 0 else 0
+
+    last_15 = list(matches.filter(status='completed').order_by('-id')[:15])
+    last_15.reverse()
+    
+    chart_labels = []
+    chart_data = []
+    for idx, m in enumerate(last_15):
+        chart_labels.append(f"J{idx+1}")
+        if m.winner == active_profile:
+            chart_data.append(1)
+        else:
+            chart_data.append(-1)
+            
+    cat_players = CategoryPlayer.objects.filter(player=active_profile).select_related('category', 'category__tournament')
+    active_tournaments = cat_players.filter(category__tournament__is_finished=False).order_by('-id')
+    finished_tournaments = cat_players.filter(category__tournament__is_finished=True).order_by('-category__tournament__id')
+    
+    finished_data = []
+    titles = 0
+    for cp in finished_tournaments:
+        t = cp.category.tournament
+        phase = ""
+        is_champion = False
+        
+        if t.tournament_type == 'ranking':
+            rank = CategoryPlayer.objects.filter(category=cp.category).filter(
+                Q(points__gt=cp.points) | 
+                (Q(points=cp.points) & Q(wins__gt=cp.wins))
+            ).count() + 1
+            phase = f"{rank}º Lugar"
+            if rank == 1:
+                is_champion = True
+                titles += 1
+        else:
+            last_match = Match.objects.filter(
+                tournament=t, category=cp.category, status='completed'
+            ).filter(Q(player_a=active_profile) | Q(player_b=active_profile)).order_by('round_number').first()
+            
+            if last_match:
+                r = last_match.round_number
+                if r == 1:
+                    phase = "Campeão" if last_match.winner == active_profile else "Vice-Campeão"
+                    if last_match.winner == active_profile:
+                        is_champion = True
+                        titles += 1
+                elif r == 2: phase = "Semifinal"
+                elif r == 3: phase = "Quartas de Final"
+                elif r == 4: phase = "Oitavas de Final"
+                else: phase = f"Fase de 1/{2**(r-1)}"
+            else:
+                phase = "Não jogou"
+
+        finished_data.append({
+            'tournament': t,
+            'category': cp.category,
+            'phase': phase,
+            'is_champion': is_champion
+        })
+
+    recurring_dict = {}
+    for cp in finished_tournaments:
+        t = cp.category.tournament
+        base_name = re.sub(r'\s*\d{4}\s*', '', t.name).strip()
+        year_match = re.search(r'\d{4}', t.name)
+        year = year_match.group(0) if year_match else "Geral"
+        
+        phase = next((d['phase'] for d in finished_data if d['tournament'] == t), "")
+        
+        if base_name not in recurring_dict:
+            recurring_dict[base_name] = []
+        recurring_dict[base_name].append({'year': year, 'phase': phase, 't_name': t.name})
+        
+    recurring_comparison = {k: v for k, v in recurring_dict.items() if len(v) > 1}
+
+    context = {
+        'my_profiles': my_profiles.all(),
+        'active_profile': active_profile,
+        'total_matches': total_matches,
+        'wins': wins,
+        'losses': losses,
+        'win_rate': round(win_rate, 1),
+        'titles': titles,
+        'chart_labels': json.dumps(chart_labels),
+        'chart_data': json.dumps(chart_data),
+        'active_tournaments': active_tournaments,
+        'finished_data': finished_data,
+        'recurring_comparison': recurring_comparison,
+    }
+    return render(request, 'athlete_stats.html', context)
