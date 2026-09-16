@@ -8,4 +8,5 @@ When the user types `commite` (or asks to commit and deploy), you must execute t
    - Go to their PythonAnywhere Dashboard.
    - Open a bash console in their project directory.
    - Run `git pull` to fetch the new commits.
+   - Run `python manage.py migrate` to update the database.
    - Go to the "Web" tab and click the "Reload" button to apply the changes to the live site.
