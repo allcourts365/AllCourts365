@@ -145,8 +145,8 @@ class Tournament(models.Model):
 class RankingTournament(Tournament):
     class Meta:
         proxy = True
-        verbose_name = "Ranking"
-        verbose_name_plural = "Rankings"
+        verbose_name = "Torneio Sazonal"
+        verbose_name_plural = "Torneios Seasonais"
 
 class KnockoutTournament(Tournament):
     class Meta:
