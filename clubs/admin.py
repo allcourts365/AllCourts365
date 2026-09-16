@@ -151,6 +151,74 @@ class PlayerAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
         return "-"
     competitions.short_description = 'Competições'
 
+    @admin.action(description="Mesclar atletas selecionados")
+    def merge_players(self, request, queryset):
+        if 'apply_merge' in request.POST:
+            primary_id = request.POST.get('primary_player_id')
+            if not primary_id:
+                messages.error(request, "Nenhum atleta principal selecionado.")
+                return
+            
+            try:
+                primary_player = queryset.get(id=primary_id)
+            except Player.DoesNotExist:
+                messages.error(request, "O atleta selecionado não está no conjunto original.")
+                return
+            
+            other_players = queryset.exclude(id=primary_id)
+            if not other_players.exists():
+                messages.warning(request, "Apenas um atleta selecionado ou mesclagem não necessária.")
+                return
+                
+            from django.db import transaction
+            from .models import Match, CategoryPlayer
+            
+            try:
+                with transaction.atomic():
+                    for duplicate in other_players:
+                        # 1. Matches
+                        Match.objects.filter(player_a=duplicate).update(player_a=primary_player)
+                        Match.objects.filter(player_b=duplicate).update(player_b=primary_player)
+                        Match.objects.filter(winner=duplicate).update(winner=primary_player)
+                        Match.objects.filter(proposed_by=duplicate).update(proposed_by=primary_player)
+                        Match.objects.filter(reported_by=duplicate).update(reported_by=primary_player)
+                        
+                        # 2. CategoryPlayer
+                        dup_categories = CategoryPlayer.objects.filter(player=duplicate)
+                        for dup_cp in dup_categories:
+                            primary_cp = CategoryPlayer.objects.filter(player=primary_player, category=dup_cp.category).first()
+                            
+                            if primary_cp:
+                                # Opção A: Somar os dados
+                                primary_cp.points += dup_cp.points
+                                primary_cp.matches_played += dup_cp.matches_played
+                                primary_cp.wins += dup_cp.wins
+                                primary_cp.losses += dup_cp.losses
+                                primary_cp.save()
+                                dup_cp.delete()
+                            else:
+                                dup_cp.player = primary_player
+                                dup_cp.save()
+                                
+                        # 3. Excluir o registro duplicado de Player
+                        duplicate.delete()
+                        
+                messages.success(request, f"Atletas mesclados com sucesso no registro definitivo: {primary_player.name}")
+            except Exception as e:
+                messages.error(request, f"Erro ao mesclar atletas: {str(e)}")
+            
+            return
+            
+        # Se apply_merge não está no POST, renderiza o template intermediário
+        from django.shortcuts import render
+        return render(request, 'admin/clubs/player/merge.html', context={
+            'players': queryset,
+            'opts': self.model._meta,
+            'title': 'Mesclar Atletas',
+        })
+        
+    actions = ['merge_players']
+
 class CategoryInline(admin.TabularInline):
     model = Category
     extra = 1
