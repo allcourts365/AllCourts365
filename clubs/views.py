@@ -123,6 +123,45 @@ def knockout_bracket(request, club_id, tournament_id, category_id):
         'brackets':   brackets_list,
     })
 
+def knockout_general_ranking(request, club_id):
+    club = get_object_or_404(Club, id=club_id)
+    from .models import Category, CategoryPlayer
+    
+    categories_names = list(Category.objects.filter(
+        tournament__club=club, 
+        tournament__tournament_type='knockout', 
+        tournament__is_active=True
+    ).values_list('name', flat=True).distinct().order_by('name'))
+    
+    selected_category = request.GET.get('categoria')
+    if not selected_category and categories_names:
+        selected_category = categories_names[0]
+        
+    ranking_data = []
+    if selected_category:
+        from django.db.models import Sum
+        ranking_data = CategoryPlayer.objects.filter(
+            category__tournament__club=club,
+            category__tournament__tournament_type='knockout',
+            category__name=selected_category,
+            category__tournament__is_active=True,
+            category__tournament__is_finished=True
+        ).values(
+            'player__name', 'player__id'
+        ).annotate(
+            total_points=Sum('points'),
+            total_matches=Sum('matches_played'),
+            total_wins=Sum('wins'),
+            total_losses=Sum('losses')
+        ).order_by('-total_points', '-total_wins', 'total_matches')
+        
+    return render(request, 'knockout_general_ranking.html', {
+        'club': club,
+        'categories': categories_names,
+        'selected_category': selected_category,
+        'ranking_data': ranking_data,
+    })
+
 
 def download_knockout_template(request):
     """Serve a planilha modelo para download."""

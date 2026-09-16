@@ -187,11 +187,11 @@
             <div class="glass-card" style="padding: 25px; border-radius: 12px; display: flex; flex-direction: column;">
                 <div>
                     {% if t.is_finished %}
-                        <div style="display: inline-block; padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); margin-bottom: 15px; letter-spacing: 0.5px;">
+                        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); margin-bottom: 15px; letter-spacing: 0.5px;">
                             <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Encerrado"> ENCERRADO
                         </div>
                     {% else %}
-                        <div style="display: inline-block; padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); margin-bottom: 15px; letter-spacing: 0.5px;">
+                        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); margin-bottom: 15px; letter-spacing: 0.5px;">
                             <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Em andamento"> EM ANDAMENTO - RODADA {{ t.current_round }}
                         </div>
                     {% endif %}
@@ -215,16 +215,21 @@
     
     <!-- Aba: Torneios Eliminatórios -->
     <div id="knockouts" class="tab-content">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 25px;">
+            <a href="{% url 'clubs:knockout_general_ranking' club.id %}" style="display: inline-flex; align-items: center; gap: 10px; background: var(--highlight-color); color: #fff; padding: 12px 24px; border-radius: 30px; text-decoration: none; font-weight: 700; font-size: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='none'">
+                <i class="fas fa-trophy"></i> Ver Ranking Geral
+            </a>
+        </div>
         <div class="desktop-3-cols" style="display: grid; gap: 20px;">
             {% for t in knockouts %}
             <div class="glass-card" style="padding: 25px; border-radius: 12px; display: flex; flex-direction: column;">
                 <div>
                     {% if t.is_finished %}
-                        <div style="display: inline-block; padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); margin-bottom: 15px; letter-spacing: 0.5px;">
+                        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); margin-bottom: 15px; letter-spacing: 0.5px;">
                             <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Encerrado"> ENCERRADO
                         </div>
                     {% else %}
-                        <div style="display: inline-block; padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); margin-bottom: 15px; letter-spacing: 0.5px;">
+                        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); margin-bottom: 15px; letter-spacing: 0.5px;">
                             <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Em andamento"> EM ANDAMENTO - FASE {{ t.current_round }}
                         </div>
                     {% endif %}
@@ -237,7 +242,7 @@
                 {% endif %}
                 
                 <div style="margin-top: auto; padding-top: 10px;">
-                    <a href="{% url 'clubs:knockout_detail' club.id t.id %}" style="text-decoration: none; display: inline-flex; align-items: center; gap: 5px; color: var(--highlight-color); font-size: 1.05rem; font-weight: 700;">Ver Chaves &rarr;</a>
+                    <a href="{% url 'clubs:knockout_detail' club.id t.id %}" style="text-decoration: none; display: inline-flex; align-items: center; gap: 5px; color: var(--highlight-color); font-size: 1.05rem; font-weight: 700;">Ver Torneio &rarr;</a>
                 </div>
             </div>
             {% empty %}

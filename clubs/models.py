@@ -113,12 +113,14 @@ class Tournament(models.Model):
     allow_player_results = models.BooleanField(default=True, verbose_name="Atleta pode lançar resultados?")
     match_duration = models.IntegerField(default=90, verbose_name="Duração estimada por jogo (minutos)", help_text="Tempo padrão usado no calendário de agendamento. Ex: 90 para 1h30min.")
 
+    use_points_by_set = models.BooleanField(default=True, verbose_name="Habilitar Pontuação por Resultado de Sets")
     points_winner_2x0 = models.IntegerField(null=True, blank=True, default=3, verbose_name="Pontos (Vitória 2x0)")
     points_winner_2x1 = models.IntegerField(null=True, blank=True, default=2, verbose_name="Pontos (Vitória 2x1)")
     points_loser_2x1  = models.IntegerField(null=True, blank=True, default=1, verbose_name="Pontos (Derrota 2x1)")
     points_loser_2x0  = models.IntegerField(null=True, blank=True, default=0, verbose_name="Pontos (Derrota 2x0)")
 
     # Pontuação por Fase (Torneio Eliminatório — opcional, deixe em branco para não usar)
+    use_points_by_round = models.BooleanField(default=False, verbose_name="Habilitar Pontuação por Fase/Avanço")
     pts_round64_participant = models.IntegerField(null=True, blank=True, verbose_name="Round 64 — Pts por Participação")
     pts_round64_winner      = models.IntegerField(null=True, blank=True, verbose_name="Round 64 — Pts por Vitória")
     pts_round32_participant = models.IntegerField(null=True, blank=True, verbose_name="Round 32 — Pts por Participação")
@@ -137,6 +139,12 @@ class Tournament(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.club.name}"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.pk:
+            for cat in self.categories.all():
+                cat.recalculate_points()
         
     class Meta:
         verbose_name = "Torneio/Ranking Base"
@@ -171,34 +179,105 @@ class Category(models.Model):
             cp.losses = 0
             cp.save()
             
-        # Recalcula baseado nas partidas finalizadas
+        tournament = self.tournament
+        use_set = getattr(tournament, 'use_points_by_set', True)
+        use_round = getattr(tournament, 'use_points_by_round', False)
+        
+        from django.db.models import Max
+        max_rounds_dict = self.matches.aggregate(Max('round_number'))
+        max_rounds = max_rounds_dict.get('round_number__max') or 1
+        
+        player_points = {}
+        player_stats = {}
+        for cp in self.players.all():
+            player_points[cp.player_id] = 0
+            player_stats[cp.player_id] = {'wins': 0, 'losses': 0, 'matches_played': 0, 'round_points': 0}
+            
+        # Calcula pontos por sets e computa wins/losses/matches
         for match in self.matches.filter(status='completed'):
-            cpa = self.players.filter(player=match.player_a).first()
-            cpb = self.players.filter(player=match.player_b).first()
-            if cpa and cpb and match.winner:
-                cpa.matches_played += 1
-                cpb.matches_played += 1
+            pa_id = match.player_a_id
+            pb_id = match.player_b_id
+            
+            if pa_id and pa_id in player_stats:
+                player_stats[pa_id]['matches_played'] += 1
+            if pb_id and pb_id in player_stats:
+                player_stats[pb_id]['matches_played'] += 1
                 
-                if match.winner == match.player_a:
-                    cpa.wins += 1
-                    cpb.losses += 1
-                    if match.sets_b == 0:
-                        cpa.points += self.tournament.points_winner_2x0
-                        cpb.points += self.tournament.points_loser_2x0
+            if match.winner:
+                wid = match.winner_id
+                lid = pb_id if wid == pa_id else pa_id
+                
+                if wid in player_stats:
+                    player_stats[wid]['wins'] += 1
+                if lid in player_stats:
+                    player_stats[lid]['losses'] += 1
+                    
+                if use_set:
+                    sa = match.sets_a or 0
+                    sb = match.sets_b or 0
+                    if wid == pa_id:
+                        if sb == 0:
+                            player_points[wid] += (tournament.points_winner_2x0 or 0)
+                            if lid in player_points: player_points[lid] += (tournament.points_loser_2x0 or 0)
+                        else:
+                            player_points[wid] += (tournament.points_winner_2x1 or 0)
+                            if lid in player_points: player_points[lid] += (tournament.points_loser_2x1 or 0)
                     else:
-                        cpa.points += self.tournament.points_winner_2x1
-                        cpb.points += self.tournament.points_loser_2x1
-                elif match.winner == match.player_b:
-                    cpb.wins += 1
-                    cpa.losses += 1
-                    if match.sets_a == 0:
-                        cpb.points += self.tournament.points_winner_2x0
-                        cpa.points += self.tournament.points_loser_2x0
-                    else:
-                        cpb.points += self.tournament.points_winner_2x1
-                        cpa.points += self.tournament.points_loser_2x1
-                cpa.save()
-                cpb.save()
+                        if sa == 0:
+                            player_points[wid] += (tournament.points_winner_2x0 or 0)
+                            if lid in player_points: player_points[lid] += (tournament.points_loser_2x0 or 0)
+                        else:
+                            player_points[wid] += (tournament.points_winner_2x1 or 0)
+                            if lid in player_points: player_points[lid] += (tournament.points_loser_2x1 or 0)
+
+        # Calcula pontos por round (fase)
+        if use_round:
+            for match in self.matches.exclude(status='cancelled'):
+                pa_id = match.player_a_id
+                pb_id = match.player_b_id
+                rounds_left = max_rounds - match.round_number
+                is_completed = (match.status == 'completed')
+                
+                def get_round_pts(is_winner):
+                    if rounds_left == 0:
+                        if is_completed and is_winner:
+                            return tournament.pts_campeon or tournament.pts_final_winner or 0
+                        return tournament.pts_final_participant or 0
+                    elif rounds_left == 1:
+                        return (tournament.pts_semi_winner or 0) if is_completed and is_winner else (tournament.pts_semi_participant or 0)
+                    elif rounds_left == 2:
+                        return (tournament.pts_quartas_winner or 0) if is_completed and is_winner else (tournament.pts_quartas_participant or 0)
+                    elif rounds_left == 3:
+                        win_pts = tournament.pts_oitavas_winner or tournament.pts_round16_winner or 0
+                        part_pts = tournament.pts_oitavas_participant or tournament.pts_round16_participant or 0
+                        return win_pts if is_completed and is_winner else part_pts
+                    elif rounds_left == 4:
+                        return (tournament.pts_round32_winner or 0) if is_completed and is_winner else (tournament.pts_round32_participant or 0)
+                    elif rounds_left == 5:
+                        return (tournament.pts_round64_winner or 0) if is_completed and is_winner else (tournament.pts_round64_participant or 0)
+                    return 0
+
+                if pa_id and pa_id in player_stats:
+                    pts = get_round_pts(is_winner=(match.winner_id == pa_id))
+                    if pts > player_stats[pa_id]['round_points']:
+                        player_stats[pa_id]['round_points'] = pts
+                        
+                if pb_id and pb_id in player_stats:
+                    pts = get_round_pts(is_winner=(match.winner_id == pb_id))
+                    if pts > player_stats[pb_id]['round_points']:
+                        player_stats[pb_id]['round_points'] = pts
+
+            for pid, stats in player_stats.items():
+                player_points[pid] += stats['round_points']
+                
+        # Atualiza os jogadores
+        for cp in self.players.all():
+            pid = cp.player_id
+            cp.points = player_points.get(pid, 0)
+            cp.matches_played = player_stats[pid]['matches_played']
+            cp.wins = player_stats[pid]['wins']
+            cp.losses = player_stats[pid]['losses']
+            cp.save()
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

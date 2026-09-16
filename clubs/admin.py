@@ -267,8 +267,10 @@ class RankingTournamentAdmin(TournamentAdmin):
             ),
             'classes': ('collapse',),
             'fields': (
+                'use_points_by_set',
                 ('points_winner_2x0', 'points_winner_2x1'),
                 ('points_loser_2x1', 'points_loser_2x0'),
+                'use_points_by_round',
                 ('pts_round64_participant', 'pts_round64_winner'),
                 ('pts_round32_participant', 'pts_round32_winner'),
                 ('pts_round16_participant', 'pts_round16_winner'),
@@ -491,8 +493,10 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
             ),
             'classes': ('collapse',),
             'fields': (
+                'use_points_by_set',
                 ('points_winner_2x0', 'points_winner_2x1'),
                 ('points_loser_2x1', 'points_loser_2x0'),
+                'use_points_by_round',
                 ('pts_round64_participant', 'pts_round64_winner'),
                 ('pts_round32_participant', 'pts_round32_winner'),
                 ('pts_round16_participant', 'pts_round16_winner'),

@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ranking Geral Eliminatório - {{ club.name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root {
+        {% if club.background_color %}--bg-color: {{ club.background_color }};{% endif %}
+        {% if club.overlay_color %}--overlay-color: {{ club.overlay_color }};{% endif %}
+        {% if club.overlay_opacity %}--overlay-opacity: {{ club.overlay_opacity|stringformat:"s" }};{% endif %}
+        {% if club.highlight_color %}--highlight-color: {{ club.highlight_color }};{% endif %}
+        {% if club.title_color %}--title-color: {{ club.title_color }};{% endif %}
+        {% if club.subtitle_color %}--subtitle-color: {{ club.subtitle_color }};{% endif %}
+    }
+    
+    {% if club.background_image %}
+    body {
+        background-image: url('{{ club.background_image.url }}') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-attachment: fixed !important;
+    }
+    {% endif %}
+
+    .ranking-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    .ranking-table th, .ranking-table td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        font-size: 1.05rem;
+    }
+    .ranking-table th {
+        color: var(--highlight-color);
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+    .ranking-table tbody tr:hover {
+        background: rgba(255,255,255,0.05);
+    }
+    
+    .ranking-table tbody tr:nth-child(1) td {
+        font-weight: 800;
+        color: #fbbf24;
+    }
+    .ranking-table tbody tr:nth-child(2) td {
+        font-weight: 700;
+        color: #94a3b8;
+    }
+    .ranking-table tbody tr:nth-child(3) td {
+        font-weight: 700;
+        color: #b45309;
+    }
+
+    .category-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .category-btn {
+        background: rgba(255,255,255,0.05);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.1);
+        padding: 15px 20px;
+        border-radius: 12px;
+        text-align: left;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: block;
+    }
+    
+    .category-btn:hover {
+        background: rgba(255,255,255,0.1);
+    }
+    
+    .category-btn.active {
+        background: var(--highlight-color);
+        border-color: var(--highlight-color);
+        color: #fff;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .content-area {
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 16px;
+        padding: 30px;
+        min-height: 500px;
+    }
+    
+    .layout-grid {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 30px;
+        margin-top: 30px;
+        margin-bottom: 50px;
+    }
+    
+    @media (max-width: 992px) {
+        .layout-grid {
+            grid-template-columns: 1fr;
+        }
+        .category-sidebar {
+            flex-direction: row;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        .category-btn {
+            white-space: nowrap;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="margin-top: 20px; margin-bottom: 40px;">
+    <a href="{% url 'clubs:detail' club.id %}" style="display: inline-block; margin-bottom: 15px; color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600;">&larr; Voltar para o Clube</a>
+    <h1 style="font-size: clamp(2rem, 4vw, 2.8rem); font-weight: 900; color: var(--title-color, #fff); text-transform: uppercase; margin-bottom: 10px; letter-spacing: -0.5px;">Ranking Geral Eliminatório</h1>
+    <p style="font-size: 1.1rem; color: var(--subtitle-color, #94A3B8); margin: 0; max-width: 800px;">Consolidado de pontos de todos os Torneios Eliminatórios do clube.</p>
+</div>
+
+{% if not categories %}
+<div class="content-area" style="text-align: center; padding: 50px;">
+    <h3 style="color: #fff; font-weight: 700; margin-bottom: 10px;">Nenhum ranking disponível</h3>
+    <p style="color: var(--subtitle-color);">Ainda não existem categorias registradas em torneios eliminatórios ativos neste clube.</p>
+</div>
+{% else %}
+<div class="layout-grid">
+    <!-- Menu Lateral -->
+    <div class="category-sidebar">
+        <h3 style="color: var(--subtitle-color); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 700;">Categorias</h3>
+        {% for cat in categories %}
+            <a href="?categoria={{ cat|urlencode }}" class="category-btn {% if selected_category == cat %}active{% endif %}">
+                {{ cat }}
+            </a>
+        {% endfor %}
+    </div>
+    
+    <!-- Área de Conteúdo / Tabela -->
+    <div class="content-area">
+        <h2 style="font-size: 1.8rem; font-weight: 800; color: #fff; margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
+            Ranking Consolidado - <span style="color: var(--highlight-color);">{{ selected_category }}</span>
+        </h2>
+        
+        {% if ranking_data %}
+            <div style="overflow-x: auto;">
+                <table class="ranking-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px; text-align: center;">Pos</th>
+                            <th>Atleta</th>
+                            <th style="text-align: center;">Pts</th>
+                            <th style="text-align: center;">J</th>
+                            <th style="text-align: center;">V</th>
+                            <th style="text-align: center;">D</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in ranking_data %}
+                        <tr>
+                            <td style="text-align: center; font-weight: 800;">
+                                {% if forloop.counter == 1 %}🥇
+                                {% elif forloop.counter == 2 %}🥈
+                                {% elif forloop.counter == 3 %}🥉
+                                {% else %}{{ forloop.counter }}º
+                                {% endif %}
+                            </td>
+                            <td>{{ row.player__name }}</td>
+                            <td style="text-align: center; font-weight: 700;">{{ row.total_points|default:"0" }}</td>
+                            <td style="text-align: center;">{{ row.total_matches|default:"0" }}</td>
+                            <td style="text-align: center;">{{ row.total_wins|default:"0" }}</td>
+                            <td style="text-align: center;">{{ row.total_losses|default:"0" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p style="color: var(--subtitle-color); text-align: center; padding: 40px 0;">Nenhum atleta pontuou nesta categoria nos torneios eliminatórios.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

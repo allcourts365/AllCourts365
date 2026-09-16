@@ -10,6 +10,7 @@ urlpatterns = [
     path('<int:club_id>/ranking/<int:ranking_id>/', views.ranking_detail, name='ranking_detail'),
     path('<int:club_id>/torneio/<int:tournament_id>/', views.knockout_detail, name='knockout_detail'),
     path('<int:club_id>/torneio/<int:tournament_id>/categoria/<int:category_id>/', views.knockout_bracket, name='knockout_bracket'),
+    path('<int:club_id>/ranking-eliminatorio/', views.knockout_general_ranking, name='knockout_general_ranking'),
     path('download/modelo-torneio/', views.download_knockout_template, name='download_knockout_template'),
     # Noticias por clube
     path('<int:club_id>/noticias/', news_views.news_club_list, name='news_list'),
