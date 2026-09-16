@@ -109,7 +109,7 @@ class ClubAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
             )
         }),
         ('Configurações Visuais Globais', {
-            'fields': ('favicon', 'background_image', 'background_video', 'background_color', 'overlay_color', 'overlay_opacity', 'highlight_color', 'title_color', 'subtitle_color')
+            'fields': ('favicon', 'card_image', 'background_image', 'background_video', 'background_color', 'overlay_color', 'overlay_opacity', 'highlight_color', 'title_color', 'subtitle_color')
         }),
         ('Marca d\'Água', {
             'fields': ('watermark_image', 'watermark_position', 'watermark_opacity', 'watermark_size_percent')
