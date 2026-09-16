@@ -1213,11 +1213,26 @@ def athlete_stats(request):
     completed_matches.sort(key=lambda m: (m.tournament_id or 0, m.round_number or 0, m.id), reverse=True)
     last_15 = completed_matches[:15]
     last_15.reverse()
+    
+    # Preenche com None até ter 15 jogos para manter o gráfico com J1 a J15 sempre
+    while len(last_15) < 15:
+        last_15.insert(0, None)
+
     chart_labels = []
     chart_data = []
     chart_details = []
     for idx, m in enumerate(last_15):
         chart_labels.append(f"J{idx+1}")
+        
+        if m is None:
+            chart_data.append(0)
+            chart_details.append({
+                'opponent': '-',
+                'tournament': '-',
+                'result': 'Sem dados'
+            })
+            continue
+
         if m.winner == active_profile:
             chart_data.append(1)
             result_text = "Vitória"
