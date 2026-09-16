@@ -1970,21 +1970,21 @@
                 var htmlContent = `<span style="display:block;">HORÁRIO RESERVADO para o jogo de ${ev.title} // ${middleText} - <strong>${statusText}</strong></span>`;
                 if (ev.status === 'unagendado') {
                     if (ev.is_completed) {
-                        let scoreHtml = ev.score_str ? `<div style="position: absolute; top: ${60 - evDate.getMinutes()}px; left: 4px; font-weight: bold;">${ev.score_str}</div>` : '';
+                        let scoreHtml = ev.score_str ? `<div style="position: absolute; top: 30px; left: 4px; font-weight: bold;">${ev.score_str}</div>` : '';
                         htmlContent = `<span style="display:block; margin-bottom: 20px;">HORÁRIO RESERVADO para o jogo de ${ev.title} // ${middleText} // MARCADO PELO ADM E FINALIZADO</span>${scoreHtml}`;
                     } else {
                         htmlContent = `<span style="display:block;">HORÁRIO RESERVADO para o jogo de ${ev.title} // ${middleText} // MARCADO PELO ADM E AGUARDANDO REALIZAÇÃO</span>`;
                     }
                 } else if (ev.status === 'agendado') {
                     if (ev.is_completed) {
-                        let scoreHtml = ev.score_str ? `<div style="position: absolute; top: ${60 - evDate.getMinutes()}px; left: 4px; font-weight: bold;">${ev.score_str}</div>` : '';
+                        let scoreHtml = ev.score_str ? `<div style="position: absolute; top: 30px; left: 4px; font-weight: bold;">${ev.score_str}</div>` : '';
                         htmlContent = `<span style="display:block; margin-bottom: 20px;">HORÁRIO RESERVADO para o jogo de ${ev.title} // ${middleText} // MARCADO E FINALIZADO</span>${scoreHtml}`;
                     } else {
                         htmlContent = `<span style="display:block;">HORÁRIO RESERVADO para o jogo de ${ev.title} // ${middleText} // MARCADO E AGUARDANDO REALIZAÇÃO</span>`;
                     }
                 } else if (ev.status === 'aguardando_adversario') {
                     if (ev.is_completed) {
-                        let scoreHtml = ev.score_str ? `<div style="position: absolute; top: ${60 - evDate.getMinutes()}px; left: 4px; font-weight: bold;">${ev.score_str}</div>` : '';
+                        let scoreHtml = ev.score_str ? `<div style="position: absolute; top: 30px; left: 4px; font-weight: bold;">${ev.score_str}</div>` : '';
                         htmlContent = `<span style="display:block; margin-bottom: 20px;">HORÁRIO RESERVADO para o jogo de ${ev.title} // ${middleText} // AGUARDANDO CONFIRMAÇÃO DO ADVERSÁRIO E FINALIZADO</span>${scoreHtml}`;
                     } else {
                         htmlContent = `<span style="display:block;">HORÁRIO RESERVADO para o jogo de ${ev.title} // ${middleText} // AGUARDANDO CONFIRMAÇÃO DO ADVERSÁRIO E REALIZAÇÃO</span>`;
@@ -1994,7 +1994,7 @@
                         htmlContent = `<span style="display:block;">${middleText} - <strong>${statusText}</strong></span>`;
                     }
                     if (ev.is_completed && ev.score_str && ev.status !== 'aguardando_adversario' && ev.status !== 'agendado') {
-                        let scoreHtml = ev.score_str ? `<div style="position: absolute; top: ${60 - evDate.getMinutes()}px; left: 4px; font-weight: bold;">${ev.score_str}</div>` : '';
+                        let scoreHtml = ev.score_str ? `<div style="position: absolute; top: 30px; left: 4px; font-weight: bold;">${ev.score_str}</div>` : '';
                         htmlContent += scoreHtml;
                     }
                 }
