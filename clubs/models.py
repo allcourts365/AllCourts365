@@ -141,17 +141,8 @@ class Tournament(models.Model):
         return f"{self.name} - {self.club.name}"
 
     def save(self, *args, **kwargs):
-        is_new = not self.pk
-        was_finished = False
-        if not is_new:
-            was_finished = Tournament.objects.filter(pk=self.pk).values_list('is_finished', flat=True).first()
-
         super().save(*args, **kwargs)
-        
         if self.pk:
-            if self.is_finished and not was_finished:
-                self.categories.update(is_finished=True)
-                
             for cat in self.categories.all():
                 cat.recalculate_points()
         

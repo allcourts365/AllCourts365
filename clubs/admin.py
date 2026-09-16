@@ -230,6 +230,16 @@ class TournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     search_fields = ('name',)
     inlines = [CategoryInline]
 
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        was_finished = form.initial.get('is_finished', False)
+        is_finished = form.cleaned_data.get('is_finished', False)
+        
+        if is_finished and not was_finished:
+            form.instance.categories.update(is_finished=True)
+        elif not is_finished and was_finished:
+            form.instance.categories.update(is_finished=False)
+
 class RankingTournamentForm(forms.ModelForm):
     excel_file = forms.FileField(
         required=False, 
@@ -443,6 +453,16 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         return qs.filter(club__administrators=request.user).distinct()
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        was_finished = form.initial.get('is_finished', False)
+        is_finished = form.cleaned_data.get('is_finished', False)
+        
+        if is_finished and not was_finished:
+            form.instance.categories.update(is_finished=True)
+        elif not is_finished and was_finished:
+            form.instance.categories.update(is_finished=False)
 
     # ── Formulário com upload e pontuação ──────────────────────────────────────
     class KnockoutForm(forms.ModelForm):
