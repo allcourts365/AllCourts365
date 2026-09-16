@@ -355,6 +355,9 @@ class Match(models.Model):
             elif self.status != 'cancelled':
                 self.status = 'pending'
                 self.winner = None
+                
+        if self.status == 'completed' and self.schedule_status == 'aguardando_adversario':
+            self.schedule_status = 'agendado'
                     
         super().save(*args, **kwargs)
 
