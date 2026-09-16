@@ -886,19 +886,35 @@
 <!-- Mobile Bottom Sheet for Standby Matches -->
 <div class="ol-bottom-sheet mobile-only" id="standbyBottomSheet">
     <div class="ol-bottom-sheet-header">
-        <span>Jogos Aguardando Agendamento</span>
+        <span>Meus Jogos</span>
         <i class="fas fa-times" style="font-size: 1.2rem; cursor: pointer; color: var(--ol-text-muted);" onclick="toggleStandbyBottomSheet()"></i>
     </div>
     <div class="ol-bottom-sheet-content">
-        <div id="mobile-standby-list">
-            {% for sm in standby_matches %}
-            <div class="ol-standby-item" onclick="selectStandbyMatch('{{ sm.id }}', '{{ sm.title|escapejs }}', {{ sm.allow_player_scheduling|yesno:'true,false' }}); toggleStandbyBottomSheet();">
-                <strong>{{ sm.title }}</strong><br>
-                <span style="color: var(--ol-text-muted);">{{ sm.tournament }} - Rodada {{ sm.round }} {% if sm.club_name %}({{ sm.club_name }}){% endif %} {% if not sm.allow_player_scheduling %}- Apenas Admin{% endif %}</span>
+        <div class="ol-standby-section">
+            <div class="ol-standby-title" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleMobileStandbyList()">
+                <span style="font-size: 1.05rem;">Aguardando Agendamento</span>
+                <i id="mobile-standby-list-icon" class="fas fa-chevron-up" style="font-size: 0.8rem;"></i>
             </div>
-            {% empty %}
-            <p style="font-size: 0.9rem; color: var(--ol-text-muted); text-align: center; margin-top: 20px;">Nenhum jogo pendente.</p>
-            {% endfor %}
+            <div id="mobile-standby-list">
+                {% for sm in standby_matches %}
+                <div class="ol-standby-item" onclick="selectStandbyMatch('{{ sm.id }}', '{{ sm.title|escapejs }}', {{ sm.allow_player_scheduling|yesno:'true,false' }}); toggleStandbyBottomSheet();">
+                    <strong>{{ sm.title }}</strong><br>
+                    <span style="color: var(--ol-text-muted);">{{ sm.tournament }} - Rodada {{ sm.round }} {% if sm.club_name %}({{ sm.club_name }}){% endif %} {% if not sm.allow_player_scheduling %}- Apenas Admin{% endif %}</span>
+                </div>
+                {% empty %}
+                <p style="font-size: 0.9rem; color: var(--ol-text-muted); text-align: center; margin-top: 20px;">Nenhum jogo pendente.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="ol-standby-section" style="margin-top: 20px;">
+            <div class="ol-standby-title" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleMobileAllMyMatchesList()">
+                <span style="font-size: 1.05rem;">Todos os meus jogos</span>
+                <i id="mobile-all-my-matches-icon" class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
+            </div>
+            <div id="mobile-all-my-matches-list" style="display: none;">
+                <!-- JS populated -->
+            </div>
         </div>
     </div>
 </div>
@@ -1708,6 +1724,34 @@
         }
     }
 
+    function toggleMobileStandbyList() {
+        const list = document.getElementById('mobile-standby-list');
+        const icon = document.getElementById('mobile-standby-list-icon');
+        if (list.style.display === 'none') {
+            list.style.display = 'block';
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        } else {
+            list.style.display = 'none';
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        }
+    }
+
+    function toggleMobileAllMyMatchesList() {
+        const list = document.getElementById('mobile-all-my-matches-list');
+        const icon = document.getElementById('mobile-all-my-matches-icon');
+        if (list.style.display === 'none') {
+            list.style.display = 'block';
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        } else {
+            list.style.display = 'none';
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        }
+    }
+
     function toggleSubSection(element) {
         const target = element.nextElementSibling;
         const icon = element.querySelector('i');
@@ -1724,7 +1768,7 @@
 
     function renderAllMyMatches() {
         const container = document.getElementById('all-my-matches-list');
-        if (!container) return;
+        const mobileContainer = document.getElementById('mobile-all-my-matches-list');
         
         let allMatches = [];
         
@@ -1751,7 +1795,9 @@
         });
         
         if (allMatches.length === 0) {
-            container.innerHTML = '<p style="font-size: 0.8rem; color: var(--ol-text-muted); margin-top: 10px;">Nenhum jogo encontrado.</p>';
+            const emptyHtml = '<p style="font-size: 0.8rem; color: var(--ol-text-muted); margin-top: 10px;">Nenhum jogo encontrado.</p>';
+            if (container) container.innerHTML = emptyHtml;
+            if (mobileContainer) mobileContainer.innerHTML = emptyHtml;
             return;
         }
         
@@ -1820,7 +1866,8 @@
             html += `</div>`; // End Club wrapper
         }
         
-        container.innerHTML = html;
+        if (container) container.innerHTML = html;
+        if (mobileContainer) mobileContainer.innerHTML = html;
     }
 
     
