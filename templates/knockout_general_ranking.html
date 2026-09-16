@@ -99,28 +99,6 @@
         padding: 30px;
         min-height: 500px;
     }
-    
-    .layout-grid {
-        display: grid;
-        grid-template-columns: 300px 1fr;
-        gap: 30px;
-        margin-top: 30px;
-        margin-bottom: 50px;
-    }
-    
-    @media (max-width: 992px) {
-        .layout-grid {
-            grid-template-columns: 1fr;
-        }
-        .category-sidebar {
-            flex-direction: row;
-            overflow-x: auto;
-            padding-bottom: 10px;
-        }
-        .category-btn {
-            white-space: nowrap;
-        }
-    }
 </style>
 {% endblock %}
 
@@ -137,60 +115,55 @@
     <p style="color: var(--subtitle-color);">Ainda não existem categorias registradas em torneios eliminatórios ativos neste clube.</p>
 </div>
 {% else %}
-<div class="layout-grid">
-    <!-- Menu Lateral -->
-    <div class="category-sidebar">
-        <h3 style="color: var(--subtitle-color); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 700;">Categorias</h3>
-        {% for cat in categories %}
-            <a href="?categoria={{ cat|urlencode }}" class="category-btn {% if selected_category == cat %}active{% endif %}">
-                {{ cat }}
-            </a>
-        {% endfor %}
-    </div>
+<div class="category-topbar" style="display: flex; gap: 10px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 25px; align-items: center; justify-content: center; flex-wrap: wrap;">
+    {% for cat in categories %}
+        <a href="?categoria={{ cat.name|urlencode }}" class="category-btn {% if selected_category == cat.name %}active{% endif %}" style="display: inline-flex; align-items: center; gap: 8px;">
+            {{ cat.name }} <span style="font-size: 0.85em; opacity: 0.8;">({{ cat.count }})</span>
+        </a>
+    {% endfor %}
+</div>
+
+<div class="content-area" style="margin-bottom: 50px;">
+    <h2 style="font-size: 1.8rem; font-weight: 800; color: #fff; margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; text-align: center;">
+        Ranking Consolidado - <span style="color: var(--highlight-color);">{{ selected_category }}</span>
+    </h2>
     
-    <!-- Área de Conteúdo / Tabela -->
-    <div class="content-area">
-        <h2 style="font-size: 1.8rem; font-weight: 800; color: #fff; margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
-            Ranking Consolidado - <span style="color: var(--highlight-color);">{{ selected_category }}</span>
-        </h2>
-        
-        {% if ranking_data %}
-            <div style="overflow-x: auto;">
-                <table class="ranking-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 60px; text-align: center;">Pos</th>
-                            <th>Atleta</th>
-                            <th style="text-align: center;">Pts</th>
-                            <th style="text-align: center;">J</th>
-                            <th style="text-align: center;">V</th>
-                            <th style="text-align: center;">D</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in ranking_data %}
-                        <tr>
-                            <td style="text-align: center; font-weight: 800;">
-                                {% if forloop.counter == 1 %}🥇
-                                {% elif forloop.counter == 2 %}🥈
-                                {% elif forloop.counter == 3 %}🥉
-                                {% else %}{{ forloop.counter }}º
-                                {% endif %}
-                            </td>
-                            <td>{{ row.player__name }}</td>
-                            <td style="text-align: center; font-weight: 700;">{{ row.total_points|default:"0" }}</td>
-                            <td style="text-align: center;">{{ row.total_matches|default:"0" }}</td>
-                            <td style="text-align: center;">{{ row.total_wins|default:"0" }}</td>
-                            <td style="text-align: center;">{{ row.total_losses|default:"0" }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p style="color: var(--subtitle-color); text-align: center; padding: 40px 0;">Nenhum atleta pontuou nesta categoria nos torneios eliminatórios.</p>
-        {% endif %}
-    </div>
+    {% if ranking_data %}
+        <div style="overflow-x: auto;">
+            <table class="ranking-table">
+                <thead>
+                    <tr>
+                        <th style="width: 60px; text-align: center;">Pos</th>
+                        <th>Atleta</th>
+                        <th style="text-align: center;">Pts</th>
+                        <th style="text-align: center;">J</th>
+                        <th style="text-align: center;">V</th>
+                        <th style="text-align: center;">D</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in ranking_data %}
+                    <tr>
+                        <td style="text-align: center; font-weight: 800;">
+                            {% if forloop.counter == 1 %}🥇
+                            {% elif forloop.counter == 2 %}🥈
+                            {% elif forloop.counter == 3 %}🥉
+                            {% else %}{{ forloop.counter }}º
+                            {% endif %}
+                        </td>
+                        <td>{{ row.player__name }}</td>
+                        <td style="text-align: center; font-weight: 700;">{{ row.total_points|default:"0" }}</td>
+                        <td style="text-align: center;">{{ row.total_matches|default:"0" }}</td>
+                        <td style="text-align: center;">{{ row.total_wins|default:"0" }}</td>
+                        <td style="text-align: center;">{{ row.total_losses|default:"0" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p style="color: var(--subtitle-color); text-align: center; padding: 40px 0;">Nenhum atleta pontuou nesta categoria nos torneios eliminatórios.</p>
+    {% endif %}
 </div>
 {% endif %}
 {% endblock %}

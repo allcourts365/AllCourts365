@@ -126,6 +126,7 @@ def knockout_bracket(request, club_id, tournament_id, category_id):
 def knockout_general_ranking(request, club_id):
     club = get_object_or_404(Club, id=club_id)
     from .models import Category, CategoryPlayer
+    from django.db.models import Count, Sum
     
     categories_names = list(Category.objects.filter(
         tournament__club=club, 
@@ -137,9 +138,23 @@ def knockout_general_ranking(request, club_id):
     if not selected_category and categories_names:
         selected_category = categories_names[0]
         
+    category_counts = CategoryPlayer.objects.filter(
+        category__tournament__club=club,
+        category__tournament__tournament_type='knockout',
+        category__tournament__is_active=True,
+        category__tournament__is_finished=True
+    ).values('category__name').annotate(player_count=Count('player', distinct=True))
+    cat_counts_dict = {item['category__name']: item['player_count'] for item in category_counts}
+    
+    categories_with_counts = []
+    for name in categories_names:
+        categories_with_counts.append({
+            'name': name,
+            'count': cat_counts_dict.get(name, 0)
+        })
+        
     ranking_data = []
     if selected_category:
-        from django.db.models import Sum
         ranking_data = CategoryPlayer.objects.filter(
             category__tournament__club=club,
             category__tournament__tournament_type='knockout',
@@ -157,7 +172,7 @@ def knockout_general_ranking(request, club_id):
         
     return render(request, 'knockout_general_ranking.html', {
         'club': club,
-        'categories': categories_names,
+        'categories': categories_with_counts,
         'selected_category': selected_category,
         'ranking_data': ranking_data,
     })
