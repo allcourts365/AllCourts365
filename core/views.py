@@ -1214,9 +1214,9 @@ def athlete_stats(request):
     last_15 = completed_matches[:15]
     last_15.reverse()
     
-    # Preenche com None até ter 15 jogos para manter o gráfico com J1 a J15 sempre
+    # Preenche com None no FINAL da lista até ter 15 jogos
     while len(last_15) < 15:
-        last_15.insert(0, None)
+        last_15.append(None)
 
     chart_labels = []
     chart_data = []
@@ -1225,7 +1225,7 @@ def athlete_stats(request):
         chart_labels.append(f"J{idx+1}")
         
         if m is None:
-            chart_data.append(0)
+            chart_data.append(None)
             chart_details.append({
                 'opponent': '-',
                 'tournament': '-',
