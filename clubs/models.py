@@ -17,6 +17,7 @@ class Club(models.Model):
     is_visible = models.BooleanField(default=True, verbose_name="Visível no site", help_text="Se desmarcado, o clube ficará oculto para os usuários.")
     website = models.URLField(max_length=200, blank=True, null=True, verbose_name="Site do Clube")
     logo = models.ImageField(upload_to='clubs/logos/', null=True, blank=True, verbose_name="Logotipo")
+    logo_size = models.IntegerField(default=100, verbose_name="Tamanho do Logo (%)", help_text="Ajuste o tamanho do logo.")
     description = models.TextField(blank=True, verbose_name="Descrição")
     address = models.CharField(max_length=300, blank=True, verbose_name="Endereço")
     rules_pdf = models.FileField(upload_to='clubs/rules/', null=True, blank=True, verbose_name="Regulamento (PDF)", help_text="Upload do regulamento do clube em formato PDF.")

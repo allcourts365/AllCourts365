@@ -67,6 +67,7 @@ class ClubForm(forms.ModelForm):
             'sunday_open': forms.TimeInput(attrs={'type': 'time'}),
             'sunday_close': forms.TimeInput(attrs={'type': 'time'}),
             'card_image_size': forms.NumberInput(attrs={'type': 'range', 'min': '10', 'max': '300', 'step': '1'}),
+            'logo_size': forms.NumberInput(attrs={'type': 'range', 'min': '10', 'max': '300', 'step': '1'}),
         }
 
 class ClubAdministratorsInline(admin.TabularInline):
@@ -103,7 +104,7 @@ class ClubAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     
     fieldsets = (
         ('Informações Básicas', {
-            'fields': ('name', 'website', 'logo', 'description', 'address', 'rules_pdf')
+            'fields': ('name', 'website', 'description', 'address', 'rules_pdf')
         }),
         ('Horários de Funcionamento', {
             'fields': (
@@ -113,7 +114,7 @@ class ClubAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
             )
         }),
         ('Configurações Visuais Globais', {
-            'fields': ('favicon', 'card_image', 'card_image_size', 'background_image', 'background_video', 'background_color', 'overlay_color', 'overlay_opacity', 'highlight_color', 'title_color', 'subtitle_color')
+            'fields': ('favicon', 'logo', 'logo_size', 'card_image', 'card_image_size', 'background_image', 'background_video', 'background_color', 'overlay_color', 'overlay_opacity', 'highlight_color', 'title_color', 'subtitle_color')
         }),
         ('Marca d\'Água', {
             'fields': ('watermark_image', 'watermark_position', 'watermark_opacity', 'watermark_size_percent')

@@ -151,6 +151,7 @@ document.addEventListener("DOMContentLoaded", function() {
         cardImage: document.getElementById('id_card_image'),
         bgImage: document.getElementById('id_background_image'),
         logo: document.getElementById('id_logo'),
+        logoSize: document.getElementById('id_logo_size'),
         
         bgColor: document.getElementById('id_background_color'),
         overlayColor: document.getElementById('id_overlay_color'),
@@ -247,7 +248,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
             // Images
             // 1. Logo
-            const logoImg = iDoc.querySelector('.club-header-card img[style*="border-radius: 50%"]');
+            const logoContainer = iDoc.querySelector('.club-header-card > div:first-child > div:nth-child(2)');
+            let logoImg = logoContainer ? logoContainer.querySelector('img') : iDoc.querySelector('.club-header-card img[style*="border-radius: 50%"]');
             if (logoImg) {
                 if (currentImages.logo) {
                     logoImg.src = currentImages.logo;
@@ -258,10 +260,26 @@ document.addEventListener("DOMContentLoaded", function() {
                     logoImg.style.width = '60px';
                     logoImg.style.height = '60px';
                 }
+                const lSize = inputs.logoSize ? (parseInt(inputs.logoSize.value, 10) || 100) : 100;
+                logoImg.style.transform = "scale(" + (lSize / 100) + ")";
+                logoImg.style.transformOrigin = "center";
             }
 
             // 2. Header Cover Image
-            const coverImg = iDoc.querySelector('.club-header-card > div:first-child img');
+            const coverContainer = iDoc.querySelector('.club-header-card > div:first-child > div:first-child');
+            let coverImg = null;
+            if (coverContainer) {
+                coverImg = coverContainer.querySelector('img');
+                if (!coverImg && (currentImages.card_image || currentImages.background_image)) {
+                    coverImg = iDoc.createElement('img');
+                    coverImg.style.width = '100%';
+                    coverImg.style.height = '100%';
+                    coverImg.style.objectFit = 'contain';
+                    coverImg.style.opacity = '0.5';
+                    coverImg.style.transformOrigin = 'center';
+                    coverContainer.appendChild(coverImg);
+                }
+            }
             if (coverImg) {
                 if (currentImages.card_image) {
                     coverImg.src = currentImages.card_image;
@@ -297,6 +315,18 @@ document.addEventListener("DOMContentLoaded", function() {
                     inputs.cardImageSize.parentNode.appendChild(valDisplay);
                 }
                 valDisplay.textContent = inputs.cardImageSize.value + '%';
+            }
+            if (inputs.logoSize) {
+                let logoValDisplay = document.getElementById('logo_size_display');
+                if (!logoValDisplay) {
+                    logoValDisplay = document.createElement('span');
+                    logoValDisplay.id = 'logo_size_display';
+                    logoValDisplay.style.marginLeft = '10px';
+                    logoValDisplay.style.fontWeight = 'bold';
+                    logoValDisplay.style.color = '#fff';
+                    inputs.logoSize.parentNode.appendChild(logoValDisplay);
+                }
+                logoValDisplay.textContent = inputs.logoSize.value + '%';
             }
         }
 

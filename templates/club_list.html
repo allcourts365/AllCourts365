@@ -26,9 +26,9 @@
                 <!-- Logo overlapping -->
                 <div style="position: absolute; bottom: -45px; left: 50%; transform: translateX(-50%); width: 90px; height: 90px; border-radius: 50%; background: #1a1a2e; border: 3px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
                     {% if club.logo %}
-                        <img src="{{ club.logo.url }}" alt="{{ club.name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        <img src="{{ club.logo.url }}" alt="{{ club.name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; transform: scale(calc({{ club.logo_size|default:100 }} / 100)); transform-origin: center;">
                     {% else %}
-                        <img src="{% static 'bolinha.png' %}" style="width: 45px; height: 45px; opacity: 0.8;">
+                        <img src="{% static 'bolinha.png' %}" style="width: 45px; height: 45px; opacity: 0.8; transform: scale(calc({{ club.logo_size|default:100 }} / 100)); transform-origin: center;">
                     {% endif %}
                 </div>
             </div>
