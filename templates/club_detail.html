@@ -115,11 +115,13 @@
 <div class="glass-card club-header-card" style="padding: 0; overflow: hidden; margin-bottom: 40px; border-radius: 20px;">
     <!-- Capa / Header Image -->
     <div style="width: 100%; height: 200px; position: relative; background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.1);">
-        {% if club.card_image %}
-            <img src="{{ club.card_image.url }}" style="width: 100%; height: 100%; object-fit: contain; opacity: 0.5; transform: scale(calc({{ club.card_image_size|default:100 }} / 100)); transform-origin: center;">
-        {% elif club.background_image %}
-            <img src="{{ club.background_image.url }}" style="width: 100%; height: 100%; object-fit: contain; opacity: 0.5; transform: scale(calc({{ club.card_image_size|default:100 }} / 100)); transform-origin: center;">
-        {% endif %}
+        <div style="width: 100%; height: 100%; overflow: hidden; position: absolute; top: 0; left: 0;">
+            {% if club.card_image %}
+                <img src="{{ club.card_image.url }}" style="width: 100%; height: 100%; object-fit: contain; opacity: 0.5; transform: scale(calc({{ club.card_image_size|default:100 }} / 100)); transform-origin: center;">
+            {% elif club.background_image %}
+                <img src="{{ club.background_image.url }}" style="width: 100%; height: 100%; object-fit: contain; opacity: 0.5; transform: scale(calc({{ club.card_image_size|default:100 }} / 100)); transform-origin: center;">
+            {% endif %}
+        </div>
         
         <!-- Logo overlapping -->
         <div style="position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%); width: 120px; height: 120px; border-radius: 50%; background: #1a1a2e; border: 4px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(10px);">

@@ -261,7 +261,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }
 
             // 2. Header Cover Image
-            const coverImg = iDoc.querySelector('.club-header-card > div:first-child > img');
+            const coverImg = iDoc.querySelector('.club-header-card > div:first-child img');
             if (coverImg) {
                 if (currentImages.card_image) {
                     coverImg.src = currentImages.card_image;
