@@ -1,5 +1,5 @@
 from allauth.account.adapter import DefaultAccountAdapter
-from allauth.exceptions import ImmediateHttpResponse
+from allauth.core.exceptions import ImmediateHttpResponse
 from django.shortcuts import redirect
 
 class CustomAccountAdapter(DefaultAccountAdapter):
