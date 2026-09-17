@@ -2142,6 +2142,7 @@
             const ld = String(currentDate.getDate()).padStart(2, '0');
             const dateStr = `${ly}-${lm}-${ld}`;
             
+            const dailyEvents = [];
             filteredMatches.forEach(ev => {
                 if (!ev.start) return;
                 const evDate = new Date(ev.start);
@@ -2153,6 +2154,40 @@
                 
                 const top = (evDate.getHours() * 60) + evDate.getMinutes();
                 const height = ev.duration || 90;
+                
+                dailyEvents.push({ ev, evDate, top, height });
+            });
+            
+            dailyEvents.sort((a, b) => a.top - b.top);
+            
+            let groups = [];
+            let currentGroup = [];
+            let currentGroupEnd = 0;
+            
+            dailyEvents.forEach(item => {
+                if (currentGroup.length === 0) {
+                    currentGroup.push(item);
+                    currentGroupEnd = item.top + item.height;
+                } else {
+                    if (item.top < currentGroupEnd) {
+                        currentGroup.push(item);
+                        currentGroupEnd = Math.max(currentGroupEnd, item.top + item.height);
+                    } else {
+                        groups.push(currentGroup);
+                        currentGroup = [item];
+                        currentGroupEnd = item.top + item.height;
+                    }
+                }
+            });
+            if (currentGroup.length > 0) groups.push(currentGroup);
+            
+            groups.forEach(group => {
+                let widthPercent = 100 / group.length;
+                group.forEach((item, index) => {
+                    const ev = item.ev;
+                    const evDate = item.evDate;
+                    const top = item.top;
+                    const height = item.height;
                 
                 var statusClass = '';
                 if (ev.is_completed) {
@@ -2173,6 +2208,8 @@
                 evDiv.className = `ol-event ${ev.is_mine ? 'mine' : 'occupied'} ${statusClass}`;
                 evDiv.style.top = `${top}px`;
                 evDiv.style.height = `${height}px`;
+                evDiv.style.left = `calc(60px + (100% - 60px) * ${index} / ${group.length})`;
+                evDiv.style.width = `calc((100% - 60px) / ${group.length})`;
                 var middleText = `das ${startStr} até ${endStr} ${ev.court_name ? 'na ' + ev.court_name : '(Quadra a definir)'}`;
                 if (ev.is_completed && ev.status !== 'aguardando_adversario' && ev.status !== 'agendado' && ev.status !== 'unagendado') {
                     middleText = `REALIZADO ${ev.date_str_br} das ${startStr} até ${endStr} ${ev.court_name ? 'na ' + ev.court_name : '(Quadra a definir)'}`;
@@ -2233,6 +2270,7 @@
                     evDiv.onclick = () => editExistingSchedule(ev.id, ev.title, dateStr, startStr, ev.court_id, ev.status, ev.duration || 90, ev.club_id, ev.can_accept, ev.allow_player_scheduling);
                 }
                 timeGrid.appendChild(evDiv);
+                });
             });
             
         } else if (currentView === 'week') {
@@ -2310,6 +2348,8 @@
             // Render events in week view columns
             const weekCols = document.getElementById('week-columns').children;
             
+            const eventsByDay = Array.from({ length: numDays }, () => []);
+            
             filteredMatches.forEach(ev => {
                 if (!ev.start) return;
                 const evDate = new Date(ev.start);
@@ -2332,6 +2372,45 @@
                 const top = (evDate.getHours() * 60) + evDate.getMinutes();
                 const height = ev.duration || 90;
                 
+                eventsByDay[dayIndex].push({ ev, evDate, top, height });
+            });
+            
+            for (let i = 0; i < numDays; i++) {
+                const dailyEvents = eventsByDay[i];
+                if (dailyEvents.length === 0) continue;
+                
+                dailyEvents.sort((a, b) => a.top - b.top);
+                
+                let groups = [];
+                let currentGroup = [];
+                let currentGroupEnd = 0;
+                
+                dailyEvents.forEach(item => {
+                    if (currentGroup.length === 0) {
+                        currentGroup.push(item);
+                        currentGroupEnd = item.top + item.height;
+                    } else {
+                        if (item.top < currentGroupEnd) {
+                            currentGroup.push(item);
+                            currentGroupEnd = Math.max(currentGroupEnd, item.top + item.height);
+                        } else {
+                            groups.push(currentGroup);
+                            currentGroup = [item];
+                            currentGroupEnd = item.top + item.height;
+                        }
+                    }
+                });
+                if (currentGroup.length > 0) groups.push(currentGroup);
+                
+                groups.forEach(group => {
+                    let widthPercent = 100 / group.length;
+                    group.forEach((item, index) => {
+                        const ev = item.ev;
+                        const evDate = item.evDate;
+                        const top = item.top;
+                        const height = item.height;
+                        const dayIndex = i;
+                
                 var statusClass = '';
                 if (ev.is_completed) statusClass = 'finalizado';
                 else if (ev.status === 'aguardando_adversario') statusClass = 'aguardando';
@@ -2346,8 +2425,9 @@
                 evDiv.className = `ol-event ${ev.is_mine ? 'mine' : 'occupied'} ${statusClass}`;
                 evDiv.style.top = `${top}px`;
                 evDiv.style.height = `${height}px`;
-                evDiv.style.left = '0';
-                evDiv.style.right = '0';
+                evDiv.style.left = (index * widthPercent) + '%';
+                evDiv.style.width = widthPercent + '%';
+                evDiv.style.right = 'auto';
                 // Dynamic font size proportionally scaled to height
                 // Capped between 0.65rem and 0.85rem.
                 const dynamicFontSize = Math.min(0.85, Math.max(0.65, 0.75 * (height / 90)));
@@ -2409,7 +2489,9 @@
                 }
                 
                 weekCols[dayIndex].appendChild(evDiv);
-            });
+                    });
+                });
+            }
         } else if (currentView === 'month') {
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
