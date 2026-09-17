@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from multiselectfield import MultiSelectField
 
 class Club(models.Model):
     POSITION_CHOICES = [
@@ -60,6 +61,7 @@ class Court(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='courts', verbose_name="Clube")
     name = models.CharField(max_length=100, verbose_name="Nome da Quadra")
     is_ranking_court = models.BooleanField(default=False, verbose_name="Usada para Jogos de Ranking?")
+    is_knockout_court = models.BooleanField(default=False, verbose_name="Usada para Jogos de Torneios Eliminatórios?")
 
     def __str__(self):
         return f"{self.name} ({self.club.name})"
@@ -99,7 +101,7 @@ class Tournament(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='tournaments', verbose_name="Clube")
     name = models.CharField(max_length=200, verbose_name="Nome do Torneio/Ranking")
     tournament_type = models.CharField(max_length=20, choices=TOURNAMENT_TYPES, default='ranking', verbose_name="Tipo")
-    competition_type = models.CharField(max_length=20, choices=COMPETITION_TYPES, default='simples', verbose_name="Competição")
+    competition_type = MultiSelectField(max_length=50, choices=COMPETITION_TYPES, default='simples', verbose_name="Competição")
     set_format = models.CharField(max_length=20, choices=SET_FORMATS, default='3_normal', verbose_name="Formato de Sets")
     
     current_round = models.IntegerField(verbose_name="Rodada Atual", default=1)
@@ -141,6 +143,9 @@ class Tournament(models.Model):
         return f"{self.name} - {self.club.name}"
 
     def save(self, *args, **kwargs):
+        if self.tournament_type == 'knockout':
+            self.allow_player_scheduling = False
+            self.allow_player_results = False
         super().save(*args, **kwargs)
         if self.pk:
             for cat in self.categories.all():

@@ -12,7 +12,7 @@
     :root {
         {% if club.background_color %}--bg-color: {{ club.background_color }};{% endif %}
         {% if club.overlay_color %}--overlay-color: {{ club.overlay_color }};{% endif %}
-        {% if club.overlay_opacity %}--overlay-opacity: {{ club.overlay_opacity|stringformat:"s" }};{% endif %}
+        {% if club.overlay_opacity is not None %}--overlay-opacity: {{ club.overlay_opacity|stringformat:"s" }};{% endif %}
         {% if club.highlight_color %}
             --highlight-color: {{ club.highlight_color }};
             --primary: {{ club.highlight_color }};
@@ -235,6 +235,84 @@
     
     header { position: sticky; left: 0; width: 100vw; z-index: 1000; }
     footer { position: sticky; left: 0; width: 100vw; }
+
+    
+    .info-card h3 {
+        color: var(--primary);
+        margin-top: 0;
+        font-size: 1.2rem;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+    }
+    .info-item label {
+        display: block;
+        color: var(--subtitle-color);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+    .info-item span {
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    
+    .schedule-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .schedule-item {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .schedule-time {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: rgba(0,0,0,0.3);
+        padding: 10px 16px;
+        border-radius: 8px;
+        border-left: 3px solid var(--primary);
+    }
+    .schedule-time .date { font-size: 0.85rem; color: var(--subtitle-color); }
+    .schedule-time .time { font-size: 1.2rem; font-weight: 700; color: #fff; }
+    
+    .schedule-players {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 250px;
+    }
+    .schedule-player {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #fff;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    
+    .schedule-details {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+        text-align: right;
+    }
+    .schedule-court { color: var(--primary); font-weight: 700; font-size: 0.95rem; }
+    .schedule-phase { color: var(--subtitle-color); font-size: 0.85rem; text-transform: uppercase; }
 </style>
 {% endblock %}
 
@@ -247,6 +325,7 @@
 {% endblock %}
 
 {% block content %}
+
 <div class="print-cover" style="margin-top: 2rem; margin-bottom: 2rem; position: relative;">
             {% if request.GET.from_dashboard %}
                 <a href="javascript:history.back()" class="back-link" style="color: var(--primary); text-decoration: none; font-weight: 600;">&larr; Voltar ao Calendário</a>
@@ -260,88 +339,80 @@
     </p>
 </div>
 
-{% if not brackets %}
-<div class="card" style="text-align: center; justify-content: center; align-items: center; min-height: 200px; background: var(--bg-card);">
-    <p style="color: var(--text-muted); font-size: 1.1rem;">A chave desta categoria ainda não foi gerada.</p>
-</div>
-{% else %}
-    {% for bracket in brackets %}
-        {% if brackets|length > 1 %}
-            <h2 style="margin-top: 3rem; margin-bottom: 1rem; color: var(--primary); font-size: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">{{ bracket.name }}</h2>
-        {% endif %}
-        <div class="bracket-container">
-            {% for round_num, matches in bracket.rounds.items %}
-            <div class="round">
-                <div class="round-header">{{ matches.0.phase }}</div>
-                
-                <div class="matches-container">
-                {% for match in matches %}
-                <div class="matchup-wrapper">
-                    {% if match.bracket_label %}
-                        <div style="text-align: left; color: var(--primary); font-weight: 800; font-size: 1.1rem; margin-bottom: 0.8rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--primary); padding-bottom: 0.3rem; margin-left: 0.5rem;">
-                            {{ match.bracket_label }}
-                        </div>
-                    {% endif %}
-                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-left: 0.5rem; font-weight: bold; text-transform: uppercase; display: flex; align-items: center; gap: 0.3rem;">
-                        <span>Jogo {{ match.match_number }}{% if match.youtube_link %} -{% endif %}</span>
-                        {% if match.youtube_link %}
-                        <a href="{{ match.youtube_link }}" target="_blank" title="Assistir jogo no YouTube" style="color: #ff0000; display: inline-flex; align-items: center; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.052-.074 1.964l-.027.365c-.048.519-.119 1.023-.22 1.402a2.007 2.007 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.007 2.007 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31.4 31.4 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.007 2.007 0 0 1 1.415-1.42c1.16-.312 5.569-.334 6.18-.335h.142c.309 0 1.587.006 2.927.052l.17.006.087.004.171.007.171.007c1.11.049 2.167.128 2.654.26zM5.525 10.536 11.53 7.68 5.525 4.824v5.712z"/>
-                            </svg>
-                        </a>
+
+<div style="margin-top: 2rem;">
+    {% if not brackets %}
+    <div class="card" style="text-align: center; justify-content: center; align-items: center; min-height: 200px; background: var(--bg-card);">
+        <p style="color: var(--text-muted); font-size: 1.1rem;">A chave desta categoria ainda não foi gerada.</p>
+    </div>
+    {% else %}
+        {% for bracket in brackets %}
+            {% if brackets|length > 1 %}
+                <h2 style="margin-top: 1rem; margin-bottom: 1rem; color: var(--primary); font-size: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">{{ bracket.name }}</h2>
+            {% endif %}
+            <div class="bracket-container">
+                {% for round_num, matches in bracket.rounds.items %}
+                <div class="round">
+                    <div class="round-header">{{ matches.0.phase }}</div>
+                    
+                    <div class="matches-container">
+                    {% for match in matches %}
+                    <div class="matchup-wrapper">
+                        {% if match.bracket_label %}
+                            <div style="text-align: left; color: var(--primary); font-weight: 800; font-size: 1.1rem; margin-bottom: 0.8rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--primary); padding-bottom: 0.3rem; margin-left: 0.5rem;">
+                                {{ match.bracket_label }}
+                            </div>
                         {% endif %}
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-left: 0.5rem; font-weight: bold; text-transform: uppercase; display: flex; align-items: center; gap: 0.3rem;">
+                            <span>Jogo {{ match.match_number }}</span>
+                        </div>
+                        <div class="matchup">
+                        <div class="team {% if match.winner and match.winner == match.player_a %}winner{% endif %}">
+                            <span class="team-name">{% if match.player_a %}{{ match.player_a.name }}{% elif match.round_number == 1 %}BYE{% elif match.prev_match_a %}<span style="font-size: 0.85em; font-style: italic; color: var(--text-muted);">Venc. Jogo {{ match.prev_match_a.match_number }}</span>{% else %}A definir{% endif %}</span>
+                            <span class="team-score">
+                                {% if match.set1_a != None %}
+                                    <span>{{ match.set1_a }}</span>
+                                    {% if match.set2_a != None %}<span>{{ match.set2_a }}</span>{% endif %}
+                                    {% if match.set3_a != None %}<span>{{ match.set3_a }}</span>{% endif %}
+                                {% elif match.status == 'completed' and match.sets_a != None %}
+                                    <span style="font-weight: 800;">{{ match.sets_a }}</span>
+                                {% elif match.status == 'completed' and match.winner and match.winner == match.player_a and not match.is_bye and match.player_b and match.player_b.name|lower != 'bye' and match.player_b.name|lower != 'folga' %}
+                                    <span style="font-size: 0.8em; font-weight: bold; color: var(--success);">W.O.</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="team {% if match.winner and match.winner == match.player_b %}winner{% endif %}">
+                            <span class="team-name">{% if match.player_b %}{{ match.player_b.name }}{% elif match.round_number == 1 %}BYE{% elif match.prev_match_b %}<span style="font-size: 0.85em; font-style: italic; color: var(--text-muted);">Venc. Jogo {{ match.prev_match_b.match_number }}</span>{% else %}A definir{% endif %}</span>
+                            <span class="team-score">
+                                {% if match.set1_b != None %}
+                                    <span>{{ match.set1_b }}</span>
+                                    {% if match.set2_b != None %}<span>{{ match.set2_b }}</span>{% endif %}
+                                    {% if match.set3_b != None %}<span>{{ match.set3_b }}</span>{% endif %}
+                                {% elif match.status == 'completed' and match.sets_b != None %}
+                                    <span style="font-weight: 800;">{{ match.sets_b }}</span>
+                                {% elif match.status == 'completed' and match.winner and match.winner == match.player_b and not match.is_bye and match.player_a and match.player_a.name|lower != 'bye' and match.player_a.name|lower != 'folga' %}
+                                    <span style="font-size: 0.8em; font-weight: bold; color: var(--success);">W.O.</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="match-status">
+                            {% if match.status == 'pending' %}Aguardando{% elif match.status == 'cancelled' %}Cancelado{% else %}Finalizado{% endif %}
+                            {% if match.scheduled_datetime %} // {{ match.scheduled_datetime|date:"d/m H:i" }}{% endif %}
+                            {% if match.court %} // {{ match.court.name }}{% endif %}
+                        </div>
                     </div>
-                    <div class="matchup">
-                    <div class="team {% if match.winner and match.winner == match.player_a %}winner{% endif %}">
-                        <span class="team-name">{% if match.player_a %}{{ match.player_a.name }}{% elif match.round_number == 1 %}BYE{% elif match.prev_match_a %}<span style="font-size: 0.85em; font-style: italic; color: var(--text-muted);">Venc. Jogo {{ match.prev_match_a.match_number }}</span>{% else %}A definir{% endif %}</span>
-                        <span class="team-score">
-                            {% if match.set1_a != None %}
-                                <span>{{ match.set1_a }}</span>
-                                {% if match.set2_a != None %}<span>{{ match.set2_a }}</span>{% endif %}
-                                {% if match.set3_a != None %}<span>{{ match.set3_a }}</span>{% endif %}
-                                {% if match.set4_a != None %}<span>{{ match.set4_a }}</span>{% endif %}
-                                {% if match.set5_a != None %}<span>{{ match.set5_a }}</span>{% endif %}
-                            {% elif match.status == 'completed' and match.sets_a != None %}
-                                <span style="font-weight: 800;" title="Placar Visão Geral">{{ match.sets_a }}</span>
-                            {% elif match.status == 'completed' and match.winner and match.winner == match.player_a and not match.is_bye and match.player_b and match.player_b.name|lower != 'bye' and match.player_b.name|lower != 'folga' %}
-                                <span style="font-size: 0.8em; font-weight: bold; color: var(--success);">W.O.</span>
-                            {% endif %}
-                        </span>
+                    </div>
+                    {% endfor %}
                     </div>
                     
-                    <div class="team {% if match.winner and match.winner == match.player_b %}winner{% endif %}">
-                        <span class="team-name">{% if match.player_b %}{{ match.player_b.name }}{% elif match.round_number == 1 %}BYE{% elif match.prev_match_b %}<span style="font-size: 0.85em; font-style: italic; color: var(--text-muted);">Venc. Jogo {{ match.prev_match_b.match_number }}</span>{% else %}A definir{% endif %}</span>
-                        <span class="team-score">
-                            {% if match.set1_b != None %}
-                                <span>{{ match.set1_b }}</span>
-                                {% if match.set2_b != None %}<span>{{ match.set2_b }}</span>{% endif %}
-                                {% if match.set3_b != None %}<span>{{ match.set3_b }}</span>{% endif %}
-                                {% if match.set4_b != None %}<span>{{ match.set4_b }}</span>{% endif %}
-                                {% if match.set5_b != None %}<span>{{ match.set5_b }}</span>{% endif %}
-                            {% elif match.status == 'completed' and match.sets_b != None %}
-                                <span style="font-weight: 800;" title="Placar Visão Geral">{{ match.sets_b }}</span>
-                            {% elif match.status == 'completed' and match.winner and match.winner == match.player_b and not match.is_bye and match.player_a and match.player_a.name|lower != 'bye' and match.player_a.name|lower != 'folga' %}
-                                <span style="font-size: 0.8em; font-weight: bold; color: var(--success);">W.O.</span>
-                            {% endif %}
-                        </span>
-                    </div>
-                    
-                    {% if match.status == 'pending' %}
-                    <div class="match-status">Aguardando</div>
-                    {% elif match.status == 'cancelled' %}
-                    <div class="match-status">Cancelado</div>
-                    {% else %}
-                    <div class="match-status">Finalizado</div>
-                    {% endif %}
-                </div>
                 </div>
                 {% endfor %}
-                </div>
-                
             </div>
-            {% endfor %}
-        </div>
-    {% endfor %}
-{% endif %}
+        {% endfor %}
+    {% endif %}
+</div>
+
+
 {% endblock %}

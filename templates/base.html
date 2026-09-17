@@ -31,7 +31,7 @@
             /* Variáveis Dinâmicas Globais */
             --global-bg-color: {{ site_config.background_color|default:"#0f172a" }};
             --global-overlay-color: {{ site_config.overlay_color|default:"#000000" }};
-            --global-overlay-opacity: {{ site_config.overlay_opacity|default:"0.5"|stringformat:"s" }};
+            --global-overlay-opacity: {{ site_config.overlay_opacity|default_if_none:"0.5"|stringformat:"s" }};
             --global-highlight-color: {{ site_config.highlight_color|default:"#3b82f6" }};
             --global-title-color: {{ site_config.title_color|default:"#ffffff" }};
             --global-subtitle-color: {{ site_config.subtitle_color|default:"#94a3b8" }};
@@ -201,8 +201,16 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <!-- Overlay da Imagem de Fundo -->
-    <div class="bg-overlay"></div>
+    <!-- Overlay da Imagem de Fundo (Só ativa se houver imagem ou vídeo) -->
+    {% if club_context %}
+        {% if club_context.background_image or club_context.background_video %}
+            <div class="bg-overlay"></div>
+        {% endif %}
+    {% else %}
+        {% if site_config.background_image or site_config.background_video %}
+            <div class="bg-overlay"></div>
+        {% endif %}
+    {% endif %}
 
     <!-- Vídeo de Fundo -->
     {% block background_video %}

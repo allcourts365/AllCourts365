@@ -9,7 +9,7 @@
     :root {
         {% if club.background_color %}--bg-color: {{ club.background_color }};{% endif %}
         {% if club.overlay_color %}--overlay-color: {{ club.overlay_color }};{% endif %}
-        {% if club.overlay_opacity %}--overlay-opacity: {{ club.overlay_opacity|stringformat:"s" }};{% endif %}
+        {% if club.overlay_opacity is not None %}--overlay-opacity: {{ club.overlay_opacity|stringformat:"s" }};{% endif %}
         {% if club.highlight_color %}--highlight-color: {{ club.highlight_color }};{% endif %}
         {% if club.title_color %}--title-color: {{ club.title_color }};{% endif %}
         {% if club.subtitle_color %}--subtitle-color: {{ club.subtitle_color }};{% endif %}

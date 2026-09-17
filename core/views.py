@@ -1108,8 +1108,9 @@ def athlete_calendar(request):
                 round_info = f" // {m.phase}"
             elif getattr(m, 'round_number', None):
                 round_info = f" // Rodada {m.round_number}"
-
-        title = f"{m.player_a.name} vs {m.player_b.name} // {tourn_name}{round_info} // {club_name}"
+        pa_name = m.player_a.name if m.player_a else "A definir"
+        pb_name = m.player_b.name if m.player_b else "A definir"
+        title = f"{pa_name} vs {pb_name} // {tourn_name}{round_info} // {club_name}"
         duration = m.tournament.match_duration if m.tournament and m.tournament.match_duration else 90
         local_dt = timezone.localtime(dt)
         

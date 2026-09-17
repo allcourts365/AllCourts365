@@ -130,8 +130,8 @@ class ClubAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
 
 @admin.register(Court)
 class CourtAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
-    list_display = ('name', 'club', 'is_ranking_court')
-    list_filter = (('club', admin.RelatedOnlyFieldListFilter), 'is_ranking_court')
+    list_display = ('name', 'club', 'is_ranking_court', 'is_knockout_court')
+    list_filter = (('club', admin.RelatedOnlyFieldListFilter), 'is_ranking_court', 'is_knockout_court')
     search_fields = ('name',)
 
 @admin.register(Player)
@@ -225,6 +225,8 @@ class CategoryInline(admin.TabularInline):
 
 @admin.register(Tournament)
 class TournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
+    class Media:
+        js = ('admin/js/tournament_admin.js',)
     list_display = ('name', 'club', 'tournament_type', 'is_active', 'is_finished')
     list_filter = (('club', admin.RelatedOnlyFieldListFilter), 'tournament_type', 'is_active')
     search_fields = ('name',)
@@ -446,7 +448,15 @@ class RankingTournamentAdmin(TournamentAdmin):
 
 @admin.register(KnockoutTournament)
 class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
+    class Media:
+        js = ('admin/js/tournament_admin.js',)
     inlines = [CategoryInline]
+
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+        initial['allow_player_scheduling'] = False
+        initial['allow_player_results'] = False
+        return initial
 
     def get_queryset(self, request):
         qs = super().get_queryset(request).filter(tournament_type='knockout')
@@ -536,6 +546,12 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
         excel_file = form.cleaned_data.get('excel_file')
         if excel_file:
             self._generate_knockout_bracket(request, obj, excel_file)
+            from .scheduling import generate_knockout_schedule
+            success, msg = generate_knockout_schedule(obj.id)
+            if success:
+                messages.success(request, f"Programação gerada automaticamente: {msg}")
+            else:
+                messages.warning(request, f"Atenção ao gerar programação: {msg}")
 
     # ── Geração do bracket ──────────────────────────────────────────────────────
     def _generate_knockout_bracket(self, request, obj, excel_file):
@@ -742,7 +758,7 @@ class MatchAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     match_name.short_description = 'Match'
 
     list_display = ('match_name', 'round_number', 'phase', 'tournament', 'category', 'status', 'winner', 'scheduled_datetime')
-    list_filter = (('tournament__club', admin.RelatedOnlyFieldListFilter), ('tournament', admin.RelatedOnlyFieldListFilter), ('category', admin.RelatedOnlyFieldListFilter), 'round_number', 'status')
+    list_filter = (('tournament__club', admin.RelatedOnlyFieldListFilter), ('tournament', admin.RelatedOnlyFieldListFilter), ('category', admin.RelatedOnlyFieldListFilter), 'round_number', 'phase', 'status')
     search_fields = ('player_a__name', 'player_b__name')
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):

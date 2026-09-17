@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Programação - {{ tournament.name }}</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #000;
+            background: #fff;
+            max-width: 100%;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header img {
+            max-height: 60px;
+        }
+        .header-center {
+            text-align: center;
+        }
+        .header-center h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+        }
+        .header-center p {
+            margin: 2px 0;
+            font-size: 0.9rem;
+            color: #555;
+        }
+        table {
+            width: 99.8%;
+            margin: 0 auto 15px auto;
+            max-width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            page-break-inside: avoid;
+            table-layout: fixed;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 6px 10px;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        .match-info-row {
+            background-color: #f1f5f9;
+            font-weight: bold;
+            text-align: left;
+        }
+        .match-info-row td {
+            border-bottom: 1px solid #ccc;
+        }
+        .player-row td {
+            text-align: center;
+            height: 28px;
+        }
+        .player-row .player-name {
+            text-align: left;
+        }
+        @media print {
+            body { padding: 0; }
+            @page { margin: 1cm; }
+        }
+    </style>
+</head>
+<body onload="window.print()">
+
+    <div class="header">
+        <div>
+            {% if club.logo %}
+                <img src="{{ club.logo.url }}" alt="{{ club.name }}">
+            {% else %}
+                <div style="width: 60px; height: 60px; background: #eee; border-radius: 50%;"></div>
+            {% endif %}
+        </div>
+        <div class="header-center">
+            <h1>{{ tournament.name }}</h1>
+            <p>{{ club.name }} • {{ club.city|default:"-" }} • {{ club.state|default:"-" }}</p>
+            <p>Programação | Jogos: {{ total_matches }}</p>
+        </div>
+        <div>
+            <img src="/static/images/logo_liga.png" alt="Liga" onerror="this.style.display='none'">
+        </div>
+    </div>
+
+    {% regroup scheduled_matches by scheduled_datetime.date as matches_by_date %}
+
+    {% for date_group in matches_by_date %}
+        <h2 style="font-size: 1.1rem; margin-top: 20px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">{{ date_group.grouper|date:"l, d/m/Y"|title }}</h2>
+        
+        {% for match in date_group.list %}
+        <table>
+            <tr class="match-info-row">
+                <td class="player-name" style="width: 70%;">
+                    {{ match.scheduled_datetime|date:"H:i" }} · Jogo {{ match.match_number|default:match.id }} · {{ match.category.name }} · {{ match.phase|default:"Fase" }} · {{ match.court.name|default:"-" }}
+                </td>
+                <td style="width: 10%;">1º set</td>
+                <td style="width: 10%;">2º set</td>
+                <td style="width: 10%;">3º set</td>
+            </tr>
+            <tr class="player-row">
+                <td class="player-name">
+                    {% if match.player_a %}
+                        {{ match.player_a.name }}
+                    {% else %}
+                        A definir
+                    {% endif %}
+                </td>
+                <td>{% if match.set1_a != None %}{{ match.set1_a }}{% endif %}</td>
+                <td>{% if match.set2_a != None %}{{ match.set2_a }}{% endif %}</td>
+                <td>{% if match.set3_a != None %}{{ match.set3_a }}{% endif %}</td>
+            </tr>
+            <tr class="player-row">
+                <td class="player-name">
+                    {% if match.player_b %}
+                        {{ match.player_b.name }}
+                    {% else %}
+                        A definir
+                    {% endif %}
+                </td>
+                <td>{% if match.set1_b != None %}{{ match.set1_b }}{% endif %}</td>
+                <td>{% if match.set2_b != None %}{{ match.set2_b }}{% endif %}</td>
+                <td>{% if match.set3_b != None %}{{ match.set3_b }}{% endif %}</td>
+            </tr>
+        </table>
+        {% endfor %}
+    {% endfor %}
+
+</body>
+</html>

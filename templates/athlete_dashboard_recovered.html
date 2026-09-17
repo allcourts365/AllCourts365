@@ -1874,7 +1874,7 @@ The following code has been modified to include a line number before every line,
 12:     :root {
 13:         {% if club.background_color %}--bg-color: {{ club.background_color }};{% endif %}
 14:         {% if club.overlay_color %}--overlay-color: {{ club.overlay_color }};{% endif %}
-15:         {% if club.overlay_opacity %}--overlay-opacity: {{ club.overlay_opacity|stringformat:"s" }};{% endif %}
+15:         {% if club.overlay_opacity is not None %}--overlay-opacity: {{ club.overlay_opacity|stringformat:"s" }};{% endif %}
 16:         {% if club.highlight_color %}--highlight-color: {{ club.highlight_color }};{% endif %}
 17:         {% if club.title_color %}--title-color: {{ club.title_color }};{% endif %}
 18:         {% if club.subtitle_color %}--subtitle-color: {{ club.subtitle_color }};{% endif %}
@@ -2117,305 +2117,605 @@ Total Lines: 800
 Total Bytes: 38255
 Showing lines 1 to 300
 The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
-1: {% extends 'base.html' %}
-2: {% load static %}
-3: 
-4: {% block title %}Painel Administrativo do Atleta - AllCourts365{% endblock %}
-5: 
-6: {% block extra_head %}
-7: <style>
-8:     /* Bypassing base.html container margins */
-9:     .full-width-wrapper {
-10:         display: flex;
-11:         flex-direction: column;
-12:         min-height: calc(100vh - 80px); /* 80px is approx navbar height */
-13:         margin-top: 0;
-14:         width: 100vw;
-15:         max-width: 100%;
-16:         margin-left: calc(-50vw + 50%);
-17:     }
-18: 
-19:     @media (min-width: 992px) {
-20:         .full-width-wrapper {
-21:             flex-direction: row;
-22:         }
-23:     }
-24: 
-25:     /* Sidebar (Menu Lateral) no Canto Esquerdo Total */
-26:     .dashboard-sidebar {
-27:         width: 100%;
-28:         padding: 40px 20px;
-29:         display: flex;
-30:         flex-direction: column;
-31:         gap: 10px;
-32:         background: rgba(15, 23, 42, 0.6);
-33:         border-right: 1px solid rgba(255, 255, 255, 0.15); /* Linha separando */
-34:         backdrop-filter: blur(20px);
-35:         -webkit-backdrop-filter: blur(20px);
-36:     }
-37: 
-38:     @media (min-width: 992px) {
-39:         .dashboard-sidebar {
-40:             width: 320px;
-41:             flex-shrink: 0;
-42:             min-height: calc(100vh - 80px);
-43:             position: sticky;
-44:             top: 80px;
-45:         }
-46:     }
-47: 
-48:     .sidebar-header {
-49:         text-align: center;
-50:         padding-bottom: 30px;
-51:         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-52:         margin-bottom: 20px;
-53:     }
-54: 
-55:     .sidebar-avatar {
-56:         width: 100px;
-57:         height: 100px;
-58:         background: linear-gradient(135deg, var(--highlight-color, #3b82f6), #1e40af);
-59:         border-radius: 50%;
-60:         display: flex;
-61:         align-items: center;
-62:         justify-content: center;
-63:         font-size: 2.8rem;
-64:         font-weight: 800;
-65:         color: #fff;
-66:         margin: 0 auto 15px auto;
-67:         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-68:         border: 3px solid rgba(255,255,255,0.2);
-69:     }
-70: 
-71:     /* Menu Items */
-72:     .menu-item {
-73:         display: flex;
-74:         align-items: center;
-75:         gap: 15px;
-76:         padding: 16px 20px;
-77:         border-radius: 12px;
-78:         color: var(--subtitle-color, #ccc);
-79:         text-decoration: none;
-80:         font-size: 1.15rem;
-81:         font-weight: 600;
-82:         cursor: pointer;
-83:         transition: all 0.2s ease;
-84:         border: 1px solid transparent;
-85:         background: transparent;
-86:         width: 100%;
-87:         text-align: left;
-88:     }
-89: 
-90:     .menu-item:hover {
-91:         background: rgba(255, 255, 255, 0.05);
-92:         color: #fff;
-93:     }
-94: 
-95:     .menu-item.active {
-96:         background: rgba(255, 255, 255, 0.1);
-97:         color: #fff;
-98:         border-left: 5px solid var(--highlight-color, #3b82f6);
-99:         box-shadow: inset 0 0 20px rgba(255,255,255,0.02);
-100:     }
-101:     
-102:     .menu-item i {
-103:         font-size: 1.3rem;
-104:         width: 25px;
-105:         text-align: center;
-106:         color: var(--highlight-color, #3b82f6);
-107:     }
-108:     
-109:     .menu-item.logout {
-110:         margin-top: 30px;
-111:         color: #ef4444;
-112:         background: rgba(239, 68, 68, 0.1);
-113:         border: 1px solid rgba(239, 68, 68, 0.2);
-114:     }
-115:     .menu-item.logout i {
-116:         color: #ef4444;
-117:     }
-118:     .menu-item.logout:hover {
-119:         background: rgba(239, 68, 68, 0.2);
-120:         border-color: rgba(239, 68, 68, 0.4);
-121:         color: #fff;
-122:     }
-123: 
-124:     /* Main Content Area (Centralizada) */
-125:     .dashboard-content {
-126:         flex: 1;
-127:         width: 100%;
-128:         padding: 40px 20px;
-129:         display: flex;
-130:         flex-direction: column;
-131:         align-items: center; /* Centraliza o conteúdo inteiro */
-132:     }
-133: 
-134:     .dashboard-main-title {
-135:         font-size: 2.8rem;
-136:         font-weight: 900;
-137:         color: #fff;
-138:         margin-bottom: 5px;
-139:         text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-140:         text-align: center;
-141:     }
-142:     .dashboard-main-subtitle {
-143:         font-size: 1.2rem;
-144:         color: var(--subtitle-color, #ccc);
-145:         margin-bottom: 40px;
-146:         text-align: center;
-147:     }
-148: 
-149:     /* Sections */
-150:     .dashboard-section {
-151:         display: none;
-152:         animation: fadeIn 0.4s ease;
-153:         width: 100%;
-154:         max-width: 800px; /* Limita a largura dos cards centrais */
-155:     }
-156:     .dashboard-section.active {
-157:         display: block;
-158:     }
-159: 
-160:     @keyframes fadeIn {
-161:         from { opacity: 0; transform: translateY(15px); }
-162:         to { opacity: 1; transform: translateY(0); }
-163:     }
-164: 
-165:     /* Custom Form Styles (No Crispy) */
-166:     .custom-form-group {
-167:         margin-bottom: 25px;
-168:         display: flex;
-169:         flex-direction: column;
-170:         align-items: flex-start;
-171:         width: 100%;
-172:     }
-173:     
-174:     .custom-form-group label {
-175:         color: #fff;
-176:         font-weight: 600;
-177:         margin-bottom: 8px;
-178:         font-size: 1rem;
-179:         letter-spacing: 0.5px;
-180:     }
-181:     
-182:     .custom-form-group input[type="text"],
-183:     .custom-form-group input[type="email"],
-184:     .custom-form-group select {
-185:         width: 100%;
-186:         background: rgba(0, 0, 0, 0.4);
-187:         border: 1px solid rgba(255, 255, 255, 0.2);
-188:         color: #fff;
-189:         border-radius: 10px;
-190:         padding: 14px 18px;
-191:         font-size: 1.05rem;
-192:         transition: all 0.3s ease;
-193:         outline: none;
-194:         box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
-195:     }
-196:     
-197:     .custom-form-group input:focus,
-198:     .custom-form-group select:focus {
-199:         background: rgba(0, 0, 0, 0.6);
-200:         border-color: var(--highlight-color, #3b82f6);
-201:         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
-202:     }
-203: 
-204:     /* Radio Buttons Customizados */
-205:     .radio-group {
-206:         display: flex;
-207:         gap: 20px;
-208:         margin-top: 5px;
-209:     }
-210:     .radio-option {
-211:         display: flex;
-212:         align-items: center;
-213:         gap: 8px;
-214:         cursor: pointer;
-215:     }
-216:     .radio-option label {
-217:         margin: 0;
-218:         cursor: pointer;
-219:         font-weight: 500;
-220:         color: var(--subtitle-color, #ccc);
-221:     }
-222:     .radio-option input[type="radio"] {
-223:         appearance: none;
-224:         width: 22px;
-225:         height: 22px;
-226:         border: 2px solid rgba(255,255,255,0.4);
-227:         border-radius: 50%;
-228:         background: rgba(0,0,0,0.2);
-229:         cursor: pointer;
-230:         position: relative;
-231:         outline: none;
-232:         transition: all 0.2s ease;
-233:     }
-234:     .radio-option input[type="radio"]:checked {
-235:         border-color: var(--highlight-color, #3b82f6);
-236:     }
-237:     .radio-option input[type="radio"]:checked::after {
-238:         content: '';
-239:         position: absolute;
-240:         top: 50%;
-241:         left: 50%;
-242:         transform: translate(-50%, -50%);
-243:         width: 12px;
-244:         height: 12px;
-245:         background: var(--highlight-color, #3b82f6);
-246:         border-radius: 50%;
-247:     }
-248: 
-249:     /* Form Grid */
-250:     .form-grid {
-251:         display: grid;
-252:         grid-template-columns: 1fr;
-253:         gap: 0 25px;
-254:     }
-255:     @media (min-width: 768px) {
-256:         .form-grid {
-257:             grid-template-columns: 1fr 1fr;
-258:         }
-259:     }
-260:     .form-full-width {
-261:         grid-column: 1 / -1;
-262:     }
-263: 
-264:     /* Buttons */
-265:     .btn-save {
-266:         padding: 14px 28px;
-267:         background: var(--highlight-color, #3b82f6);
-268:         color: #fff;
-269:         border: none;
-270:         border-radius: 30px;
-271:         font-size: 1.1rem;
-272:         font-weight: 800;
-273:         cursor: pointer;
-274:         transition: transform 0.2s, box-shadow 0.2s;
-275:         display: inline-flex;
-276:         align-items: center;
-277:         justify-content: center;
-278:         gap: 10px;
-279:         text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-280:     }
-281:     .btn-save:hover {
-282:         transform: translateY(-3px);
-283:         box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-284:         color: #fff;
-285:     }
-286: 
-287:     .status-badge {
-288:         display: inline-flex;
-289:         align-items: center;
-290:         gap: 8px;
-291:         padding: 10px 20px;
-292:         border-radius: 30px;
-293:         font-size: 1rem;
-294:         font-weight: bold;
-295:     }
-296:     .status-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
-297:     .status-approved { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
-298: </style>
-299: {% endblock %}
-300: 
+1: {% extends 'base.html' %}
+
+2: {% load static %}
+
+3: 
+
+4: {% block title %}Painel Administrativo do Atleta - AllCourts365{% endblock %}
+
+5: 
+
+6: {% block extra_head %}
+
+7: <style>
+
+8:     /* Bypassing base.html container margins */
+
+9:     .full-width-wrapper {
+
+10:         display: flex;
+
+11:         flex-direction: column;
+
+12:         min-height: calc(100vh - 80px); /* 80px is approx navbar height */
+
+13:         margin-top: 0;
+
+14:         width: 100vw;
+
+15:         max-width: 100%;
+
+16:         margin-left: calc(-50vw + 50%);
+
+17:     }
+
+18: 
+
+19:     @media (min-width: 992px) {
+
+20:         .full-width-wrapper {
+
+21:             flex-direction: row;
+
+22:         }
+
+23:     }
+
+24: 
+
+25:     /* Sidebar (Menu Lateral) no Canto Esquerdo Total */
+
+26:     .dashboard-sidebar {
+
+27:         width: 100%;
+
+28:         padding: 40px 20px;
+
+29:         display: flex;
+
+30:         flex-direction: column;
+
+31:         gap: 10px;
+
+32:         background: rgba(15, 23, 42, 0.6);
+
+33:         border-right: 1px solid rgba(255, 255, 255, 0.15); /* Linha separando */
+
+34:         backdrop-filter: blur(20px);
+
+35:         -webkit-backdrop-filter: blur(20px);
+
+36:     }
+
+37: 
+
+38:     @media (min-width: 992px) {
+
+39:         .dashboard-sidebar {
+
+40:             width: 320px;
+
+41:             flex-shrink: 0;
+
+42:             min-height: calc(100vh - 80px);
+
+43:             position: sticky;
+
+44:             top: 80px;
+
+45:         }
+
+46:     }
+
+47: 
+
+48:     .sidebar-header {
+
+49:         text-align: center;
+
+50:         padding-bottom: 30px;
+
+51:         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+52:         margin-bottom: 20px;
+
+53:     }
+
+54: 
+
+55:     .sidebar-avatar {
+
+56:         width: 100px;
+
+57:         height: 100px;
+
+58:         background: linear-gradient(135deg, var(--highlight-color, #3b82f6), #1e40af);
+
+59:         border-radius: 50%;
+
+60:         display: flex;
+
+61:         align-items: center;
+
+62:         justify-content: center;
+
+63:         font-size: 2.8rem;
+
+64:         font-weight: 800;
+
+65:         color: #fff;
+
+66:         margin: 0 auto 15px auto;
+
+67:         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+
+68:         border: 3px solid rgba(255,255,255,0.2);
+
+69:     }
+
+70: 
+
+71:     /* Menu Items */
+
+72:     .menu-item {
+
+73:         display: flex;
+
+74:         align-items: center;
+
+75:         gap: 15px;
+
+76:         padding: 16px 20px;
+
+77:         border-radius: 12px;
+
+78:         color: var(--subtitle-color, #ccc);
+
+79:         text-decoration: none;
+
+80:         font-size: 1.15rem;
+
+81:         font-weight: 600;
+
+82:         cursor: pointer;
+
+83:         transition: all 0.2s ease;
+
+84:         border: 1px solid transparent;
+
+85:         background: transparent;
+
+86:         width: 100%;
+
+87:         text-align: left;
+
+88:     }
+
+89: 
+
+90:     .menu-item:hover {
+
+91:         background: rgba(255, 255, 255, 0.05);
+
+92:         color: #fff;
+
+93:     }
+
+94: 
+
+95:     .menu-item.active {
+
+96:         background: rgba(255, 255, 255, 0.1);
+
+97:         color: #fff;
+
+98:         border-left: 5px solid var(--highlight-color, #3b82f6);
+
+99:         box-shadow: inset 0 0 20px rgba(255,255,255,0.02);
+
+100:     }
+
+101:     
+
+102:     .menu-item i {
+
+103:         font-size: 1.3rem;
+
+104:         width: 25px;
+
+105:         text-align: center;
+
+106:         color: var(--highlight-color, #3b82f6);
+
+107:     }
+
+108:     
+
+109:     .menu-item.logout {
+
+110:         margin-top: 30px;
+
+111:         color: #ef4444;
+
+112:         background: rgba(239, 68, 68, 0.1);
+
+113:         border: 1px solid rgba(239, 68, 68, 0.2);
+
+114:     }
+
+115:     .menu-item.logout i {
+
+116:         color: #ef4444;
+
+117:     }
+
+118:     .menu-item.logout:hover {
+
+119:         background: rgba(239, 68, 68, 0.2);
+
+120:         border-color: rgba(239, 68, 68, 0.4);
+
+121:         color: #fff;
+
+122:     }
+
+123: 
+
+124:     /* Main Content Area (Centralizada) */
+
+125:     .dashboard-content {
+
+126:         flex: 1;
+
+127:         width: 100%;
+
+128:         padding: 40px 20px;
+
+129:         display: flex;
+
+130:         flex-direction: column;
+
+131:         align-items: center; /* Centraliza o conteúdo inteiro */
+
+132:     }
+
+133: 
+
+134:     .dashboard-main-title {
+
+135:         font-size: 2.8rem;
+
+136:         font-weight: 900;
+
+137:         color: #fff;
+
+138:         margin-bottom: 5px;
+
+139:         text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+
+140:         text-align: center;
+
+141:     }
+
+142:     .dashboard-main-subtitle {
+
+143:         font-size: 1.2rem;
+
+144:         color: var(--subtitle-color, #ccc);
+
+145:         margin-bottom: 40px;
+
+146:         text-align: center;
+
+147:     }
+
+148: 
+
+149:     /* Sections */
+
+150:     .dashboard-section {
+
+151:         display: none;
+
+152:         animation: fadeIn 0.4s ease;
+
+153:         width: 100%;
+
+154:         max-width: 800px; /* Limita a largura dos cards centrais */
+
+155:     }
+
+156:     .dashboard-section.active {
+
+157:         display: block;
+
+158:     }
+
+159: 
+
+160:     @keyframes fadeIn {
+
+161:         from { opacity: 0; transform: translateY(15px); }
+
+162:         to { opacity: 1; transform: translateY(0); }
+
+163:     }
+
+164: 
+
+165:     /* Custom Form Styles (No Crispy) */
+
+166:     .custom-form-group {
+
+167:         margin-bottom: 25px;
+
+168:         display: flex;
+
+169:         flex-direction: column;
+
+170:         align-items: flex-start;
+
+171:         width: 100%;
+
+172:     }
+
+173:     
+
+174:     .custom-form-group label {
+
+175:         color: #fff;
+
+176:         font-weight: 600;
+
+177:         margin-bottom: 8px;
+
+178:         font-size: 1rem;
+
+179:         letter-spacing: 0.5px;
+
+180:     }
+
+181:     
+
+182:     .custom-form-group input[type="text"],
+
+183:     .custom-form-group input[type="email"],
+
+184:     .custom-form-group select {
+
+185:         width: 100%;
+
+186:         background: rgba(0, 0, 0, 0.4);
+
+187:         border: 1px solid rgba(255, 255, 255, 0.2);
+
+188:         color: #fff;
+
+189:         border-radius: 10px;
+
+190:         padding: 14px 18px;
+
+191:         font-size: 1.05rem;
+
+192:         transition: all 0.3s ease;
+
+193:         outline: none;
+
+194:         box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+
+195:     }
+
+196:     
+
+197:     .custom-form-group input:focus,
+
+198:     .custom-form-group select:focus {
+
+199:         background: rgba(0, 0, 0, 0.6);
+
+200:         border-color: var(--highlight-color, #3b82f6);
+
+201:         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+
+202:     }
+
+203: 
+
+204:     /* Radio Buttons Customizados */
+
+205:     .radio-group {
+
+206:         display: flex;
+
+207:         gap: 20px;
+
+208:         margin-top: 5px;
+
+209:     }
+
+210:     .radio-option {
+
+211:         display: flex;
+
+212:         align-items: center;
+
+213:         gap: 8px;
+
+214:         cursor: pointer;
+
+215:     }
+
+216:     .radio-option label {
+
+217:         margin: 0;
+
+218:         cursor: pointer;
+
+219:         font-weight: 500;
+
+220:         color: var(--subtitle-color, #ccc);
+
+221:     }
+
+222:     .radio-option input[type="radio"] {
+
+223:         appearance: none;
+
+224:         width: 22px;
+
+225:         height: 22px;
+
+226:         border: 2px solid rgba(255,255,255,0.4);
+
+227:         border-radius: 50%;
+
+228:         background: rgba(0,0,0,0.2);
+
+229:         cursor: pointer;
+
+230:         position: relative;
+
+231:         outline: none;
+
+232:         transition: all 0.2s ease;
+
+233:     }
+
+234:     .radio-option input[type="radio"]:checked {
+
+235:         border-color: var(--highlight-color, #3b82f6);
+
+236:     }
+
+237:     .radio-option input[type="radio"]:checked::after {
+
+238:         content: '';
+
+239:         position: absolute;
+
+240:         top: 50%;
+
+241:         left: 50%;
+
+242:         transform: translate(-50%, -50%);
+
+243:         width: 12px;
+
+244:         height: 12px;
+
+245:         background: var(--highlight-color, #3b82f6);
+
+246:         border-radius: 50%;
+
+247:     }
+
+248: 
+
+249:     /* Form Grid */
+
+250:     .form-grid {
+
+251:         display: grid;
+
+252:         grid-template-columns: 1fr;
+
+253:         gap: 0 25px;
+
+254:     }
+
+255:     @media (min-width: 768px) {
+
+256:         .form-grid {
+
+257:             grid-template-columns: 1fr 1fr;
+
+258:         }
+
+259:     }
+
+260:     .form-full-width {
+
+261:         grid-column: 1 / -1;
+
+262:     }
+
+263: 
+
+264:     /* Buttons */
+
+265:     .btn-save {
+
+266:         padding: 14px 28px;
+
+267:         background: var(--highlight-color, #3b82f6);
+
+268:         color: #fff;
+
+269:         border: none;
+
+270:         border-radius: 30px;
+
+271:         font-size: 1.1rem;
+
+272:         font-weight: 800;
+
+273:         cursor: pointer;
+
+274:         transition: transform 0.2s, box-shadow 0.2s;
+
+275:         display: inline-flex;
+
+276:         align-items: center;
+
+277:         justify-content: center;
+
+278:         gap: 10px;
+
+279:         text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+
+280:     }
+
+281:     .btn-save:hover {
+
+282:         transform: translateY(-3px);
+
+283:         box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+
+284:         color: #fff;
+
+285:     }
+
+286: 
+
+287:     .status-badge {
+
+288:         display: inline-flex;
+
+289:         align-items: center;
+
+290:         gap: 8px;
+
+291:         padding: 10px 20px;
+
+292:         border-radius: 30px;
+
+293:         font-size: 1rem;
+
+294:         font-weight: bold;
+
+295:     }
+
+296:     .status-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+
+297:     .status-approved { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+
+298: </style>
+
+299: {% endblock %}
+
+300: 
+
 The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
 

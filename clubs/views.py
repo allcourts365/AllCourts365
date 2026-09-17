@@ -47,13 +47,36 @@ def ranking_detail(request, club_id, ranking_id):
 
 def knockout_detail(request, club_id, tournament_id):
     """Página principal do torneio eliminatório — exibe os cards de categorias."""
+    from .models import Match, CategoryPlayer
     club       = get_object_or_404(Club, id=club_id)
     tournament = get_object_or_404(club.tournaments, id=tournament_id, tournament_type='knockout', is_active=True)
     categories = tournament.categories.all()
+    
+    # Busca todos os jogos agendados do torneio inteiro
+    scheduled_matches = list(Match.objects.filter(tournament=tournament, schedule_status='agendado').order_by('scheduled_datetime', 'court_id'))
+    
+    # Calcula os match_numbers baseado nas chaves
+    all_tourn_matches = list(Match.objects.filter(tournament=tournament).order_by('category_id', 'round_number', 'position_in_bracket'))
+    match_counter_by_cat = {}
+    match_number_map = {}
+    for m in all_tourn_matches:
+        if m.category_id not in match_counter_by_cat:
+            match_counter_by_cat[m.category_id] = 1
+        match_number_map[m.id] = match_counter_by_cat[m.category_id]
+        match_counter_by_cat[m.category_id] += 1
+        
+    for sm in scheduled_matches:
+        sm.match_number = match_number_map.get(sm.id, sm.id)
+    
+    # Busca todos os atletas inscritos no torneio
+    all_participants = CategoryPlayer.objects.filter(category__tournament=tournament).select_related('player', 'category').order_by('player__name')
+    
     return render(request, 'knockout_detail.html', {
         'club':       club,
         'tournament': tournament,
         'categories': categories,
+        'scheduled_matches': scheduled_matches,
+        'all_participants': all_participants,
     })
 
 
@@ -116,11 +139,14 @@ def knockout_bracket(request, club_id, tournament_id, category_id):
             'rounds': rounds_dict
         })
 
+    scheduled_matches = list(Match.objects.filter(category=category, schedule_status='agendado').order_by('scheduled_datetime'))
+
     return render(request, 'knockout_bracket.html', {
         'club':       club,
         'tournament': tournament,
         'category':   category,
         'brackets':   brackets_list,
+        'scheduled_matches': scheduled_matches,
     })
 
 def knockout_general_ranking(request, club_id):
@@ -189,3 +215,47 @@ def download_knockout_template(request):
     if not os.path.exists(filepath):
         raise Http404("Planilha modelo não encontrada.")
     return FileResponse(open(filepath, 'rb'), as_attachment=True, filename='planilha_torneio.xlsx')
+
+from django.contrib import messages
+from django.shortcuts import redirect
+from .scheduling import generate_knockout_schedule
+from django.contrib.admin.views.decorators import staff_member_required
+
+@staff_member_required
+def generate_schedule_view(request, club_id, tournament_id):
+    if request.method == 'POST':
+        success, msg = generate_knockout_schedule(tournament_id)
+        if success:
+            messages.success(request, msg)
+        else:
+            messages.error(request, msg)
+    return redirect('clubs:knockout_detail', club_id=club_id, tournament_id=tournament_id)
+
+def knockout_schedule_print(request, club_id, tournament_id):
+    """View read-only para impressão da programação do torneio."""
+    from .models import Match, CategoryPlayer, Club
+    club       = get_object_or_404(Club, id=club_id)
+    tournament = get_object_or_404(club.tournaments, id=tournament_id, tournament_type='knockout', is_active=True)
+    
+    # Busca todos os jogos agendados
+    scheduled_matches = list(Match.objects.filter(tournament=tournament, schedule_status='agendado').order_by('scheduled_datetime', 'court_id'))
+    
+    # Calcula os match_numbers
+    all_tourn_matches = list(Match.objects.filter(tournament=tournament).order_by('category_id', 'round_number', 'position_in_bracket'))
+    match_counter_by_cat = {}
+    match_number_map = {}
+    for m in all_tourn_matches:
+        if m.category_id not in match_counter_by_cat:
+            match_counter_by_cat[m.category_id] = 1
+        match_number_map[m.id] = match_counter_by_cat[m.category_id]
+        match_counter_by_cat[m.category_id] += 1
+        
+    for sm in scheduled_matches:
+        sm.match_number = match_number_map.get(sm.id, sm.id)
+        
+    return render(request, 'knockout_schedule_print.html', {
+        'club': club,
+        'tournament': tournament,
+        'scheduled_matches': scheduled_matches,
+        'total_matches': len(scheduled_matches),
+    })
