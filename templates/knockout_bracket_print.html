@@ -192,7 +192,13 @@
             <div style="width: 250px; height: 250px; background: #eee; border-radius: 50%; margin-bottom: 2rem;"></div>
         {% endif %}
         <h1>{{ tournament.name }} - {{ category.name }}</h1>
-        <p>{{ club.name }} • {{ club.city|default:"-" }} • {{ club.state|default:"-" }}</p>
+        {% if club.city and club.state %}
+            <p>{{ club.name }} • {{ club.city }} • {{ club.state }}</p>
+        {% elif club.city %}
+            <p>{{ club.name }} • {{ club.city }}</p>
+        {% else %}
+            <p>{{ club.name }}</p>
+        {% endif %}
         <p>Chave Eliminatória</p>
     </div>
 
