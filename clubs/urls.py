@@ -10,6 +10,7 @@ urlpatterns = [
     path('<int:club_id>/season/<int:ranking_id>/', views.ranking_detail, name='ranking_detail'),
     path('<int:club_id>/eliminatory/<int:tournament_id>/', views.knockout_detail, name='knockout_detail'),
     path('<int:club_id>/eliminatory/<int:tournament_id>/categoria/<int:category_id>/', views.knockout_bracket, name='knockout_bracket'),
+    path('<int:club_id>/eliminatory/<int:tournament_id>/categoria/<int:category_id>/print-bracket/', views.knockout_bracket_print, name='knockout_bracket_print'),
     path('<int:club_id>/ranking-eliminatorio/', views.knockout_general_ranking, name='knockout_general_ranking'),
     path('<int:club_id>/eliminatory/<int:tournament_id>/gerar-programacao/', views.generate_schedule_view, name='generate_schedule'),
     path('<int:club_id>/eliminatory/<int:tournament_id>/print-schedule/', views.knockout_schedule_print, name='knockout_schedule_print'),

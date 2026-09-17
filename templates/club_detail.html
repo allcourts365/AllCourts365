@@ -114,7 +114,7 @@
 <a href="{% url 'clubs:list' %}" style="display: inline-block; margin-top: 20px; margin-bottom: 15px; color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600;">&larr; Voltar para os Clubes</a>
 <div class="glass-card club-header-card" style="padding: 0; overflow: hidden; margin-bottom: 40px; border-radius: 20px;">
     <!-- Capa / Header Image -->
-    <div style="width: 100%; height: 200px; position: relative; background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.1);">
+    <div style="width: 100%; aspect-ratio: 4 / 1; position: relative; background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.1);">
         <div style="width: 100%; height: 100%; overflow: hidden; position: absolute; top: 0; left: 0;">
             {% if club.card_image %}
                 <img src="{{ club.card_image.url }}" style="width: 100%; height: 100%; object-fit: contain; opacity: 0.5; transform: scale(calc({{ club.card_image_size|default:100 }} / 100)); transform-origin: center;">

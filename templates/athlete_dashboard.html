@@ -364,7 +364,7 @@
 {% if linked_club %}
 <div class="glass-card club-header-card" style="padding: 0; overflow: hidden; margin-top: 40px; margin-bottom: 40px; border-radius: 20px;">
     <!-- Capa / Header Image -->
-    <div style="width: 100%; height: 200px; position: relative; background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.1);">
+    <div style="width: 100%; aspect-ratio: 4 / 1; position: relative; background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.1);">
         <div style="width: 100%; height: 100%; overflow: hidden; position: absolute; top: 0; left: 0;">
             {% if linked_club.card_image %}
                 <img src="{{ linked_club.card_image.url }}" style="width: 100%; height: 100%; object-fit: contain; opacity: 0.5; transform: scale(calc({{ linked_club.card_image_size|default:100 }} / 100)); transform-origin: center;">
@@ -487,7 +487,7 @@
                         {% for profile in my_profiles %}
                         <div class="glass-card" style="padding: 0; overflow: hidden; border-radius: 16px; transition: transform 0.2s; border: 1px solid rgba(16, 185, 129, 0.3);">
                             <!-- Cover Image -->
-                            <div style="height: 100px; position: relative; background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <div style="width: 100%; aspect-ratio: 4 / 1; position: relative; background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.05);">
         <div style="width: 100%; height: 100%; overflow: hidden; position: absolute; top: 0; left: 0;">
             {% if profile.club.card_image %}
                 <img src="{{ profile.club.card_image.url }}" style="width: 100%; height: 100%; object-fit: contain; opacity: 0.6; transform: scale(calc({{ profile.club.card_image_size|default:100 }} / 100)); transform-origin: center;">
@@ -526,7 +526,7 @@
                         {% for req in all_link_requests %}
                             {% if req.status == 'pending' %}
                             <div class="glass-card" style="padding: 0; overflow: hidden; border-radius: 16px; border: 1px solid rgba(245, 158, 11, 0.3); display: flex; flex-direction: column;">
-                                <div style="height: 80px; position: relative; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <div style="width: 100%; aspect-ratio: 4 / 1; position: relative; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.05);">
         <div style="width: 100%; height: 100%; overflow: hidden; position: absolute; top: 0; left: 0;">
             {% if req.club.card_image %}
                 <img src="{{ req.club.card_image.url }}" style="width: 100%; height: 100%; object-fit: contain; opacity: 0.4; transform: scale(calc({{ req.club.card_image_size|default:100 }} / 100)); transform-origin: center;">
@@ -554,7 +554,7 @@
                             </div>
                             {% elif req.status == 'rejected' %}
                             <div class="glass-card" style="padding: 0; overflow: hidden; border-radius: 16px; border: 1px solid rgba(239, 68, 68, 0.3); display: flex; flex-direction: column;">
-                                <div style="height: 80px; position: relative; background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <div style="width: 100%; aspect-ratio: 4 / 1; position: relative; background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.05);">
         <div style="width: 100%; height: 100%; overflow: hidden; position: absolute; top: 0; left: 0;">
             {% if req.club.card_image %}
                 <img src="{{ req.club.card_image.url }}" style="width: 100%; height: 100%; object-fit: contain; opacity: 0.4; transform: scale(calc({{ req.club.card_image_size|default:100 }} / 100)); transform-origin: center;">
@@ -639,7 +639,7 @@
                         {% for profile in my_profiles %}
                         <div class="glass-card" style="padding: 0; overflow: hidden; border-radius: 16px; transition: transform 0.2s; border: 1px solid rgba(16, 185, 129, 0.3);">
                             <!-- Cover Image -->
-                            <div style="height: 100px; position: relative; background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <div style="width: 100%; aspect-ratio: 4 / 1; position: relative; background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.05);">
         <div style="width: 100%; height: 100%; overflow: hidden; position: absolute; top: 0; left: 0;">
             {% if profile.club.card_image %}
                 <img src="{{ profile.club.card_image.url }}" style="width: 100%; height: 100%; object-fit: contain; opacity: 0.6; transform: scale(calc({{ profile.club.card_image_size|default:100 }} / 100)); transform-origin: center;">
@@ -680,7 +680,7 @@
                         {% for req in all_link_requests %}
                             {% if req.status == 'pending' %}
                             <div class="glass-card" style="padding: 0; overflow: hidden; border-radius: 16px; border: 1px solid rgba(245, 158, 11, 0.3);">
-                                <div style="height: 80px; position: relative; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <div style="width: 100%; aspect-ratio: 4 / 1; position: relative; background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.05);">
         <div style="width: 100%; height: 100%; overflow: hidden; position: absolute; top: 0; left: 0;">
             {% if req.club.card_image %}
                 <img src="{{ req.club.card_image.url }}" style="width: 100%; height: 100%; object-fit: contain; opacity: 0.4; transform: scale(calc({{ req.club.card_image_size|default:100 }} / 100)); transform-origin: center;">
@@ -708,7 +708,7 @@
                             </div>
                             {% elif req.status == 'rejected' %}
                             <div class="glass-card" style="padding: 0; overflow: hidden; border-radius: 16px; border: 1px solid rgba(239, 68, 68, 0.3);">
-                                <div style="height: 80px; position: relative; background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <div style="width: 100%; aspect-ratio: 4 / 1; position: relative; background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.05);">
         <div style="width: 100%; height: 100%; overflow: hidden; position: absolute; top: 0; left: 0;">
             {% if req.club.card_image %}
                 <img src="{{ req.club.card_image.url }}" style="width: 100%; height: 100%; object-fit: contain; opacity: 0.4; transform: scale(calc({{ req.club.card_image_size|default:100 }} / 100)); transform-origin: center;">

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Chave - {{ category.name }}</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #000;
+            background: #fff;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header img {
+            max-height: 60px;
+        }
+        .header-center {
+            text-align: center;
+        }
+        .header-center h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+        }
+        .header-center p {
+            margin: 2px 0;
+            font-size: 0.9rem;
+            color: #555;
+        }
+        
+        /* Bracket Styles */
+        .bracket-container {
+            display: flex;
+            flex-direction: row;
+            padding: 1rem 0;
+            gap: 2rem;
+            align-items: stretch;
+            overflow-x: auto;
+        }
+
+        .round {
+            display: flex;
+            flex-direction: column;
+            min-width: 250px;
+        }
+        
+        .matches-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .round-header {
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            background: #eee;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .matchup-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            padding: 0.5rem 0;
+            gap: 0.2rem;
+        }
+
+        .matchup {
+            border: 1px solid #aaa;
+            border-radius: 6px;
+            position: relative;
+            background: #fff;
+            z-index: 2;
+        }
+
+        /* Connectors */
+        .round:not(:last-child) div.matchup-wrapper:nth-of-type(odd)::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -1rem;
+            width: 1rem;
+            height: 50%;
+            border-top: 2px solid #aaa;
+            border-right: 2px solid #aaa;
+            z-index: 1;
+        }
+
+        .round:not(:last-child) div.matchup-wrapper:nth-of-type(even)::after {
+            content: '';
+            position: absolute;
+            bottom: 50%;
+            right: -1rem;
+            width: 1rem;
+            height: 50%;
+            border-bottom: 2px solid #aaa;
+            border-right: 2px solid #aaa;
+            z-index: 1;
+        }
+
+        .round:not(:first-child) div.matchup-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -1rem;
+            width: 1rem;
+            border-top: 2px solid #aaa;
+            z-index: 1;
+        }
+
+        .team {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #eee;
+        }
+        .team:last-child {
+            border-bottom: none;
+        }
+
+        .team.winner {
+            font-weight: bold;
+            background-color: #f9f9f9;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .team-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-grow: 1;
+            padding-right: 0.5rem;
+        }
+
+        .team-score {
+            display: flex;
+            gap: 0.2rem;
+        }
+        
+        .team-score span {
+            width: 1.2rem;
+            text-align: center;
+        }
+
+        .match-info-top {
+            font-size: 0.65rem;
+            color: #666;
+            margin-left: 0.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        @media print {
+            body { padding: 0; }
+            @page { size: landscape; margin: 1cm; }
+            .bracket-container { overflow-x: visible; }
+        }
+    </style>
+</head>
+<body onload="window.print()">
+
+    <div class="header">
+        <div>
+            {% if club.logo %}
+                <img src="{{ club.logo.url }}" alt="{{ club.name }}">
+            {% else %}
+                <div style="width: 60px; height: 60px; background: #eee; border-radius: 50%;"></div>
+            {% endif %}
+        </div>
+        <div class="header-center">
+            <h1>{{ tournament.name }} - {{ category.name }}</h1>
+            <p>{{ club.name }} • {{ club.city|default:"-" }} • {{ club.state|default:"-" }}</p>
+            <p>Chave Eliminatória</p>
+        </div>
+        <div>
+            <img src="/static/images/logo_liga.png" alt="Liga" onerror="this.style.display='none'">
+        </div>
+    </div>
+
+    {% if not brackets %}
+        <p style="text-align: center; color: #555; margin-top: 40px;">A chave desta categoria ainda não foi gerada.</p>
+    {% else %}
+        {% for bracket in brackets %}
+            {% if brackets|length > 1 %}
+                <h2 style="font-size: 1.2rem; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 20px;">{{ bracket.name }}</h2>
+            {% endif %}
+            
+            <div class="bracket-container">
+                {% for round_num, matches in bracket.rounds.items %}
+                <div class="round">
+                    <div class="round-header">{{ matches.0.phase }}</div>
+                    <div class="matches-container">
+                    
+                    {% for match in matches %}
+                    <div class="matchup-wrapper">
+                        {% if match.bracket_label %}
+                            <div style="text-align: left; font-weight: bold; font-size: 0.9rem; margin-bottom: 0.3rem; border-bottom: 1px solid #000; padding-bottom: 0.2rem; margin-left: 0.5rem;">
+                                {{ match.bracket_label }}
+                            </div>
+                        {% endif %}
+                        <div class="match-info-top">Jogo {{ match.match_number }}</div>
+                        <div class="matchup">
+                            <div class="team {% if match.winner and match.winner == match.player_a %}winner{% endif %}">
+                                <span class="team-name">{% if match.player_a %}{{ match.player_a.name }}{% elif match.round_number == 1 %}BYE{% elif match.prev_match_a %}<span style="font-style: italic; color: #777;">Venc. Jogo {{ match.prev_match_a.match_number }}</span>{% else %}A definir{% endif %}</span>
+                                <span class="team-score">
+                                    {% if match.set1_a != None %}
+                                        <span>{{ match.set1_a }}</span>
+                                        {% if match.set2_a != None %}<span>{{ match.set2_a }}</span>{% endif %}
+                                        {% if match.set3_a != None %}<span>{{ match.set3_a }}</span>{% endif %}
+                                    {% elif match.status == 'completed' and match.sets_a != None %}
+                                        <span>{{ match.sets_a }}</span>
+                                    {% elif match.status == 'completed' and match.winner and match.winner == match.player_a and not match.is_bye and match.player_b and match.player_b.name|lower != 'bye' and match.player_b.name|lower != 'folga' %}
+                                        <span>W.O.</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            
+                            <div class="team {% if match.winner and match.winner == match.player_b %}winner{% endif %}">
+                                <span class="team-name">{% if match.player_b %}{{ match.player_b.name }}{% elif match.round_number == 1 %}BYE{% elif match.prev_match_b %}<span style="font-style: italic; color: #777;">Venc. Jogo {{ match.prev_match_b.match_number }}</span>{% else %}A definir{% endif %}</span>
+                                <span class="team-score">
+                                    {% if match.set1_b != None %}
+                                        <span>{{ match.set1_b }}</span>
+                                        {% if match.set2_b != None %}<span>{{ match.set2_b }}</span>{% endif %}
+                                        {% if match.set3_b != None %}<span>{{ match.set3_b }}</span>{% endif %}
+                                    {% elif match.status == 'completed' and match.sets_b != None %}
+                                        <span>{{ match.sets_b }}</span>
+                                    {% elif match.status == 'completed' and match.winner and match.winner == match.player_b and not match.is_bye and match.player_a and match.player_a.name|lower != 'bye' and match.player_a.name|lower != 'folga' %}
+                                        <span>W.O.</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+</body>
+</html>
