@@ -555,6 +555,15 @@ def athlete_dashboard(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    import os
+    from django.conf import settings
+    avatars_path = os.path.join(settings.BASE_DIR, 'static', 'Avatares')
+    try:
+        available_avatars = [f for f in os.listdir(avatars_path) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+        available_avatars.sort()
+    except FileNotFoundError:
+        available_avatars = []
+
     context = {
         'linked_club': linked_club,
         'user_form': user_form,
@@ -574,6 +583,7 @@ def athlete_dashboard(request):
         'unread_messages_count': unread_messages_count,
         'my_player_profile': active_profile,
         'my_profiles': my_profiles,
+        'available_avatars': available_avatars,
     }
     
     return render(request, 'athlete_dashboard.html', context)

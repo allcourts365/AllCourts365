@@ -76,6 +76,23 @@ class UserProfile(models.Model):
     racket = models.CharField(max_length=100, blank=True, verbose_name="Raquete que usa")
     handedness = models.CharField(max_length=50, choices=[('D', 'Destro'), ('C', 'Canhoto'), ('A', 'Ambidestro')], blank=True, verbose_name="Empunhadura")
     backhand = models.CharField(max_length=50, choices=[('1', 'Uma Mão'), ('2', 'Duas Mãos')], blank=True, verbose_name="Backhand")
+    
+    # Dados Pessoais & Contato
+    phone = models.CharField(max_length=20, blank=True, verbose_name="WhatsApp / Telefone")
+    birth_date = models.DateField(null=True, blank=True, verbose_name="Data de Nascimento")
+    city = models.CharField(max_length=100, blank=True, verbose_name="Cidade / Endereço")
+    shirt_size = models.CharField(max_length=5, choices=[('P', 'P'), ('M', 'M'), ('G', 'G'), ('GG', 'GG'), ('XG', 'XG')], blank=True, verbose_name="Tamanho da Camiseta")
+    
+    # Ficha Técnica e Preferências
+    string_tension = models.CharField(max_length=50, blank=True, verbose_name="Tensão da Corda (Libras)", help_text="Ex: 48 lbs, 50/52")
+    string_type = models.CharField(max_length=100, blank=True, verbose_name="Tipo de Corda Favorita")
+    play_style = models.CharField(max_length=100, blank=True, verbose_name="Estilo de Jogo")
+    best_shot = models.CharField(max_length=100, blank=True, verbose_name="Melhor Golpe")
+    tennis_idol = models.CharField(max_length=100, blank=True, verbose_name="Ídolo no Tênis")
+    preferred_time = models.CharField(max_length=100, blank=True, verbose_name="Horários Preferidos para Jogar")
+    
+    # Avatar
+    avatar = models.CharField(max_length=100, blank=True, verbose_name="Avatar", default="avatar1.png")
 
     def __str__(self):
         return f"Perfil de {self.user.username}"

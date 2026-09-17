@@ -23,7 +23,15 @@ class UserForm(forms.ModelForm):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        fields = ['full_name', 'racket', 'handedness', 'backhand']
+        fields = [
+            'full_name', 'racket', 'handedness', 'backhand',
+            'phone', 'birth_date', 'city', 'shirt_size',
+            'string_tension', 'string_type', 'play_style', 'best_shot',
+            'tennis_idol', 'preferred_time', 'avatar'
+        ]
+        widgets = {
+            'birth_date': forms.DateInput(attrs={'type': 'date'}),
+        }
 
 class PlayerLinkRequestForm(forms.ModelForm):
     class Meta:

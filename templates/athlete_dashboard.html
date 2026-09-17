@@ -802,6 +802,17 @@
                     </div>
                     
                     <div class="form-grid">
+                        <!-- Avatar Selection Desktop -->
+                        <div class="custom-form-group form-full-width" style="display: flex; justify-content: center; margin-bottom: 20px;">
+                            <div style="position: relative; display: inline-block; cursor: pointer;" onclick="openAvatarModal()">
+                                <img id="current-avatar-img-desktop" src="{% if user.profile.avatar %}{% static 'Avatares/'|add:user.profile.avatar %}{% else %}{% static 'Avatares/avatar1.png' %}{% endif %}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--highlight-color); background: rgba(255,255,255,0.1);">
+                                <div style="position: absolute; bottom: 0; right: 0; background: var(--highlight-color); color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 3px solid #0f172a; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                                    <i class="fas fa-pencil-alt" style="font-size: 0.85rem;"></i>
+                                </div>
+                            </div>
+                            <div style="display:none;">{{ profile_form.avatar }}</div>
+                        </div>
+
                         <div class="custom-form-group">
                             <label for="{{ user_form.first_name.id_for_label }}">Primeiro Nome</label>
                             {{ user_form.first_name }}
@@ -810,9 +821,25 @@
                             <label for="{{ user_form.last_name.id_for_label }}">Último Nome</label>
                             {{ user_form.last_name }}
                         </div>
-                        <div class="custom-form-group form-full-width">
+                        <div class="custom-form-group">
                             <label for="{{ user_form.email.id_for_label }}">Endereço de E-mail</label>
                             {{ user_form.email }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.phone.id_for_label }}">WhatsApp / Telefone</label>
+                            {{ profile_form.phone }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.birth_date.id_for_label }}">Data de Nascimento</label>
+                            {{ profile_form.birth_date }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.city.id_for_label }}">Cidade / Endereço</label>
+                            {{ profile_form.city }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.shirt_size.id_for_label }}">Tamanho da Camiseta</label>
+                            {{ profile_form.shirt_size }}
                         </div>
                     </div>
 
@@ -830,19 +857,41 @@
                             <label for="{{ profile_form.full_name.id_for_label }}">Nome Completo (Para Rankings e Chaves)</label>
                             {{ profile_form.full_name }}
                         </div>
-                        <div class="custom-form-group form-full-width">
+                        <div class="custom-form-group">
                             <label for="{{ profile_form.racket.id_for_label }}">Marca/Modelo da Raquete (Opcional)</label>
                             {{ profile_form.racket }}
                         </div>
-                        
                         <div class="custom-form-group">
                             <label for="{{ profile_form.handedness.id_for_label }}">Mão Dominante (Empunhadura)</label>
                             {{ profile_form.handedness }}
                         </div>
-                        
                         <div class="custom-form-group">
                             <label for="{{ profile_form.backhand.id_for_label }}">Tipo de Backhand</label>
                             {{ profile_form.backhand }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.string_tension.id_for_label }}">Tensão da Corda (Libras)</label>
+                            {{ profile_form.string_tension }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.string_type.id_for_label }}">Tipo de Corda Favorita</label>
+                            {{ profile_form.string_type }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.play_style.id_for_label }}">Estilo de Jogo</label>
+                            {{ profile_form.play_style }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.best_shot.id_for_label }}">Melhor Golpe</label>
+                            {{ profile_form.best_shot }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.tennis_idol.id_for_label }}">Ídolo no Tênis</label>
+                            {{ profile_form.tennis_idol }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.preferred_time.id_for_label }}">Horários Preferidos</label>
+                            {{ profile_form.preferred_time }}
                         </div>
                     </div>
                     
@@ -875,6 +924,16 @@
                     </div>
                     
                     <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <!-- Avatar Selection Mobile -->
+                        <div class="custom-form-group" style="display: flex; justify-content: center; margin-bottom: 10px;">
+                            <div style="position: relative; display: inline-block; cursor: pointer;" onclick="openAvatarModal()">
+                                <img id="current-avatar-img-mobile" src="{% if user.profile.avatar %}{% static 'Avatares/'|add:user.profile.avatar %}{% else %}{% static 'Avatares/avatar1.png' %}{% endif %}" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--highlight-color); background: rgba(255,255,255,0.1);">
+                                <div style="position: absolute; bottom: 0; right: 0; background: var(--highlight-color); color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: 3px solid #0f172a;">
+                                    <i class="fas fa-pencil-alt" style="font-size: 0.8rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="custom-form-group">
                             <label for="{{ user_form.first_name.id_for_label }}_mobile">Primeiro Nome</label>
                             {{ user_form.first_name }}
@@ -886,6 +945,22 @@
                         <div class="custom-form-group">
                             <label for="{{ user_form.email.id_for_label }}_mobile">Endereço de E-mail</label>
                             {{ user_form.email }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.phone.id_for_label }}_mobile">WhatsApp / Telefone</label>
+                            {{ profile_form.phone }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.birth_date.id_for_label }}_mobile">Data de Nascimento</label>
+                            {{ profile_form.birth_date }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.city.id_for_label }}_mobile">Cidade / Endereço</label>
+                            {{ profile_form.city }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.shirt_size.id_for_label }}_mobile">Tamanho da Camiseta</label>
+                            {{ profile_form.shirt_size }}
                         </div>
                     </div>
 
@@ -907,15 +982,37 @@
                             <label for="{{ profile_form.racket.id_for_label }}_mobile">Marca/Modelo da Raquete (Opcional)</label>
                             {{ profile_form.racket }}
                         </div>
-                        
                         <div class="custom-form-group">
                             <label for="{{ profile_form.handedness.id_for_label }}_mobile">Mão Dominante (Empunhadura)</label>
                             {{ profile_form.handedness }}
                         </div>
-                        
                         <div class="custom-form-group">
                             <label for="{{ profile_form.backhand.id_for_label }}_mobile">Tipo de Backhand</label>
                             {{ profile_form.backhand }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.string_tension.id_for_label }}_mobile">Tensão da Corda (Libras)</label>
+                            {{ profile_form.string_tension }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.string_type.id_for_label }}_mobile">Tipo de Corda Favorita</label>
+                            {{ profile_form.string_type }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.play_style.id_for_label }}_mobile">Estilo de Jogo</label>
+                            {{ profile_form.play_style }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.best_shot.id_for_label }}_mobile">Melhor Golpe</label>
+                            {{ profile_form.best_shot }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.tennis_idol.id_for_label }}_mobile">Ídolo no Tênis</label>
+                            {{ profile_form.tennis_idol }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.preferred_time.id_for_label }}_mobile">Horários Preferidos</label>
+                            {{ profile_form.preferred_time }}
                         </div>
                     </div>
                     
@@ -1432,6 +1529,21 @@
 <!-- Score filled via JS -->
         </div>
 
+    <!-- Modal Escolher Avatar -->
+    <div id="avatarModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center;">
+        <div class="modal-content" style="background-color: #1e293b; margin: auto; padding: 30px; border: 1px solid #334155; width: 90%; max-width: 600px; border-radius: 16px; position: relative; max-height: 80vh; overflow-y: auto;">
+            <span class="close" onclick="closeAvatarModal()" style="color: #94a3b8; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+            <h3 style="color: white; margin-top: 0; margin-bottom: 20px; font-size: 1.5rem; text-align: center;">Escolha seu Avatar</h3>
+            
+            <div class="avatar-selector" style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
+                {% for av in available_avatars %}
+                    <div class="avatar-option" onclick="selectAvatar('{{ av }}')" id="avatar-modal-{{ av|cut:'.' }}" style="cursor: pointer; border: 3px solid transparent; border-radius: 50%; padding: 2px; transition: all 0.2s;">
+                        <img src="{% static 'Avatares/'|add:av %}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover;">
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -1932,4 +2044,40 @@
             }
         });
     }
+
+    
+    function openAvatarModal() {
+        document.getElementById('avatarModal').style.display = 'flex';
+    }
+    
+    function closeAvatarModal() {
+        document.getElementById('avatarModal').style.display = 'none';
+    }
+
+    function selectAvatar(filename) {
+        document.querySelectorAll('input[name="avatar"]').forEach(input => input.value = filename);
+        document.querySelectorAll('.avatar-option').forEach(el => el.style.borderColor = 'transparent');
+        
+        let safeId = filename.replace('.', '');
+        let modalEl = document.getElementById('avatar-modal-' + safeId);
+        if(modalEl) modalEl.style.borderColor = 'var(--highlight-color)';
+        
+        // Atualiza a imagem no formulário
+        let dImg = document.getElementById('current-avatar-img-desktop');
+        let mImg = document.getElementById('current-avatar-img-mobile');
+        let newSrc = "{% static 'Avatares/' %}" + filename;
+        if(dImg) dImg.src = newSrc;
+        if(mImg) mImg.src = newSrc;
+        
+        closeAvatarModal();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        let avatarInput = document.querySelector('input[name="avatar"]');
+        if(avatarInput && avatarInput.value) {
+            let safeId = avatarInput.value.replace('.', '');
+            let modalEl = document.getElementById('avatar-modal-' + safeId);
+            if(modalEl) modalEl.style.borderColor = 'var(--highlight-color)';
+        }
+    });
 {% endblock %}
