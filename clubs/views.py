@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import FileResponse, Http404
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.db.models import Q
 from .models import Club, Match
 import os
@@ -8,6 +9,7 @@ def club_list(request):
     clubs = Club.objects.filter(is_visible=True).order_by('name')
     return render(request, 'club_list.html', {'clubs': clubs})
 
+@xframe_options_sameorigin
 def club_detail(request, club_id):
     club = get_object_or_404(Club, id=club_id)
     rankings  = club.tournaments.filter(is_active=True, tournament_type='ranking')
