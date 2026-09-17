@@ -316,10 +316,39 @@ def knockout_bracket_print(request, club_id, tournament_id, category_id):
 
     brackets_list = []
     if all_matches:
-        brackets_list.append({
-            'name': category.name,
-            'rounds': rounds_dict
-        })
+        all_round_numbers = sorted(rounds_dict.keys())
+        max_rounds = 4
+        max_initial_matches = 8
+        page_index = 1
+        
+        for round_start_idx in range(0, len(all_round_numbers), max_rounds):
+            chunk_rounds = all_round_numbers[round_start_idx : round_start_idx + max_rounds]
+            first_round_in_chunk = chunk_rounds[0]
+            first_round_matches = rounds_dict[first_round_in_chunk]
+            
+            for match_start_idx in range(0, len(first_round_matches), max_initial_matches):
+                chunk_matches = first_round_matches[match_start_idx : match_start_idx + max_initial_matches]
+                
+                page_rounds_dict = {}
+                page_rounds_dict[first_round_in_chunk] = chunk_matches
+                
+                current_layer_matches = chunk_matches
+                for r in chunk_rounds[1:]:
+                    next_layer_set = {m.next_match_id: True for m in current_layer_matches if m.next_match_id}
+                    next_layer_matches = [m for m in rounds_dict.get(r, []) if m.id in next_layer_set]
+                    if not next_layer_matches:
+                        break
+                    page_rounds_dict[r] = next_layer_matches
+                    current_layer_matches = next_layer_matches
+                    
+                brackets_list.append({
+                    'name': f"{category.name} - Parte {page_index}",
+                    'rounds': page_rounds_dict
+                })
+                page_index += 1
+                
+        if len(brackets_list) == 1:
+            brackets_list[0]['name'] = category.name
 
     return render(request, 'knockout_bracket_print.html', {
         'club':       club,

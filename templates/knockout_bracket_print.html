@@ -40,6 +40,15 @@
         }
         
         /* Bracket Styles */
+        .bracket-page {
+            page-break-after: always;
+            break-after: page;
+        }
+        .bracket-page:last-child {
+            page-break-after: auto;
+            break-after: auto;
+        }
+        
         .bracket-container {
             display: flex;
             flex-direction: row;
@@ -206,12 +215,13 @@
         <p style="text-align: center; color: #555; margin-top: 40px;">A chave desta categoria ainda não foi gerada.</p>
     {% else %}
         {% for bracket in brackets %}
-            {% if brackets|length > 1 %}
-                <h2 style="font-size: 1.2rem; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 20px;">{{ bracket.name }}</h2>
-            {% endif %}
-            
-            <div class="bracket-container">
-                {% for round_num, matches in bracket.rounds.items %}
+            <div class="bracket-page">
+                {% if brackets|length > 1 %}
+                    <h2 style="font-size: 1.2rem; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 20px;">{{ bracket.name }}</h2>
+                {% endif %}
+                
+                <div class="bracket-container">
+                    {% for round_num, matches in bracket.rounds.items %}
                 <div class="round">
                     <div class="round-header">{{ matches.0.phase }}</div>
                     <div class="matches-container">
@@ -261,6 +271,7 @@
                     </div>
                 </div>
                 {% endfor %}
+            </div>
             </div>
         {% endfor %}
     {% endif %}
