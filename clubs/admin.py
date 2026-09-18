@@ -546,17 +546,30 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     )
 
     def save_model(self, request, obj, form, change):
+        from django.db import transaction
+        from django.db.models.signals import post_save
+        from .models import Match, update_category_points
+
         obj.tournament_type = 'knockout'
         super().save_model(request, obj, form, change)
         excel_file = form.cleaned_data.get('excel_file')
         if excel_file:
-            self._generate_knockout_bracket(request, obj, excel_file)
-            from .scheduling import generate_knockout_schedule
-            success, msg = generate_knockout_schedule(obj.id)
-            if success:
-                messages.success(request, f"Programação gerada automaticamente: {msg}")
-            else:
-                messages.warning(request, f"Atenção ao gerar programação: {msg}")
+            post_save.disconnect(update_category_points, sender=Match)
+            try:
+                with transaction.atomic():
+                    self._generate_knockout_bracket(request, obj, excel_file)
+                    from .scheduling import generate_knockout_schedule
+                    success, msg = generate_knockout_schedule(obj.id)
+                    if success:
+                        messages.success(request, f"Programação gerada automaticamente: {msg}")
+                    else:
+                        messages.warning(request, f"Atenção ao gerar programação: {msg}")
+                
+                # Atualizar pontos depois de salvar tudo
+                for cat in obj.categories.all():
+                    cat.recalculate_points()
+            finally:
+                post_save.connect(update_category_points, sender=Match)
 
     # ── Geração do bracket ──────────────────────────────────────────────────────
     def _generate_knockout_bracket(self, request, obj, excel_file):

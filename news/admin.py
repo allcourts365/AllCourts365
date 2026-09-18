@@ -16,7 +16,7 @@ class NewsAdminForm(forms.ModelForm):
 @admin.register(News)
 class NewsAdmin(admin.ModelAdmin):
     form = NewsAdminForm
-    list_display = ("title", "club_display", "author", "is_published", "published_at", "created_at")
+    list_display = ("title", "club_display", "author", "is_published", "published_at")
     list_filter = ("is_published", "club")
     search_fields = ("title", "author", "content")
     prepopulated_fields = {"slug": ("title",)}
