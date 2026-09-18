@@ -93,11 +93,13 @@ document.addEventListener("DOMContentLoaded", function() {
         
         const newWidth = window.innerWidth;
         currentScale = newWidth / virtualWidth;
-        const previewHeightPx = (virtualHeight * currentScale) + 35;
+        const previewHeightPx = (virtualHeight * currentScale);
         previewContainer.style.height = previewHeightPx + 'px'; 
         iframe.style.transform = `scale(${currentScale})`;
         
-        previewLabel.style.cursor = 'default';
+        // Remove label and resize handle completely on mobile
+        previewLabel.style.display = 'none';
+        resizeHandle.style.display = 'none';
         const contentDiv = document.getElementById('content');
         const breadcrumbs = document.querySelector('.breadcrumbs');
         
@@ -113,7 +115,7 @@ document.addEventListener("DOMContentLoaded", function() {
             borderWrapper.style.boxSizing = 'border-box';
             
             // Puxa a prévia MUITO agressivamente para cima para devorar qualquer gap invisível
-            borderWrapper.style.marginTop = '-85px';
+            borderWrapper.style.marginTop = '-110px';
             borderWrapper.style.marginBottom = '0';
             
             // Esconde a lista de mensagens se estiver vazia (ela costuma criar buracos no Django)
