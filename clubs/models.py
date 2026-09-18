@@ -177,6 +177,7 @@ class TournamentFee(models.Model):
     name = models.CharField(max_length=100, verbose_name="Nome (Ex: Associado, Convidado)")
     payment_method = models.CharField(max_length=100, default="Pagamento via PIX", verbose_name="Forma de Pagamento")
     price = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Valor (R$)")
+    pix_code = models.TextField(blank=True, null=True, verbose_name="Código PIX Específico", help_text="Código PIX Copia e Cola para este perfil/valor.")
 
     class Meta:
         verbose_name = "Taxa de Inscrição"
@@ -334,8 +335,16 @@ class Category(models.Model):
         verbose_name_plural = "Categorias"
 
 class CategoryPlayer(models.Model):
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'Pendente de Pagamento'),
+        ('approved', 'Confirmada'),
+        ('cancelled', 'Cancelada'),
+    ]
+
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='players')
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    fee = models.ForeignKey('TournamentFee', on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Taxa Escolhida")
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='approved', verbose_name="Status do Pagamento")
     points = models.IntegerField(default=0, verbose_name="Pontos")
     matches_played = models.IntegerField(default=0, verbose_name="Jogos")
     wins = models.IntegerField(default=0, verbose_name="Vitórias")

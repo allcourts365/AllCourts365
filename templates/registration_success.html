@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inscrição Concluída - {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 60px auto; background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); padding: 40px; text-align: center;">
+    
+    <div style="margin-bottom: 25px;">
+        <i class="fas fa-check-circle" style="font-size: 4rem; color: #10b981;"></i>
+    </div>
+
+    <h2 style="color: #fff; margin-bottom: 15px;">Inscrição Pré-Reservada!</h2>
+    
+    <p style="color: #94a3b8; font-size: 1.05rem; line-height: 1.6; margin-bottom: 30px;">
+        Sua vaga na categoria escolhida foi reservada com sucesso.
+        <br><br>
+        O seu status no momento é <strong style="color: #f59e0b;">Pendente de Pagamento</strong>. 
+        Por favor, envie o comprovante do PIX para a organização do torneio. 
+        <br>Assim que validado, sua inscrição será confirmada de forma definitiva.
+    </p>
+
+    <div style="display: flex; flex-direction: column; gap: 15px;">
+        {% if tournament.whatsapp_group_link %}
+        <a href="{{ tournament.whatsapp_group_link }}" target="_blank" class="btn" style="padding: 12px 24px; border-radius: 8px; background: #25D366; color: #fff; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 10px; transition: opacity 0.2s;">
+            <i class="fab fa-whatsapp" style="font-size: 1.2rem;"></i> Entrar no Grupo do Torneio
+        </a>
+        {% endif %}
+
+        {% if tournament.contact_whatsapp %}
+        <a href="https://wa.me/{{ tournament.contact_whatsapp|cut:' '|cut:'-'|cut:'('|cut:')' }}" target="_blank" class="btn" style="padding: 12px 24px; border-radius: 8px; background: rgba(255,255,255,0.1); color: #fff; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 10px; transition: background 0.2s;">
+            <i class="fas fa-comment-dots" style="font-size: 1.2rem;"></i> Falar com o Organizador
+        </a>
+        {% endif %}
+
+        <a href="{% if tournament.tournament_type == 'knockout' %}{% url 'clubs:knockout_detail' club.id tournament.id %}{% else %}{% url 'clubs:ranking_detail' club.id tournament.id %}{% endif %}" class="btn" style="padding: 12px 24px; border-radius: 8px; background: transparent; color: var(--highlight-color, #ea580c); text-decoration: none; font-weight: 600; margin-top: 10px;">
+            Voltar para a página do torneio
+        </a>
+    </div>
+
+</div>
+{% endblock %}

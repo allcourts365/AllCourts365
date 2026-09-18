@@ -782,8 +782,8 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
 
 @admin.register(CategoryPlayer)
 class CategoryPlayerAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
-    list_display = ('player', 'category', 'points', 'matches_played', 'wins', 'losses', 'is_seed', 'seed_number')
-    list_filter = (('category__tournament__club', admin.RelatedOnlyFieldListFilter), ('category', admin.RelatedOnlyFieldListFilter), 'is_seed')
+    list_display = ('player', 'category', 'fee', 'payment_status', 'points', 'matches_played', 'wins', 'losses', 'is_seed', 'seed_number')
+    list_filter = (('category__tournament__club', admin.RelatedOnlyFieldListFilter), ('category', admin.RelatedOnlyFieldListFilter), 'payment_status', 'is_seed')
     search_fields = ('player__name',)
 
 @admin.register(Match)

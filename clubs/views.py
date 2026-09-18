@@ -356,3 +356,129 @@ def knockout_bracket_print(request, club_id, tournament_id, category_id):
         'category':   category,
         'brackets':   brackets_list,
     })
+
+# ==========================================
+# Inscrições
+# ==========================================
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
+
+@login_required
+def registration_step1(request, club_id, tournament_id):
+    from .models import Club, Tournament, Category, CategoryPlayer
+    club = get_object_or_404(Club, id=club_id)
+    tournament = get_object_or_404(Tournament, id=tournament_id, club=club)
+    
+    categories = tournament.categories.all().order_by('name')
+    
+    # Prepara as categorias com info de limite de vagas
+    for cat in categories:
+        cat.current_players_count = cat.players.count()
+        cat.is_full = False
+        if cat.max_players and cat.current_players_count >= cat.max_players:
+            cat.is_full = True
+
+    if request.method == 'POST':
+        category_id = request.POST.get('category_id')
+        if category_id:
+            # Armazena na sessão e vai pro passo 2
+            request.session['registration_tournament_id'] = tournament_id
+            request.session['registration_category_id'] = category_id
+            return redirect('clubs:registration_step2', club_id=club.id, tournament_id=tournament.id)
+            
+    return render(request, 'registration_step1.html', {
+        'club': club,
+        'tournament': tournament,
+        'categories': categories,
+    })
+
+@login_required
+def registration_step2(request, club_id, tournament_id):
+    from .models import Club, Tournament, Category, TournamentFee
+    club = get_object_or_404(Club, id=club_id)
+    tournament = get_object_or_404(Tournament, id=tournament_id, club=club)
+    
+    cat_id = request.session.get('registration_category_id')
+    if not cat_id or request.session.get('registration_tournament_id') != tournament_id:
+        return redirect('clubs:registration_step1', club_id=club.id, tournament_id=tournament.id)
+        
+    category = get_object_or_404(Category, id=cat_id, tournament=tournament)
+    fees = tournament.fees.all()
+    
+    if request.method == 'POST':
+        fee_id = request.POST.get('fee_id')
+        confirm_profile = request.POST.get('confirm_profile') == 'on'
+        confirm_terms = request.POST.get('confirm_terms') == 'on'
+        
+        if fee_id and confirm_profile and confirm_terms:
+            request.session['registration_fee_id'] = fee_id
+            return redirect('clubs:registration_step3', club_id=club.id, tournament_id=tournament.id)
+            
+    return render(request, 'registration_step2.html', {
+        'club': club,
+        'tournament': tournament,
+        'category': category,
+        'fees': fees,
+    })
+
+@login_required
+def registration_step3(request, club_id, tournament_id):
+    from .models import Club, Tournament, Category, TournamentFee, CategoryPlayer
+    club = get_object_or_404(Club, id=club_id)
+    tournament = get_object_or_404(Tournament, id=tournament_id, club=club)
+    
+    cat_id = request.session.get('registration_category_id')
+    fee_id = request.session.get('registration_fee_id')
+    
+    if not cat_id or not fee_id or request.session.get('registration_tournament_id') != tournament_id:
+        return redirect('clubs:registration_step1', club_id=club.id, tournament_id=tournament.id)
+        
+    category = get_object_or_404(Category, id=cat_id, tournament=tournament)
+    fee = get_object_or_404(TournamentFee, id=fee_id, tournament=tournament)
+    
+    # Verifica se o usuario já tem player account
+    player_profile = request.user.player_profiles.filter(club=club).first()
+    if not player_profile:
+        # Cria profile se não tiver
+        from .models import Player
+        player_profile, created = Player.objects.get_or_create(
+            user=request.user, 
+            club=club, 
+            defaults={'name': request.user.get_full_name() or request.user.username}
+        )
+    
+    if request.method == 'POST':
+        # Finaliza a inscrição
+        if not CategoryPlayer.objects.filter(category=category, player=player_profile).exists():
+            CategoryPlayer.objects.create(
+                category=category,
+                player=player_profile,
+                fee=fee,
+                payment_status='pending'
+            )
+        
+        # Limpa sessao
+        if 'registration_category_id' in request.session: del request.session['registration_category_id']
+        if 'registration_fee_id' in request.session: del request.session['registration_fee_id']
+        if 'registration_tournament_id' in request.session: del request.session['registration_tournament_id']
+        
+        return redirect('clubs:registration_success', club_id=club.id, tournament_id=tournament.id)
+
+    return render(request, 'registration_step3.html', {
+        'club': club,
+        'tournament': tournament,
+        'category': category,
+        'fee': fee,
+        'player_profile': player_profile,
+    })
+
+@login_required
+def registration_success(request, club_id, tournament_id):
+    from .models import Club, Tournament
+    club = get_object_or_404(Club, id=club_id)
+    tournament = get_object_or_404(Tournament, id=tournament_id, club=club)
+    return render(request, 'registration_success.html', {
+        'club': club,
+        'tournament': tournament,
+    })

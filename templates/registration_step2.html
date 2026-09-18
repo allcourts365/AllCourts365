@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Passo 2 - {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 40px auto; background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); padding: 30px;">
+    
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="color: var(--title-color, #fff); margin-bottom: 10px;">Inscrição</h2>
+        <p style="color: var(--subtitle-color, #94a3b8);">{{ tournament.name }}</p>
+    </div>
+
+    <div style="margin-bottom: 25px;">
+        <h3 style="color: var(--highlight-color, #ea580c); font-size: 1.1rem; font-weight: 600; margin-bottom: 10px;">
+            Passo 2 de 3: Escolha o seu perfil
+        </h3>
+        <div style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; display: flex;">
+            <div style="width: 66.66%; background: var(--highlight-color, #ea580c); border-radius: 2px;"></div>
+        </div>
+    </div>
+
+    <!-- Categoria Escolhida (Apenas Leitura) -->
+    <div style="margin-bottom: 25px;">
+        <div style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 8px;">Categoria selecionada:</div>
+        <div style="padding: 15px 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-weight: 600; font-size: 1.1rem; color: #fff;">{{ category.name }}</div>
+            <a href="{% url 'clubs:registration_step1' club.id tournament.id %}" style="color: var(--highlight-color, #ea580c); font-size: 0.9rem; text-decoration: none;">Alterar</a>
+        </div>
+    </div>
+
+    <!-- Alerta -->
+    <div style="background: rgba(234, 88, 12, 0.1); border-left: 4px solid var(--highlight-color, #ea580c); padding: 15px; border-radius: 4px; margin-bottom: 25px; color: #fff; font-size: 0.95rem;">
+        <i class="fas fa-exclamation-triangle" style="color: var(--highlight-color, #ea580c); margin-right: 8px;"></i>
+        <strong>Atenção:</strong> Selecione corretamente o seu perfil. A escolha errada pode exigir a correção da taxa com a organização.
+    </div>
+
+    <form method="POST" action="{% url 'clubs:registration_step2' club.id tournament.id %}" id="step2-form">
+        {% csrf_token %}
+        
+        <!-- Taxas -->
+        <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px;">
+            <div style="font-size: 0.9rem; color: #94a3b8;">Qual o seu perfil de inscrição?</div>
+            {% for fee in fees %}
+            <label style="
+                display: block; 
+                padding: 20px; 
+                background: rgba(255,255,255,0.05); 
+                border: 1px solid rgba(255,255,255,0.1); 
+                border-radius: 8px; 
+                cursor: pointer; 
+                transition: background 0.2s;
+                position: relative;
+            " class="fee-card">
+                
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <input type="radio" name="fee_id" value="{{ fee.id }}" required class="fee-radio" style="transform: scale(1.5); accent-color: var(--highlight-color, #ea580c);">
+                    
+                    <div style="flex-grow: 1;">
+                        <div style="font-weight: 600; font-size: 1.1rem; color: #fff;">{{ fee.name }}</div>
+                        <div style="font-size: 0.85rem; color: var(--subtitle-color, #94a3b8); margin-top: 4px;">{{ fee.payment_method }}</div>
+                    </div>
+                    
+                    <div style="font-weight: bold; font-size: 1.2rem; color: var(--highlight-color, #ea580c);">
+                        R$ {{ fee.price }}
+                    </div>
+                </div>
+            </label>
+            {% empty %}
+            <div style="text-align: center; padding: 30px; color: #94a3b8;">
+                Nenhuma taxa configurada. O administrador precisa cadastrar os valores.
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Termos e Condições -->
+        <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+            <label style="display: flex; gap: 10px; align-items: flex-start; cursor: pointer; color: #e2e8f0; font-size: 0.95rem;">
+                <input type="checkbox" name="confirm_profile" required class="term-checkbox" style="margin-top: 4px; transform: scale(1.2); accent-color: var(--highlight-color, #ea580c);">
+                <span>Confirmo que selecionei o perfil correto de inscrição.</span>
+            </label>
+            
+            <label style="display: flex; gap: 10px; align-items: flex-start; cursor: pointer; color: #e2e8f0; font-size: 0.95rem;">
+                <input type="checkbox" name="confirm_terms" required class="term-checkbox" style="margin-top: 4px; transform: scale(1.2); accent-color: var(--highlight-color, #ea580c);">
+                <span>Li e aceito os Termos de participação, o Regulamento e a Política de cancelamento.</span>
+            </label>
+        </div>
+
+        <!-- Botões -->
+        <div style="display: flex; justify-content: space-between; gap: 15px;">
+            <a href="{% url 'clubs:registration_step1' club.id tournament.id %}" class="btn" style="padding: 12px 24px; border-radius: 8px; background: rgba(255,255,255,0.1); color: #fff; text-decoration: none; text-align: center; font-weight: 600; transition: background 0.2s;">
+                Voltar
+            </a>
+            <button type="submit" id="submit-btn" disabled style="padding: 12px 24px; border-radius: 8px; border: none; background: var(--highlight-color, #ea580c); color: #fff; font-weight: 600; font-size: 1rem; transition: transform 0.2s, opacity 0.2s; opacity: 0.5; cursor: not-allowed;">
+                Ir para o pagamento <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .fee-card:hover {
+        background: rgba(255,255,255,0.1) !important;
+    }
+    input[type="radio"]:checked + div {
+        color: var(--highlight-color, #ea580c);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('step2-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const feeRadios = document.querySelectorAll('.fee-radio');
+        const termCheckboxes = document.querySelectorAll('.term-checkbox');
+
+        function checkFormValidity() {
+            let feeSelected = false;
+            feeRadios.forEach(radio => {
+                if (radio.checked) feeSelected = true;
+            });
+
+            let termsAccepted = true;
+            termCheckboxes.forEach(checkbox => {
+                if (!checkbox.checked) termsAccepted = false;
+            });
+
+            if (feeSelected && termsAccepted) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.style.cursor = 'pointer';
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.5';
+                submitBtn.style.cursor = 'not-allowed';
+            }
+        }
+
+        feeRadios.forEach(radio => radio.addEventListener('change', checkFormValidity));
+        termCheckboxes.forEach(checkbox => checkbox.addEventListener('change', checkFormValidity));
+    });
+</script>
+{% endblock %}

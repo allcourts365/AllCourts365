@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inscrição - {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 40px auto; background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); padding: 30px;">
+    
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="color: var(--title-color, #fff); margin-bottom: 10px;">Inscrição</h2>
+        <p style="color: var(--subtitle-color, #94a3b8);">{{ tournament.name }}</p>
+    </div>
+
+    <div style="margin-bottom: 25px;">
+        <h3 style="color: var(--highlight-color, #ea580c); font-size: 1.1rem; font-weight: 600; margin-bottom: 10px;">
+            Passo 1 de 3: Escolha a Categoria
+        </h3>
+        <div style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; display: flex;">
+            <div style="width: 33.33%; background: var(--highlight-color, #ea580c); border-radius: 2px;"></div>
+        </div>
+    </div>
+
+    <form method="POST" action="{% url 'clubs:registration_step1' club.id tournament.id %}">
+        {% csrf_token %}
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            {% for cat in categories %}
+            <label style="
+                display: block; 
+                padding: 20px; 
+                background: {% if cat.is_full %}rgba(0,0,0,0.2){% else %}rgba(255,255,255,0.05){% endif %}; 
+                border: 1px solid rgba(255,255,255,0.1); 
+                border-radius: 8px; 
+                cursor: {% if cat.is_full %}not-allowed{% else %}pointer{% endif %}; 
+                transition: background 0.2s, transform 0.2s;
+                position: relative;
+                opacity: {% if cat.is_full %}0.6{% else %}1{% endif %};
+            " class="cat-card">
+                
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        {% if not cat.is_full %}
+                        <input type="radio" name="category_id" value="{{ cat.id }}" required style="transform: scale(1.5); accent-color: var(--highlight-color, #ea580c);">
+                        {% else %}
+                        <i class="fas fa-ban" style="color: #ef4444; font-size: 1.2rem;"></i>
+                        {% endif %}
+                        
+                        <div>
+                            <div style="font-weight: 600; font-size: 1.1rem; color: #fff;">{{ cat.name }}</div>
+                            {% if cat.max_players %}
+                            <div style="font-size: 0.85rem; color: var(--subtitle-color, #94a3b8); margin-top: 4px;">
+                                <i class="fas fa-users"></i> {{ cat.current_players_count }} de {{ cat.max_players }} vagas preenchidas
+                            </div>
+                            {% else %}
+                            <div style="font-size: 0.85rem; color: var(--subtitle-color, #94a3b8); margin-top: 4px;">
+                                <i class="fas fa-users"></i> {{ cat.current_players_count }} inscritos
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if cat.is_full %}
+                    <span style="background: #ef4444; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">LOTAÇÃO MÁXIMA</span>
+                    {% endif %}
+                </div>
+            </label>
+            {% empty %}
+            <div style="text-align: center; padding: 30px; color: #94a3b8;">
+                Nenhuma categoria disponível para inscrição no momento.
+            </div>
+            {% endfor %}
+        </div>
+
+        <div style="margin-top: 30px; display: flex; justify-content: space-between; gap: 15px;">
+            <a href="{% if tournament.tournament_type == 'knockout' %}{% url 'clubs:knockout_detail' club.id tournament.id %}{% else %}{% url 'clubs:ranking_detail' club.id tournament.id %}{% endif %}" class="btn" style="padding: 12px 24px; border-radius: 8px; background: rgba(255,255,255,0.1); color: #fff; text-decoration: none; text-align: center; font-weight: 600; transition: background 0.2s;">
+                Voltar
+            </a>
+            <button type="submit" class="btn-highlight" style="padding: 12px 24px; border-radius: 8px; border: none; background: var(--highlight-color, #ea580c); color: #fff; font-weight: 600; font-size: 1rem; cursor: pointer; transition: transform 0.2s;">
+                Avançar <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .cat-card:hover {
+        background: rgba(255,255,255,0.1) !important;
+    }
+    input[type="radio"]:checked + div {
+        color: var(--highlight-color, #ea580c);
+    }
+</style>
+{% endblock %}
