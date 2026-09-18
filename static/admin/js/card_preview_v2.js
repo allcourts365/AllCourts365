@@ -98,6 +98,7 @@ document.addEventListener("DOMContentLoaded", function() {
         iframe.style.transform = `scale(${currentScale})`;
         
         previewLabel.style.cursor = 'default';
+        const contentDiv = document.getElementById('content');
         if (contentDiv) {
             // Injeção de CSS bruto para forçar a morte de QUALQUER buraco branco no topo
             // Isso aniquila padding-top e margin-top de todos os elementos entre o cabeçalho e a prévia, 
