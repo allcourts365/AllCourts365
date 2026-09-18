@@ -37,39 +37,28 @@ class NewsAdmin(admin.ModelAdmin):
     def duplicate_button(self, obj):
         from django.utils.html import format_html
         from django.urls import reverse
-        url = reverse('admin:news_news_duplicate', args=[obj.pk])
+        url = reverse('admin:news_news_add') + f'?duplicate={obj.pk}'
         return format_html('<a class="button" style="background-color: #417690; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none;" href="{}">Duplicar</a>', url)
     duplicate_button.short_description = "Ações"
     duplicate_button.allow_tags = True
 
-    def get_urls(self):
-        from django.urls import path
-        urls = super().get_urls()
-        custom_urls = [
-            path('<path:object_id>/duplicate/', self.admin_site.admin_view(self.duplicate_view), name='news_news_duplicate'),
-        ]
-        return custom_urls + urls
-
-    def duplicate_view(self, request, object_id):
-        from django.shortcuts import get_object_or_404, redirect
-        from django.contrib import messages
-        import uuid
-        
-        obj = get_object_or_404(News, pk=object_id)
-        
-        # Faz uma cópia da notícia
-        obj.pk = None
-        obj.title = f"{obj.title} (Cópia)"
-        # Limpa o slug para o model gerar um novo automaticamente
-        obj.slug = ""
-        obj.is_published = False
-        obj.published_at = None
-        obj.save()
-        
-        messages.success(request, "Notícia duplicada com sucesso! Você está editando a cópia.")
-        
-        from django.urls import reverse
-        return redirect(reverse('admin:news_news_change', args=[obj.pk]))
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+        duplicate_id = request.GET.get('duplicate')
+        if duplicate_id:
+            try:
+                original = News.objects.get(pk=duplicate_id)
+                initial['title'] = f"{original.title} (Cópia)"
+                initial['subtitle'] = original.subtitle
+                initial['is_global'] = original.is_global
+                initial['club'] = original.club_id
+                initial['author'] = original.author
+                initial['content'] = original.content
+                initial['media_credit'] = original.media_credit
+                # initial['image'] e 'video' não podem ser clonados trivialmente sem re-upload via admin, mas o texto e config vai todo!
+            except News.DoesNotExist:
+                pass
+        return initial
 
     fieldsets = (
         ("Identificacao", {
@@ -150,11 +139,33 @@ class BroadcastMessageAdmin(admin.ModelAdmin):
             'all': ('css/admin/custom_changelist.css',)
         }
 
-    list_display = ('subject', 'club_display', 'sender', 'created_at')
+    list_display = ('subject', 'club_display', 'sender', 'created_at', 'duplicate_button')
     list_filter = ('is_global', 'club')
     search_fields = ('subject', 'body')
     readonly_fields = ('created_at', 'sender')
     
+    def duplicate_button(self, obj):
+        from django.utils.html import format_html
+        from django.urls import reverse
+        url = reverse('admin:news_broadcastmessage_add') + f'?duplicate={obj.pk}'
+        return format_html('<a class="button" style="background-color: #417690; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none;" href="{}">Duplicar</a>', url)
+    duplicate_button.short_description = "Ações"
+    duplicate_button.allow_tags = True
+
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+        duplicate_id = request.GET.get('duplicate')
+        if duplicate_id:
+            try:
+                original = BroadcastMessage.objects.get(pk=duplicate_id)
+                initial['subject'] = f"{original.subject} (Cópia)"
+                initial['body'] = original.body
+                initial['is_global'] = original.is_global
+                initial['club'] = original.club_id
+            except BroadcastMessage.DoesNotExist:
+                pass
+        return initial
+        
     def club_display(self, obj):
         if obj.is_global:
             return "Global (Todos)"
