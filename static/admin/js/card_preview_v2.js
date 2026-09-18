@@ -102,53 +102,47 @@ document.addEventListener("DOMContentLoaded", function() {
         const breadcrumbs = document.querySelector('.breadcrumbs');
         
         if (contentDiv && breadcrumbs) {
-            // Trava o body para não rolar a página inteira
-            document.documentElement.style.overflow = 'hidden';
-            document.body.style.overflow = 'hidden';
+            // Solução definitiva: movemos a prévia para FORA do #content e do #main.
+            // Ela será inserida imediatamente após os breadcrumbs, garantindo ZERO espaço.
             
-            // Solução matemática infalível: pegar a posição exata da tela onde o cabeçalho termina
-            const breadcrumbsRect = breadcrumbs.getBoundingClientRect();
-            
-            // Criamos um wrapper sem bordas laterais
+            // Criamos um wrapper sem bordas laterais (conforme exigido)
             const borderWrapper = document.createElement('div');
             borderWrapper.style.paddingLeft = '0';
             borderWrapper.style.paddingRight = '0';
             borderWrapper.style.width = '100%';
             borderWrapper.style.boxSizing = 'border-box';
             
-            // Posicionamento absoluto travado na coordenada exata
-            borderWrapper.style.position = 'fixed';
-            borderWrapper.style.top = breadcrumbsRect.bottom + 'px';
-            borderWrapper.style.left = '0';
-            borderWrapper.style.zIndex = '9999';
+            // Puxa a prévia MUITO agressivamente para cima para devorar qualquer gap invisível
+            borderWrapper.style.marginTop = '-55px';
+            borderWrapper.style.marginBottom = '0';
+            
+            // Esconde a lista de mensagens se estiver vazia (ela costuma criar buracos no Django)
+            const msgList = document.querySelector('.messagelist');
+            if (msgList && msgList.children.length === 0) {
+                msgList.style.display = 'none';
+                msgList.style.margin = '0';
+                msgList.style.padding = '0';
+            }
             
             borderWrapper.appendChild(previewContainer);
-            document.body.appendChild(borderWrapper); // Anexa direto no body para ignorar qualquer formatação de containers
+            breadcrumbs.parentNode.insertBefore(borderWrapper, breadcrumbs.nextSibling);
+            
+            // Trava o body para não rolar a página inteira
+            document.documentElement.style.overflow = 'hidden';
+            document.body.style.overflow = 'hidden';
             
             // Cria um invólucro para o formulário rolar separadamente (abaixo da prévia)
             const scrollWrapper = document.createElement('div');
             scrollWrapper.style.overflowY = 'auto';
-            scrollWrapper.style.width = '100%';
-            
-            // A posição do formulário começa exatamente onde a prévia termina
-            const formTopPosition = breadcrumbsRect.bottom + previewHeightPx;
-            scrollWrapper.style.position = 'fixed';
-            scrollWrapper.style.top = formTopPosition + 'px';
-            scrollWrapper.style.left = '0';
-            scrollWrapper.style.height = `calc(100vh - ${formTopPosition}px)`;
-            scrollWrapper.style.paddingTop = '15px'; // Espaço de ~0.5cm
-            
-            // Preserva o padding original do formulário
-            const contentRect = contentDiv.getBoundingClientRect();
-            scrollWrapper.style.paddingLeft = contentRect.left + 'px';
-            scrollWrapper.style.paddingRight = (window.innerWidth - contentRect.right) + 'px';
-            scrollWrapper.style.boxSizing = 'border-box';
+            // A altura agora subtrai o cabeçalho (aprox 100px) e a prévia
+            scrollWrapper.style.height = `calc(100vh - 100px - ${previewHeightPx}px)`; 
+            scrollWrapper.style.paddingTop = '15px'; // Espaço de ~0.5cm pedido pelo usuário abaixo da prévia
             
             // Movemos todo o formulário (e títulos) para dentro do scrollWrapper
             while (contentDiv.firstChild) {
                 scrollWrapper.appendChild(contentDiv.firstChild);
             }
-            document.body.appendChild(scrollWrapper); // Anexa no body também
+            contentDiv.appendChild(scrollWrapper);
             
             // Oculta o h1 original dentro do scrollWrapper para não poluir
             const h1 = scrollWrapper.querySelector('h1');
