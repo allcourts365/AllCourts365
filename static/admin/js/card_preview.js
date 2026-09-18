@@ -84,8 +84,9 @@ document.addEventListener("DOMContentLoaded", function() {
     const isMobile = window.innerWidth <= 768;
     if (isMobile) {
         previewContainer.style.position = 'relative';
-        previewContainer.style.left = '0';
         previewContainer.style.width = '100%';
+        previewContainer.style.left = '0';
+        previewContainer.style.margin = '0';
         previewContainer.style.zIndex = '999';
         previewContainer.style.borderRadius = '0';
         previewContainer.style.boxShadow = '0 5px 15px rgba(0,0,0,0.5)';
@@ -93,31 +94,41 @@ document.addEventListener("DOMContentLoaded", function() {
         const newWidth = window.innerWidth;
         currentScale = newWidth / virtualWidth;
         const previewHeightPx = (virtualHeight * currentScale) + 35;
-        previewContainer.style.height = previewHeightPx + 'px'; // 35 for label padding
+        previewContainer.style.height = previewHeightPx + 'px'; 
         iframe.style.transform = `scale(${currentScale})`;
         
         previewLabel.style.cursor = 'default';
         previewLabel.textContent = 'Prévia da Página (Ao Vivo)';
         resizeHandle.style.display = 'none';
 
-        const contentDiv = document.getElementById('content');
-        if (contentDiv) {
-            contentDiv.insertBefore(previewContainer, contentDiv.firstChild);
-            
-            // Cria um invólucro para o formulário rolar separadamente
-            const scrollWrapper = document.createElement('div');
-            scrollWrapper.style.overflowY = 'auto';
-            scrollWrapper.style.height = `calc(100vh - 70px - ${previewHeightPx}px)`; // 70px aprox para compensar header/breadcrumbs
-            
-            // Move todos os elementos seguintes para dentro do invólucro
-            while (previewContainer.nextSibling) {
-                scrollWrapper.appendChild(previewContainer.nextSibling);
+        const container = document.getElementById('container');
+        const mainDiv = document.getElementById('main');
+        const breadcrumbs = document.querySelector('.breadcrumbs');
+        
+        if (container && mainDiv) {
+            // Insere a prévia logo depois dos breadcrumbs (antes do #main)
+            if (breadcrumbs) {
+                container.insertBefore(previewContainer, breadcrumbs.nextSibling);
+            } else {
+                container.insertBefore(previewContainer, mainDiv);
             }
-            contentDiv.appendChild(scrollWrapper);
             
-            // Trava a rolagem da página inteira
-            document.body.style.overflow = 'hidden';
+            // Transforma o body e container para não rolarem
             document.documentElement.style.overflow = 'hidden';
+            document.body.style.overflow = 'hidden';
+            document.body.style.margin = '0';
+            document.body.style.padding = '0';
+            
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            container.style.height = '100dvh'; // Use dynamic viewport height
+            container.style.overflow = 'hidden';
+            
+            // O #main vai ocupar todo o resto da tela e rolar internamente
+            mainDiv.style.flex = '1';
+            mainDiv.style.overflowY = 'auto';
+            mainDiv.style.marginTop = '0'; // Remove espaçamentos extras do Django
+            mainDiv.style.paddingTop = '15px'; // Espaço de ~0.5cm pedido pelo usuário
         } else {
             document.body.appendChild(previewContainer);
         }
