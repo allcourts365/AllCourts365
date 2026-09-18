@@ -16,7 +16,7 @@ class NewsAdminForm(forms.ModelForm):
 @admin.register(News)
 class NewsAdmin(admin.ModelAdmin):
     form = NewsAdminForm
-    list_display = ("title", "club_display", "author", "is_published", "published_at", "duplicate_button")
+    list_display = ("title", "club_display", "published_at", "duplicate_button")
     list_filter = ("is_published", "club")
     search_fields = ("title", "author", "content")
     prepopulated_fields = {"slug": ("title",)}
@@ -129,7 +129,7 @@ from django.contrib.auth.models import User
 
 @admin.register(BroadcastMessage)
 class BroadcastMessageAdmin(admin.ModelAdmin):
-    list_display = ('subject', 'club_display', 'sender', 'created_at', 'duplicate_button')
+    list_display = ('subject', 'club_display', 'created_at', 'duplicate_button')
     list_filter = ('is_global', 'club')
     search_fields = ('subject', 'body')
     readonly_fields = ('created_at', 'sender')
