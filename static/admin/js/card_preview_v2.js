@@ -140,7 +140,7 @@ document.addEventListener("DOMContentLoaded", function() {
             scrollWrapper.style.overflowY = 'auto';
             // A altura agora subtrai o cabeçalho (aprox 100px) e a prévia
             scrollWrapper.style.height = `calc(100vh - 100px - ${previewHeightPx}px)`; 
-            scrollWrapper.style.paddingTop = '15px'; // Espaço de ~0.5cm pedido pelo usuário abaixo da prévia
+            scrollWrapper.style.paddingTop = '35px'; // Empurra o conteúdo 5 milímetros para baixo
             
             // Movemos todo o formulário (e títulos) para dentro do scrollWrapper
             while (contentDiv.firstChild) {
