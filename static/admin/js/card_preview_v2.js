@@ -105,15 +105,15 @@ document.addEventListener("DOMContentLoaded", function() {
             // Solução definitiva: movemos a prévia para FORA do #content e do #main.
             // Ela será inserida imediatamente após os breadcrumbs, garantindo ZERO espaço.
             
-            // Criamos um wrapper para as bordas laterais (15px é o padrão do Django no mobile)
+            // Criamos um wrapper sem bordas laterais (conforme exigido)
             const borderWrapper = document.createElement('div');
-            borderWrapper.style.paddingLeft = '15px';
-            borderWrapper.style.paddingRight = '15px';
+            borderWrapper.style.paddingLeft = '0';
+            borderWrapper.style.paddingRight = '0';
             borderWrapper.style.width = '100%';
             borderWrapper.style.boxSizing = 'border-box';
             
             // Puxa a prévia agressivamente para cima para devorar qualquer gap invisível
-            borderWrapper.style.marginTop = '-15px';
+            borderWrapper.style.marginTop = '-25px';
             
             // Esconde a lista de mensagens se estiver vazia (ela costuma criar buracos no Django)
             const msgList = document.querySelector('.messagelist');
