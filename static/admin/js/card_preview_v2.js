@@ -98,28 +98,21 @@ document.addEventListener("DOMContentLoaded", function() {
         iframe.style.transform = `scale(${currentScale})`;
         
         previewLabel.style.cursor = 'default';
-        const contentDiv = document.getElementById('content');
-        
         if (contentDiv) {
-            // Garante que o H1 original não vai criar um buraco se estiver invisível
-            const h1 = contentDiv.querySelector('h1');
-            if (h1) {
-                h1.style.display = 'none';
-                h1.style.margin = '0';
-                h1.style.padding = '0';
-            }
-            
-            // Remove 100% de margens e paddings de cima do #content
-            contentDiv.style.paddingTop = '0';
-            contentDiv.style.marginTop = '0';
-            
-            // Tira também margens de baixo dos breadcrumbs caso existam
-            const breadcrumbs = document.querySelector('.breadcrumbs');
-            if (breadcrumbs) {
-                breadcrumbs.style.marginBottom = '0';
-                breadcrumbs.style.paddingBottom = '0';
-            }
-            
+            // Injeção de CSS bruto para forçar a morte de QUALQUER buraco branco no topo
+            // Isso aniquila padding-top e margin-top de todos os elementos entre o cabeçalho e a prévia, 
+            // mas preserva o padding-left/right do #content (as bordas laterais).
+            const antiGapStyle = document.createElement('style');
+            antiGapStyle.innerHTML = `
+                #main { padding-top: 0 !important; margin-top: 0 !important; }
+                #content { padding-top: 0 !important; margin-top: 0 !important; }
+                .breadcrumbs { padding-bottom: 0 !important; margin-bottom: 0 !important; border-bottom: none !important; }
+                #content > h1 { display: none !important; margin: 0 !important; padding: 0 !important; height: 0 !important; }
+                ul.messagelist { margin-bottom: 0 !important; }
+                #sticky-page-preview { margin-top: 0 !important; }
+            `;
+            document.head.appendChild(antiGapStyle);
+
             // Insere a prévia dentro do #content, no topo
             contentDiv.insertBefore(previewContainer, contentDiv.firstChild);
             
