@@ -1,1 +1,41 @@
-/* Arquivo vazio para sobrescrever cache */
+/* Força o painel de filtro a sempre ficar na direita */
+#changelist {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: flex-start !important;
+}
+
+#changelist-form {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    overflow-x: auto !important; /* impede que a tabela quebre o layout empurrando o filtro */
+}
+
+#changelist-filter {
+    flex: 0 0 280px !important;
+    margin-left: 20px !important;
+    clear: none !important;
+}
+
+/* Força a barra de ações a ficar do lado esquerdo, abaixo da barra de pesquisa */
+.actions {
+    float: left !important;
+    width: 100% !important;
+    text-align: left !important;
+    margin-top: 15px !important;
+    margin-bottom: 15px !important;
+    display: block !important;
+}
+
+/* Limpa qualquer layout estranho da barra de ferramentas/pesquisa */
+#toolbar {
+    float: left !important;
+    width: 100% !important;
+    clear: both !important;
+}
+
+/* Força a tabela a não sofrer float bizarro */
+#result_list {
+    clear: both !important;
+    width: 100% !important;
+}

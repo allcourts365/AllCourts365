@@ -15,6 +15,10 @@ class NewsAdminForm(forms.ModelForm):
 
 @admin.register(News)
 class NewsAdmin(admin.ModelAdmin):
+    class Media:
+        css = {
+            'all': ('css/admin/custom_changelist.css',)
+        }
     form = NewsAdminForm
     list_display = ("title", "club_display", "published_at", "duplicate_button")
     list_filter = ("is_published", "club")
@@ -129,6 +133,10 @@ from django.contrib.auth.models import User
 
 @admin.register(BroadcastMessage)
 class BroadcastMessageAdmin(admin.ModelAdmin):
+    class Media:
+        css = {
+            'all': ('css/admin/custom_changelist.css',)
+        }
     list_display = ('subject', 'club_display', 'created_at', 'duplicate_button')
     list_filter = ('is_global', 'club')
     search_fields = ('subject', 'body')
