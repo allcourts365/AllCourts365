@@ -19,10 +19,14 @@ class Command(BaseCommand):
             model_permissions = Permission.objects.filter(content_type=content_type)
             permissions.extend(model_permissions)
             
-        # Adiciona Permissões especiais do app CORE se precisar (ex: PlayerLinkRequest)
-        from core.models import PlayerLinkRequest
-        ct_link = ContentType.objects.get_for_model(PlayerLinkRequest)
-        permissions.extend(Permission.objects.filter(content_type=ct_link))
+        # Adiciona Permissões especiais
+        from core.models import PlayerLinkRequest, UserProfile
+        from django.contrib.auth.models import User
+        
+        extra_models = [PlayerLinkRequest, UserProfile, User]
+        for model in extra_models:
+            ct = ContentType.objects.get_for_model(model)
+            permissions.extend(Permission.objects.filter(content_type=ct))
 
         group.permissions.set(permissions)
         

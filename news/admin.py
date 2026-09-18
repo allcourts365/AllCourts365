@@ -33,7 +33,7 @@ class NewsAdmin(admin.ModelAdmin):
         from django.utils.html import format_html
         from django.urls import reverse
         url = reverse('admin:news_news_add') + f'?duplicate={obj.pk}'
-        return format_html('<a class="button" style="background-color: #417690; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none;" href="{}">Duplicar</a>', url)
+        return format_html('<a class="button" style="background-color: #417690; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none;" href="{}">Criar com cópia</a>', url)
     duplicate_button.short_description = "Ações"
     duplicate_button.allow_tags = True
 
@@ -138,7 +138,7 @@ class BroadcastMessageAdmin(admin.ModelAdmin):
         from django.utils.html import format_html
         from django.urls import reverse
         url = reverse('admin:news_broadcastmessage_add') + f'?duplicate={obj.pk}'
-        return format_html('<a class="button" style="background-color: #417690; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none;" href="{}">Duplicar</a>', url)
+        return format_html('<a class="button" style="background-color: #417690; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none;" href="{}">Criar com cópia</a>', url)
     duplicate_button.short_description = "Ações"
     duplicate_button.allow_tags = True
 

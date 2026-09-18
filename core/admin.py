@@ -69,7 +69,12 @@ class CustomUserAdmin(UserAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if not request.user.is_superuser:
-            return qs.filter(is_superuser=False)
+            from django.db.models import Q
+            return qs.filter(
+                Q(player_profiles__club__administrators=request.user) | 
+                Q(managed_clubs__administrators=request.user) |
+                Q(id=request.user.id)
+            ).distinct()
         return qs
         
     def save_model(self, request, obj, form, change):
@@ -83,6 +88,17 @@ class CustomUserAdmin(UserAdmin):
             if not created and not email_address.verified:
                 email_address.verified = True
                 email_address.save()
+                
+        # Se for um Admin de Clube criando um NOVO usuário, vincula automaticamente a um Player no clube dele
+        if not change and not request.user.is_superuser:
+            club = request.user.managed_clubs.first()
+            if club:
+                from clubs.models import Player
+                Player.objects.get_or_create(
+                    user=obj,
+                    club=club,
+                    defaults={'name': obj.get_full_name() or obj.username}
+                )
 
     def get_fieldsets(self, request, obj=None):
         if not obj:

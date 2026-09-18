@@ -47,6 +47,13 @@ class ClubScopedAdminMixin:
                 kwargs["queryset"] = Category.objects.filter(tournament__club__administrators=request.user)
             elif db_field.name in ["player", "player_a", "player_b", "winner"]:
                 kwargs["queryset"] = Player.objects.filter(club__administrators=request.user)
+            elif db_field.name == "user":
+                from django.contrib.auth.models import User
+                from django.db.models import Q
+                kwargs["queryset"] = User.objects.filter(
+                    Q(player_profiles__club__administrators=request.user) | 
+                    Q(id=request.user.id)
+                ).distinct()
                 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
