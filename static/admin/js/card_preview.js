@@ -102,15 +102,15 @@ document.addEventListener("DOMContentLoaded", function() {
         resizeHandle.style.display = 'none';
 
         const container = document.getElementById('container');
-        const mainDiv = document.getElementById('main');
+        const contentDiv = document.getElementById('content');
         const breadcrumbs = document.querySelector('.breadcrumbs');
         
-        if (container && mainDiv) {
-            // Insere a prévia logo depois dos breadcrumbs (antes do #main)
+        if (container && contentDiv) {
+            // Insere a prévia logo depois dos breadcrumbs (antes do #content)
             if (breadcrumbs) {
                 container.insertBefore(previewContainer, breadcrumbs.nextSibling);
             } else {
-                container.insertBefore(previewContainer, mainDiv);
+                container.insertBefore(previewContainer, contentDiv);
             }
             
             // Transforma o body e container para não rolarem
@@ -124,11 +124,11 @@ document.addEventListener("DOMContentLoaded", function() {
             container.style.height = '100dvh'; // Use dynamic viewport height
             container.style.overflow = 'hidden';
             
-            // O #main vai ocupar todo o resto da tela e rolar internamente
-            mainDiv.style.flex = '1';
-            mainDiv.style.overflowY = 'auto';
-            mainDiv.style.marginTop = '0'; // Remove espaçamentos extras do Django
-            mainDiv.style.paddingTop = '15px'; // Espaço de ~0.5cm pedido pelo usuário
+            // O #content vai ocupar todo o resto da tela e rolar internamente
+            contentDiv.style.flex = '1';
+            contentDiv.style.overflowY = 'auto';
+            contentDiv.style.marginTop = '0'; // Remove espaçamentos extras do Django
+            contentDiv.style.paddingTop = '15px'; // Espaço de ~0.5cm pedido pelo usuário
         } else {
             document.body.appendChild(previewContainer);
         }
