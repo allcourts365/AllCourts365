@@ -98,37 +98,28 @@ document.addEventListener("DOMContentLoaded", function() {
         iframe.style.transform = `scale(${currentScale})`;
         
         previewLabel.style.cursor = 'default';
-        previewLabel.textContent = 'Prévia da Página (Ao Vivo)';
-        resizeHandle.style.display = 'none';
-
-        const container = document.getElementById('container');
         const contentDiv = document.getElementById('content');
-        const breadcrumbs = document.querySelector('.breadcrumbs');
         
-        if (container && contentDiv) {
-            // Insere a prévia logo depois dos breadcrumbs (antes do #content)
-            if (breadcrumbs) {
-                container.insertBefore(previewContainer, breadcrumbs.nextSibling);
-            } else {
-                container.insertBefore(previewContainer, contentDiv);
-            }
+        if (contentDiv) {
+            // Insere a prévia dentro do #content, no topo
+            contentDiv.insertBefore(previewContainer, contentDiv.firstChild);
             
-            // Transforma o body e container para não rolarem
+            // Transforma o body para não rolar
             document.documentElement.style.overflow = 'hidden';
             document.body.style.overflow = 'hidden';
-            document.body.style.margin = '0';
-            document.body.style.padding = '0';
             
-            container.style.display = 'flex';
-            container.style.flexDirection = 'column';
-            container.style.height = '100dvh'; // Use dynamic viewport height
-            container.style.overflow = 'hidden';
+            // Cria um invólucro para o formulário rolar separadamente
+            const scrollWrapper = document.createElement('div');
+            scrollWrapper.style.overflowY = 'auto';
+            scrollWrapper.style.height = `calc(100vh - 70px - ${previewHeightPx}px)`; 
+            scrollWrapper.style.paddingTop = '15px'; // Espaço de ~0.5cm pedido pelo usuário
             
-            // O #content vai ocupar todo o resto da tela e rolar internamente
-            contentDiv.style.flex = '1';
-            contentDiv.style.overflowY = 'auto';
-            contentDiv.style.marginTop = '0'; // Remove espaçamentos extras do Django
-            contentDiv.style.paddingTop = '15px'; // Espaço de ~0.5cm pedido pelo usuário
+            // Move todos os elementos seguintes (o formulário) para dentro do invólucro
+            while (previewContainer.nextSibling) {
+                scrollWrapper.appendChild(previewContainer.nextSibling);
+            }
+            contentDiv.appendChild(scrollWrapper);
+            
         } else {
             document.body.appendChild(previewContainer);
         }
