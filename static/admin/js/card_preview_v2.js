@@ -99,40 +99,46 @@ document.addEventListener("DOMContentLoaded", function() {
         
         previewLabel.style.cursor = 'default';
         const contentDiv = document.getElementById('content');
-        if (contentDiv) {
-            // Injeção de CSS bruto para forçar a morte de QUALQUER buraco branco no topo
-            // Isso aniquila padding-top e margin-top de todos os elementos entre o cabeçalho e a prévia, 
-            // mas preserva o padding-left/right do #content (as bordas laterais).
-            const antiGapStyle = document.createElement('style');
-            antiGapStyle.innerHTML = `
-                #main { padding-top: 0 !important; margin-top: 0 !important; }
-                #content { padding-top: 0 !important; margin-top: 0 !important; }
-                .breadcrumbs { padding-bottom: 0 !important; margin-bottom: 0 !important; border-bottom: none !important; }
-                #content > h1 { display: none !important; margin: 0 !important; padding: 0 !important; height: 0 !important; }
-                ul.messagelist { margin-bottom: 0 !important; }
-                #sticky-page-preview { margin-top: 0 !important; }
-            `;
-            document.head.appendChild(antiGapStyle);
-
-            // Insere a prévia dentro do #content, no topo
-            contentDiv.insertBefore(previewContainer, contentDiv.firstChild);
+        const breadcrumbs = document.querySelector('.breadcrumbs');
+        
+        if (contentDiv && breadcrumbs) {
+            // Solução definitiva: movemos a prévia para FORA do #content e do #main.
+            // Ela será inserida imediatamente após os breadcrumbs, garantindo ZERO espaço.
             
-            // Transforma o body para não rolar
+            // Criamos um wrapper para simular as bordas laterais exatas do #content
+            const borderWrapper = document.createElement('div');
+            const contentRect = contentDiv.getBoundingClientRect();
+            borderWrapper.style.paddingLeft = contentRect.left + 'px';
+            borderWrapper.style.paddingRight = (window.innerWidth - contentRect.right) + 'px';
+            borderWrapper.style.width = '100%';
+            borderWrapper.style.boxSizing = 'border-box';
+            
+            borderWrapper.appendChild(previewContainer);
+            breadcrumbs.parentNode.insertBefore(borderWrapper, breadcrumbs.nextSibling);
+            
+            // Trava o body para não rolar a página inteira
             document.documentElement.style.overflow = 'hidden';
             document.body.style.overflow = 'hidden';
             
-            // Cria um invólucro para o formulário rolar separadamente
+            // Cria um invólucro para o formulário rolar separadamente (abaixo da prévia)
             const scrollWrapper = document.createElement('div');
             scrollWrapper.style.overflowY = 'auto';
-            scrollWrapper.style.height = `calc(100vh - 70px - ${previewHeightPx}px)`; 
-            scrollWrapper.style.paddingTop = '15px'; // Espaço de ~0.5cm pedido pelo usuário
+            // A altura agora subtrai o cabeçalho (aprox 100px) e a prévia
+            scrollWrapper.style.height = `calc(100vh - 100px - ${previewHeightPx}px)`; 
+            scrollWrapper.style.paddingTop = '15px'; // Espaço de ~0.5cm pedido pelo usuário abaixo da prévia
             
-            // Move todos os elementos seguintes (o formulário) para dentro do invólucro
-            while (previewContainer.nextSibling) {
-                scrollWrapper.appendChild(previewContainer.nextSibling);
+            // Movemos todo o formulário (e títulos) para dentro do scrollWrapper
+            while (contentDiv.firstChild) {
+                scrollWrapper.appendChild(contentDiv.firstChild);
             }
             contentDiv.appendChild(scrollWrapper);
             
+            // Oculta o h1 original dentro do scrollWrapper para não poluir
+            const h1 = scrollWrapper.querySelector('h1');
+            if (h1) h1.style.display = 'none';
+
+        } else if (contentDiv) {
+            contentDiv.insertBefore(previewContainer, contentDiv.firstChild);
         } else {
             document.body.appendChild(previewContainer);
         }
