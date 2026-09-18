@@ -170,9 +170,32 @@ class SiteConfigurationAdmin(admin.ModelAdmin):
         return False
 
 @admin.register(UserProfile)
-class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'full_name', 'racket', 'handedness', 'backhand')
-    search_fields = ('user__username', 'user__email', 'full_name')
+class UserProfileAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
+    list_display = ('user', 'full_name', 'phone', 'city', 'racket', 'handedness', 'backhand')
+    search_fields = ('user__username', 'user__email', 'full_name', 'phone', 'city')
+    
+    fieldsets = (
+        ('Informações Básicas', {
+            'fields': ('user', 'full_name', 'phone', 'birth_date', 'city', 'shirt_size')
+        }),
+        ('Ficha Técnica (Tênis)', {
+            'fields': ('racket', 'handedness', 'backhand', 'string_tension', 'string_type', 'play_style', 'best_shot', 'tennis_idol', 'preferred_time')
+        }),
+        ('Mídia', {
+            'fields': ('avatar',)
+        }),
+    )
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if not request.user.is_superuser:
+            from django.db.models import Q
+            return qs.filter(
+                Q(user__player_profiles__club__administrators=request.user) | 
+                Q(user__managed_clubs__administrators=request.user) |
+                Q(user_id=request.user.id)
+            ).distinct()
+        return qs
 
 @admin.register(PlayerLinkRequest)
 class PlayerLinkRequestAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
