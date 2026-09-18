@@ -95,7 +95,7 @@ class ClubAdministratorsInline(admin.TabularInline):
 @admin.register(Club)
 class ClubAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     class Media:
-        js = ('admin/js/card_preview.js',)
+        js = ('admin/js/card_preview_v2.js',)
         
     form = ClubForm
     list_display = ('name', 'created_at')

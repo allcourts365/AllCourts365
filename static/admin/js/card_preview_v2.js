@@ -101,8 +101,24 @@ document.addEventListener("DOMContentLoaded", function() {
         const contentDiv = document.getElementById('content');
         
         if (contentDiv) {
-            // Remove o padding-top do container do Django para colar a prévia no cabeçalho
+            // Garante que o H1 original não vai criar um buraco se estiver invisível
+            const h1 = contentDiv.querySelector('h1');
+            if (h1) {
+                h1.style.display = 'none';
+                h1.style.margin = '0';
+                h1.style.padding = '0';
+            }
+            
+            // Remove 100% de margens e paddings de cima do #content
             contentDiv.style.paddingTop = '0';
+            contentDiv.style.marginTop = '0';
+            
+            // Tira também margens de baixo dos breadcrumbs caso existam
+            const breadcrumbs = document.querySelector('.breadcrumbs');
+            if (breadcrumbs) {
+                breadcrumbs.style.marginBottom = '0';
+                breadcrumbs.style.paddingBottom = '0';
+            }
             
             // Insere a prévia dentro do #content, no topo
             contentDiv.insertBefore(previewContainer, contentDiv.firstChild);
