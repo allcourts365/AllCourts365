@@ -117,7 +117,7 @@ document.addEventListener("DOMContentLoaded", function() {
             borderWrapper.style.boxSizing = 'border-box';
             
             // Puxa a prévia MUITO agressivamente para cima para devorar qualquer gap invisível
-            borderWrapper.style.marginTop = '-110px';
+            borderWrapper.style.marginTop = '-118px';
             borderWrapper.style.marginBottom = '0';
             
             // Esconde a lista de mensagens se estiver vazia (ela costuma criar buracos no Django)
