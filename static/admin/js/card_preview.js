@@ -80,66 +80,113 @@ document.addEventListener("DOMContentLoaded", function() {
     previewContainer.appendChild(previewLabel);
     previewContainer.appendChild(iframe);
     previewContainer.appendChild(resizeHandle);
-    document.body.appendChild(previewContainer);
+
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+        previewContainer.style.position = 'relative';
+        previewContainer.style.left = '0';
+        previewContainer.style.width = '100%';
+        previewContainer.style.zIndex = '999';
+        previewContainer.style.borderRadius = '0';
+        previewContainer.style.boxShadow = '0 5px 15px rgba(0,0,0,0.5)';
+        
+        const newWidth = window.innerWidth;
+        currentScale = newWidth / virtualWidth;
+        const previewHeightPx = (virtualHeight * currentScale) + 35;
+        previewContainer.style.height = previewHeightPx + 'px'; // 35 for label padding
+        iframe.style.transform = `scale(${currentScale})`;
+        
+        previewLabel.style.cursor = 'default';
+        previewLabel.textContent = 'Prévia da Página (Ao Vivo)';
+        resizeHandle.style.display = 'none';
+
+        const contentDiv = document.getElementById('content');
+        if (contentDiv) {
+            contentDiv.insertBefore(previewContainer, contentDiv.firstChild);
+            
+            // Cria um invólucro para o formulário rolar separadamente
+            const scrollWrapper = document.createElement('div');
+            scrollWrapper.style.overflowY = 'auto';
+            scrollWrapper.style.height = `calc(100vh - 70px - ${previewHeightPx}px)`; // 70px aprox para compensar header/breadcrumbs
+            
+            // Move todos os elementos seguintes para dentro do invólucro
+            while (previewContainer.nextSibling) {
+                scrollWrapper.appendChild(previewContainer.nextSibling);
+            }
+            contentDiv.appendChild(scrollWrapper);
+            
+            // Trava a rolagem da página inteira
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+        } else {
+            document.body.appendChild(previewContainer);
+        }
+    } else {
+        document.body.appendChild(previewContainer);
+    }
 
     // --- Drag Logic ---
     let isDragging = false;
     let dragOffsetX, dragOffsetY;
 
-    previewLabel.addEventListener('mousedown', function(e) {
-        isDragging = true;
-        const rect = previewContainer.getBoundingClientRect();
-        dragOffsetX = e.clientX - rect.left;
-        dragOffsetY = e.clientY - rect.top;
-    });
+    if (!isMobile) {
+        previewLabel.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            const rect = previewContainer.getBoundingClientRect();
+            dragOffsetX = e.clientX - rect.left;
+            dragOffsetY = e.clientY - rect.top;
+        });
 
-    document.addEventListener('mousemove', function(e) {
-        if (isDragging) {
-            let newX = e.clientX - dragOffsetX;
-            let newY = e.clientY - dragOffsetY;
-            previewContainer.style.left = newX + 'px';
-            previewContainer.style.top = newY + 'px';
-            previewContainer.style.right = 'auto'; // override default right placement
-        }
-    });
+        document.addEventListener('mousemove', function(e) {
+            if (isDragging) {
+                let newX = e.clientX - dragOffsetX;
+                let newY = e.clientY - dragOffsetY;
+                previewContainer.style.left = newX + 'px';
+                previewContainer.style.top = newY + 'px';
+                previewContainer.style.right = 'auto'; // override default right placement
+            }
+        });
 
-    document.addEventListener('mouseup', function(e) {
-        if (isDragging) {
-            isDragging = false;
-            localStorage.setItem('admin_preview_left', parseInt(previewContainer.style.left));
-            localStorage.setItem('admin_preview_top', parseInt(previewContainer.style.top));
-        }
-    });
+        document.addEventListener('mouseup', function(e) {
+            if (isDragging) {
+                isDragging = false;
+                localStorage.setItem('admin_preview_left', parseInt(previewContainer.style.left));
+                localStorage.setItem('admin_preview_top', parseInt(previewContainer.style.top));
+            }
+        });
+    }
 
     // --- Resize Logic ---
     let isResizing = false;
     let resizeStartWidth, resizeStartX;
 
-    resizeHandle.addEventListener('mousedown', function(e) {
-        e.stopPropagation();
-        e.preventDefault();
-        isResizing = true;
-        resizeStartWidth = parseInt(previewContainer.style.width);
-        resizeStartX = e.clientX;
-    });
+    if (!isMobile) {
+        resizeHandle.addEventListener('mousedown', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            isResizing = true;
+            resizeStartWidth = parseInt(previewContainer.style.width);
+            resizeStartX = e.clientX;
+        });
 
-    document.addEventListener('mousemove', function(e) {
-        if (isResizing) {
-            let diff = e.clientX - resizeStartX;
-            let newWidth = Math.max(300, Math.min(virtualWidth, resizeStartWidth + diff));
-            currentScale = newWidth / virtualWidth;
-            previewContainer.style.width = newWidth + 'px';
-            previewContainer.style.height = (virtualHeight * currentScale) + 'px';
-            iframe.style.transform = `scale(${currentScale})`;
-        }
-    });
+        document.addEventListener('mousemove', function(e) {
+            if (isResizing) {
+                let diff = e.clientX - resizeStartX;
+                let newWidth = Math.max(300, Math.min(virtualWidth, resizeStartWidth + diff));
+                currentScale = newWidth / virtualWidth;
+                previewContainer.style.width = newWidth + 'px';
+                previewContainer.style.height = (virtualHeight * currentScale) + 'px';
+                iframe.style.transform = `scale(${currentScale})`;
+            }
+        });
 
-    document.addEventListener('mouseup', function(e) {
-        if (isResizing) {
-            isResizing = false;
-            localStorage.setItem('admin_preview_width', parseInt(previewContainer.style.width));
-        }
-    });
+        document.addEventListener('mouseup', function(e) {
+            if (isResizing) {
+                isResizing = false;
+                localStorage.setItem('admin_preview_width', parseInt(previewContainer.style.width));
+            }
+        });
+    }
 
     // Inputs from the admin form
     const inputs = {
