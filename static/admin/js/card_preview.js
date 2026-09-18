@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", function() {
         previewContainer.style.position = 'relative';
         previewContainer.style.width = '100%';
         previewContainer.style.left = '0';
-        previewContainer.style.margin = '0';
+        previewContainer.style.marginTop = '-20px'; // Puxa a prévia para cima para colar no cabeçalho (anula o padding do Django)
         previewContainer.style.zIndex = '999';
         previewContainer.style.borderRadius = '0';
         previewContainer.style.boxShadow = '0 5px 15px rgba(0,0,0,0.5)';
