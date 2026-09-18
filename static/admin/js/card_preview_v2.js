@@ -93,12 +93,18 @@ document.addEventListener("DOMContentLoaded", function() {
         
         const newWidth = window.innerWidth;
         currentScale = newWidth / virtualWidth;
-        const previewHeightPx = (virtualHeight * currentScale);
+        const previewHeightPx = (virtualHeight * currentScale) + 35;
         previewContainer.style.height = previewHeightPx + 'px'; 
         iframe.style.transform = `scale(${currentScale})`;
         
-        // Remove label and resize handle completely on mobile
-        previewLabel.style.display = 'none';
+        // Mantém a barra, mas tira o texto "Arraste-me" e esconde os botões +/-
+        const span = previewLabel.querySelector('span');
+        if (span) span.textContent = 'Prévia da Página (Ao Vivo)';
+        
+        const controls = previewLabel.querySelector('div');
+        if (controls) controls.style.display = 'none';
+        
+        // Esconde apenas a setinha de aumentar no mobile
         resizeHandle.style.display = 'none';
         const contentDiv = document.getElementById('content');
         const breadcrumbs = document.querySelector('.breadcrumbs');
