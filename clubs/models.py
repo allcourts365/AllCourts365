@@ -110,8 +110,19 @@ class Tournament(models.Model):
     start_date = models.DateField(verbose_name="Data de Início", null=True, blank=True)
     end_date = models.DateField(verbose_name="Data de Fim", null=True, blank=True)
     number_of_brackets = models.IntegerField(default=1, verbose_name="Número de Chaves (Eliminatório)")
+    registration_deadline = models.DateField(verbose_name="Data Limite de Inscrição", null=True, blank=True)
     is_active = models.BooleanField(default=True, verbose_name="Ativo (Exibir no site)")
     is_finished = models.BooleanField(default=False, verbose_name="Encerrado")
+    
+    # Informações do Torneio
+    from ckeditor.fields import RichTextField
+    information = RichTextField(verbose_name="Sobre o Torneio (Regulamento, etc)", blank=True, null=True)
+    location_name = models.CharField(max_length=200, verbose_name="Nome do Local", blank=True, null=True)
+    location_address = models.CharField(max_length=255, verbose_name="Endereço", blank=True, null=True)
+    location_url = models.URLField(verbose_name="Link de Como Chegar (Google Maps, etc)", blank=True, null=True)
+    contact_whatsapp = models.CharField(max_length=50, verbose_name="WhatsApp da Organização", blank=True, null=True)
+    whatsapp_group_link = models.URLField(verbose_name="Link do Grupo do Torneio", blank=True, null=True)
+    fee_observation = models.TextField(verbose_name="Observação sobre as Taxas (Rodapé)", blank=True, null=True, help_text="Ex: O código PIX para pagamento aparece na etapa de pagamento...")
     
     allow_player_scheduling = models.BooleanField(default=True, verbose_name="Atleta pode gerenciar agendamento?")
     allow_player_results = models.BooleanField(default=True, verbose_name="Atleta pode lançar resultados?")
@@ -141,6 +152,10 @@ class Tournament(models.Model):
     pts_final_winner        = models.IntegerField(null=True, blank=True, verbose_name="Final — Pts por Vitória (Campeão)")
     pts_campeon             = models.IntegerField(null=True, blank=True, verbose_name="Campeão — Pts Extras")
 
+    @property
+    def has_matches(self):
+        return Match.objects.filter(category__tournament=self).exists()
+
     def __str__(self):
         return f"{self.name} - {self.club.name}"
 
@@ -152,10 +167,23 @@ class Tournament(models.Model):
         if self.pk:
             for cat in self.categories.all():
                 cat.recalculate_points()
-        
+                
     class Meta:
         verbose_name = "Torneio/Ranking Base"
         verbose_name_plural = "Torneios/Rankings Base"
+
+class TournamentFee(models.Model):
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='fees')
+    name = models.CharField(max_length=100, verbose_name="Nome (Ex: Associado, Convidado)")
+    payment_method = models.CharField(max_length=100, default="Pagamento via PIX", verbose_name="Forma de Pagamento")
+    price = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Valor (R$)")
+
+    class Meta:
+        verbose_name = "Taxa de Inscrição"
+        verbose_name_plural = "Taxas de Inscrição"
+        
+    def __str__(self):
+        return f"{self.name} - R$ {self.price}"
 
 class RankingTournament(Tournament):
     class Meta:
@@ -172,6 +200,7 @@ class KnockoutTournament(Tournament):
 class Category(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='categories')
     name = models.CharField(max_length=100, verbose_name="Nome da Categoria")
+    max_players = models.IntegerField(null=True, blank=True, verbose_name="Limite de Inscritos", help_text="Deixe em branco para sem limite")
     is_finished = models.BooleanField(default=False, verbose_name="Encerrada")
 
     def __str__(self):

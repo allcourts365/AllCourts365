@@ -1,5 +1,5 @@
 from django.contrib import admin, messages
-from .models import Club, Player, Tournament, RankingTournament, KnockoutTournament, Category, CategoryPlayer, Match, Court
+from .models import Club, Player, Tournament, RankingTournament, KnockoutTournament, Category, CategoryPlayer, Match, Court, TournamentFee
 import openpyxl
 
 from django import forms
@@ -235,6 +235,10 @@ class CategoryInline(admin.TabularInline):
     model = Category
     extra = 1
 
+class TournamentFeeInline(admin.TabularInline):
+    model = TournamentFee
+    extra = 1
+
 @admin.register(Tournament)
 class TournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     class Media:
@@ -242,7 +246,7 @@ class TournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     list_display = ('name', 'club', 'tournament_type', 'is_active', 'is_finished')
     list_filter = (('club', admin.RelatedOnlyFieldListFilter), 'tournament_type', 'is_active')
     search_fields = ('name',)
-    inlines = [CategoryInline]
+    inlines = [CategoryInline, TournamentFeeInline]
 
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)
@@ -278,9 +282,13 @@ class RankingTournamentAdmin(TournamentAdmin):
     fieldsets = (
         ('Informações do Ranking', {
             'fields': ('club', 'name', 'competition_type', 'set_format',
-                       'current_round', 'start_date', 'end_date', 'number_of_brackets',
+                       'current_round', 'start_date', 'end_date', 'registration_deadline', 'number_of_brackets',
                        'allow_player_scheduling', 'allow_player_results', 'match_duration',
                        'is_active', 'is_finished')
+        }),
+        ('Detalhes (Aba Informações)', {
+            'fields': ('information', 'location_name', 'location_address', 'location_url',
+                       'contact_whatsapp', 'whatsapp_group_link', 'fee_observation')
         }),
         ('Upload de Atletas (Gera as rodadas Automaticamente)', {
             'fields': ('excel_file', 'history_file'),
@@ -462,7 +470,7 @@ class RankingTournamentAdmin(TournamentAdmin):
 class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     class Media:
         js = ('admin/js/tournament_admin.js',)
-    inlines = [CategoryInline]
+    inlines = [CategoryInline, TournamentFeeInline]
 
     def get_changeform_initial_data(self, request):
         initial = super().get_changeform_initial_data(request)
@@ -522,9 +530,13 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     fieldsets = (
         ('Informações do Torneio', {
             'fields': ('club', 'name', 'competition_type', 'set_format',
-                       'start_date', 'end_date', 'number_of_brackets',
+                       'start_date', 'end_date', 'registration_deadline', 'number_of_brackets',
                        'allow_player_scheduling', 'allow_player_results', 'match_duration',
                        'is_active', 'is_finished')
+        }),
+        ('Detalhes (Aba Informações)', {
+            'fields': ('information', 'location_name', 'location_address', 'location_url',
+                       'contact_whatsapp', 'whatsapp_group_link', 'fee_observation')
         }),
         ('Upload de Atletas (Gera as Chaves Automaticamente)', {
             'fields': ('excel_file',),

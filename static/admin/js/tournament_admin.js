@@ -43,4 +43,26 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Move TournamentFeeInline (taxas) right above fee_observation
+    var feeObservationField = document.querySelector('.field-fee_observation');
+    var allInlines = document.querySelectorAll('.inline-group');
+    var feeInline = null;
+    
+    // Find the inline group whose h2 contains "Taxas de Inscrição"
+    allInlines.forEach(function(inline) {
+        var h2 = inline.querySelector('h2');
+        if (h2 && h2.textContent.includes('Taxas de Inscrição')) {
+            feeInline = inline;
+        }
+    });
+
+    if (feeInline && feeObservationField) {
+        feeObservationField.parentNode.insertBefore(feeInline, feeObservationField);
+        // Tweak styles to look integrated within the fieldset
+        feeInline.style.margin = '15px 0 20px 0';
+        feeInline.style.boxShadow = 'none';
+        feeInline.style.border = 'none';
+        feeInline.style.padding = '0';
+    }
 });

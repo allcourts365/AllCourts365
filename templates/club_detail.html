@@ -192,6 +192,10 @@
                         <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); margin-bottom: 15px; letter-spacing: 0.5px;">
                             <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Encerrado"> ENCERRADO
                         </div>
+                    {% elif not t.has_matches %}
+                        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); margin-bottom: 15px; letter-spacing: 0.5px;">
+                            <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Inscrições"> FASE DE INSCRIÇÕES
+                        </div>
                     {% else %}
                         <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); margin-bottom: 15px; letter-spacing: 0.5px;">
                             <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Em andamento"> EM ANDAMENTO - RODADA {{ t.current_round }}
@@ -201,7 +205,11 @@
                 
                 <h3 style="margin-bottom: 15px; font-size: 1.4rem; font-weight: 800; color: #fff; text-transform: uppercase;">{{ t.name }}</h3>
                 
-                {% if t.start_date and t.end_date %}
+                {% if not t.has_matches and t.registration_deadline and not t.is_finished %}
+                    <p style="margin-bottom: 20px; color: #38bdf8; font-size: 1.05rem; font-weight: 600;">
+                        <i class="fas fa-calendar-check" style="margin-right: 5px;"></i> Inscrições até {{ t.registration_deadline|date:"d/m/Y" }}
+                    </p>
+                {% elif t.start_date and t.end_date %}
                     <p style="margin-bottom: 20px; color: #fff; font-size: 1.05rem;">{{ t.start_date|date:"d/m/Y" }} a {{ t.end_date|date:"d/m/Y" }}</p>
                 {% endif %}
                 
@@ -230,6 +238,10 @@
                         <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); margin-bottom: 15px; letter-spacing: 0.5px;">
                             <img src="{% static 'bolinha.png' %}" class="ball-static" alt="Encerrado"> ENCERRADO
                         </div>
+                    {% elif not t.has_matches %}
+                        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); margin-bottom: 15px; letter-spacing: 0.5px;">
+                            <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Inscrições"> FASE DE INSCRIÇÕES
+                        </div>
                     {% else %}
                         <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); margin-bottom: 15px; letter-spacing: 0.5px;">
                             <img src="{% static 'bolinha.png' %}" class="ball-spinning" alt="Em andamento"> EM ANDAMENTO - FASE {{ t.current_round }}
@@ -239,7 +251,11 @@
                 
                 <h3 style="margin-bottom: 15px; font-size: 1.4rem; font-weight: 800; color: #fff; text-transform: uppercase;">{{ t.name }}</h3>
                 
-                {% if t.start_date and t.end_date %}
+                {% if not t.has_matches and t.registration_deadline and not t.is_finished %}
+                    <p style="margin-bottom: 20px; color: #38bdf8; font-size: 1.05rem; font-weight: 600;">
+                        <i class="fas fa-calendar-check" style="margin-right: 5px;"></i> Inscrições até {{ t.registration_deadline|date:"d/m/Y" }}
+                    </p>
+                {% elif t.start_date and t.end_date %}
                     <p style="margin-bottom: 20px; color: #fff; font-size: 1.05rem;">{{ t.start_date|date:"d/m/Y" }} a {{ t.end_date|date:"d/m/Y" }}</p>
                 {% endif %}
                 

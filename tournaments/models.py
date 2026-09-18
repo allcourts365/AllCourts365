@@ -61,6 +61,15 @@ class Tournament(models.Model):
     is_active = models.BooleanField(default=True, verbose_name="Ativo (Exibir no site)")
     is_finished = models.BooleanField(default=False, verbose_name="Encerrado", help_text="Marque esta opção quando o torneio/ranking chegar ao fim.")
     
+    # Informações do Torneio
+    from ckeditor.fields import RichTextField
+    information = RichTextField(verbose_name="Sobre o Torneio (Regulamento, etc)", blank=True, null=True)
+    location_name = models.CharField(max_length=200, verbose_name="Nome do Local", blank=True, null=True)
+    location_address = models.CharField(max_length=255, verbose_name="Endereço", blank=True, null=True)
+    location_url = models.URLField(verbose_name="Link de Como Chegar", blank=True, null=True)
+    contact_whatsapp = models.CharField(max_length=50, verbose_name="WhatsApp da Organização", blank=True, null=True)
+    whatsapp_group_link = models.URLField(verbose_name="Link do Grupo do Torneio", blank=True, null=True)
+    
     # Configurações de Pontuação para Ranking
     points_winner_2x0 = models.IntegerField(default=3, verbose_name="Pontos (Vitória 2x0)", help_text="Pontos recebidos pelo vencedor de um jogo 2x0.")
     points_winner_2x1 = models.IntegerField(default=2, verbose_name="Pontos (Vitória 2x1)", help_text="Pontos recebidos pelo vencedor de um jogo 2x1.")

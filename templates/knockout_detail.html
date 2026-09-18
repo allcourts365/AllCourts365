@@ -248,30 +248,189 @@
 
 <!-- Tab: Informações -->
 <div id="tab-informacoes" class="tab-content active">
-    <div class="info-card">
-        <h3>Detalhes do Torneio</h3>
-        <div class="info-grid">
-            <div class="info-item">
-                <label>Formato de Competição</label>
-                <span>{{ tournament.get_competition_type_display|default:"Simples" }}</span>
-            </div>
-            <div class="info-item">
-                <label>Formato de Jogo</label>
-                <span>{{ tournament.get_set_format_display }}</span>
-            </div>
-            <div class="info-item">
-                <label>Status</label>
-                <span>{% if tournament.is_finished %}Encerrado{% else %}Em andamento{% endif %}</span>
+    <style>
+        .info-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+        @media (max-width: 900px) {
+            .info-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+        .info-card {
+            background: #ffffff;
+            color: #333333;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        /* Reset CKEditor content colors to ensure they are visible on white background */
+        .tournament-info-content {
+            font-size: 0.95rem; 
+            line-height: 1.6; 
+            color: #444444 !important;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+        .tournament-info-content * {
+            color: #444444 !important;
+            max-width: 100%;
+            background-color: transparent !important;
+        }
+        .tournament-info-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+    </style>
+    <div class="info-layout">
+        <!-- Lado Esquerdo -->
+        <div>
+            <div class="info-card" style="background: #ffffff; color: #333;">
+                <div class="info-grid" style="display: flex; gap: 40px; margin-bottom: 30px;">
+                    <div class="info-item">
+                        <label style="color: #777; display: block; font-size: 0.8rem; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">Formato de Competição</label>
+                        <span style="color: #333; font-weight: 600; font-size: 1.1rem;">{{ tournament.get_competition_type_display|default:"Simples" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label style="color: #777; display: block; font-size: 0.8rem; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">Formato de Jogo</label>
+                        <span style="color: #333; font-weight: 600; font-size: 1.1rem;">{{ tournament.get_set_format_display }}</span>
+                    </div>
+                    <div class="info-item">
+                        <label style="color: #777; display: block; font-size: 0.8rem; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">Status</label>
+                        <span style="color: #333; font-weight: 600; font-size: 1.1rem;">{% if tournament.is_finished %}Encerrado{% else %}Em andamento{% endif %}</span>
+                    </div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 0 0 25px 0;">
+
+                <h3 style="color: #333; margin-bottom: 20px; font-weight: 700;">Sobre o torneio</h3>
+                
+                {% if tournament.information %}
+                    <div class="tournament-info-content">
+                        {{ tournament.information|safe }}
+                    </div>
+                {% else %}
+                    <p style="color: #666;">Detalhes não informados pelo organizador.</p>
+                {% endif %}
+                
+                {% if club.rules_pdf %}
+                <div style="margin-top: 30px;">
+                    <a href="{{ club.rules_pdf.url }}" target="_blank" class="btn-highlight" style="display: inline-flex; align-items: center; gap: 10px; font-size: 0.95rem; padding: 10px 20px; border-radius: 8px; background: #e2e8f0; color: #333; font-weight: 600; text-decoration: none;">
+                        <i class="fas fa-file-pdf"></i> Regulamento (PDF)
+                    </a>
+                </div>
+                {% endif %}
             </div>
         </div>
+        
+        <!-- Lado Direito -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            
+            {% if not tournament.has_matches and not tournament.is_finished %}
+            <!-- Botão Inscrever-se -->
+            <a href="{{ tournament.whatsapp_group_link|default:'#' }}" style="display: flex; align-items: center; justify-content: center; width: 100%; background: var(--highlight-color); color: #fff; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: 700; text-transform: uppercase; text-decoration: none; box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'" onclick="{% if not tournament.whatsapp_group_link %}alert('Link de inscrição ainda não configurado pelo organizador.'); return false;{% endif %}">
+                Inscrever-se
+            </a>
+            {% endif %}
+
+            <!-- Onde Acontece -->
+            <div class="info-card" style="background: #ffffff; color: #333;">
+                <h3 style="color: #333; margin-bottom: 15px; font-weight: 700; font-size: 1.1rem;">Onde acontece</h3>
+                <div style="font-weight: 600; font-size: 1rem; margin-bottom: 5px;">{{ tournament.location_name|default:club.name }}</div>
+                <div style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">
+                    {{ tournament.location_address|default:club.address|default:"Endereço não informado" }}
+                </div>
+                
+                {% if tournament.location_address or club.address %}
+                <iframe 
+                    width="100%" 
+                    height="200" 
+                    style="border:0; border-radius: 8px; margin-bottom: 15px;" 
+                    loading="lazy" 
+                    allowfullscreen 
+                    src="https://maps.google.com/maps?q={{ tournament.location_address|default:club.address|urlencode }}&t=&z=15&ie=UTF8&iwloc=&output=embed">
+                </iframe>
+                {% endif %}
+
+                {% if tournament.location_url %}
+                <a href="{{ tournament.location_url }}" target="_blank" style="display: block; width: 100%; text-align: center; padding: 10px; border: 1px solid #ccc; border-radius: 8px; color: #333; font-weight: 600; text-decoration: none; transition: background 0.2s;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='transparent'">
+                    <i class="fas fa-map-marker-alt"></i> Abrir no Maps
+                </a>
+                {% endif %}
+            </div>
+            
+            <!-- Contato da organização -->
+            <div class="info-card" style="background: #ffffff; color: #333;">
+                <h3 style="color: #333; margin-bottom: 15px; font-weight: 700; font-size: 1.1rem;">Contato da organização</h3>
+                
+                {% if tournament.whatsapp_group_link %}
+                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; gap: 10px;">
+                        <i class="far fa-comment-dots" style="font-size: 1.2rem; color: #64748b;"></i>
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.95rem;">Entrar no grupo do torneio</div>
+                            <div style="font-size: 0.8rem; color: #64748b;">Acompanhar comunicados importantes do organizador</div>
+                        </div>
+                    </div>
+                    <a href="{{ tournament.whatsapp_group_link }}" target="_blank" style="align-self: flex-end; background: #ea580c; color: white; padding: 6px 16px; border-radius: 6px; font-weight: 600; text-decoration: none; font-size: 0.9rem;">
+                        Entrar
+                    </a>
+                </div>
+                {% endif %}
+                
+                {% if tournament.contact_whatsapp %}
+                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; gap: 10px;">
+                        <i class="far fa-comment-alt" style="font-size: 1.2rem; color: #64748b;"></i>
+                        <div>
+                            <div style="font-weight: 600; font-size: 0.95rem;">Falar com o organizador</div>
+                            <div style="font-size: 0.8rem; color: #64748b;">Dúvidas, solicitação de horários e envio de comprovante de pagamento</div>
+                        </div>
+                    </div>
+                    <a href="https://wa.me/{{ tournament.contact_whatsapp|cut:' '|cut:'-'|cut:'('|cut:')'|cut:'+' }}" target="_blank" style="align-self: flex-end; background: #0f172a; color: white; padding: 6px 16px; border-radius: 6px; font-weight: 600; text-decoration: none; font-size: 0.9rem;">
+                        Falar
+                    </a>
+                </div>
+                {% endif %}
+                
+                {% if not tournament.whatsapp_group_link and not tournament.contact_whatsapp %}
+                <p style="font-size: 0.9rem; color: #666;">Nenhum contato cadastrado.</p>
+                {% endif %}
+            </div>
+            
+            <!-- Taxas de Inscrição -->
+            {% if tournament.fees.exists or tournament.fee_observation %}
+            <div class="info-card" style="background: #ffffff; color: #333;">
+                <h3 style="color: #333; margin-bottom: 15px; font-weight: 700; font-size: 1.1rem;">Taxas de inscrição</h3>
+                
+                {% if tournament.fees.exists %}
+                <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: {% if tournament.fee_observation %}20px{% else %}0{% endif %};">
+                    {% for fee in tournament.fees.all %}
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+                        <div>
+                            <div style="font-weight: 600; color: #1e293b; font-size: 1rem;">{{ fee.name }}</div>
+                            <div style="color: #64748b; font-size: 0.85rem;">{{ fee.payment_method }}</div>
+                        </div>
+                        <div style="font-weight: 700; color: #1e293b; font-size: 1.05rem;">
+                            R$ {{ fee.price|floatformat:2 }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if tournament.fee_observation %}
+                <div style="font-size: 0.85rem; color: #64748b; line-height: 1.5;">
+                    {{ tournament.fee_observation|linebreaksbr }}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
     </div>
-    {% if club.rules_pdf %}
-    <div style="text-align: center; margin-top: 30px;">
-        <a href="{{ club.rules_pdf.url }}" target="_blank" class="btn-highlight" style="display: inline-flex; align-items: center; gap: 10px; font-size: 1.1rem; padding: 12px 24px;">
-            <i class="fas fa-file-pdf"></i> Baixar Regulamento
-        </a>
-    </div>
-    {% endif %}
 </div>
 
 <!-- Tab: Inscritos -->
