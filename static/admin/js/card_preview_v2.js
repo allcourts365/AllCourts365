@@ -97,12 +97,8 @@ document.addEventListener("DOMContentLoaded", function() {
         previewContainer.style.height = previewHeightPx + 'px'; 
         iframe.style.transform = `scale(${currentScale})`;
         
-        // Mantém a barra, mas tira o texto "Arraste-me" e esconde os botões +/-
-        const span = previewLabel.querySelector('span');
-        if (span) span.textContent = 'Prévia da Página (Ao Vivo)';
-        
-        const controls = previewLabel.querySelector('div');
-        if (controls) controls.style.display = 'none';
+        // Reescreve todo o conteúdo da barra no celular para remover o texto extra e os botões
+        previewLabel.innerHTML = 'Prévia da Página (Ao Vivo)';
         
         // Esconde apenas a setinha de aumentar no mobile
         resizeHandle.style.display = 'none';
