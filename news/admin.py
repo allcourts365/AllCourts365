@@ -21,7 +21,7 @@ class NewsAdmin(admin.ModelAdmin):
         }
         
     form = NewsAdminForm
-    list_display = ("title", "club_display", "author", "is_published", "published_at")
+    list_display = ("title", "club_display", "author", "is_published", "published_at", "duplicate_button")
     list_filter = ("is_published", "club")
     search_fields = ("title", "author", "content")
     prepopulated_fields = {"slug": ("title",)}
@@ -33,6 +33,43 @@ class NewsAdmin(admin.ModelAdmin):
             return "Home do AllCourts365"
         return obj.club if obj.club else "-"
     club_display.short_description = "Clube / Liga"
+
+    def duplicate_button(self, obj):
+        from django.utils.html import format_html
+        from django.urls import reverse
+        url = reverse('admin:news_news_duplicate', args=[obj.pk])
+        return format_html('<a class="button" style="background-color: #417690; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none;" href="{}">Duplicar</a>', url)
+    duplicate_button.short_description = "Ações"
+    duplicate_button.allow_tags = True
+
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        custom_urls = [
+            path('<path:object_id>/duplicate/', self.admin_site.admin_view(self.duplicate_view), name='news_news_duplicate'),
+        ]
+        return custom_urls + urls
+
+    def duplicate_view(self, request, object_id):
+        from django.shortcuts import get_object_or_404, redirect
+        from django.contrib import messages
+        import uuid
+        
+        obj = get_object_or_404(News, pk=object_id)
+        
+        # Faz uma cópia da notícia
+        obj.pk = None
+        obj.title = f"{obj.title} (Cópia)"
+        # Limpa o slug para o model gerar um novo automaticamente
+        obj.slug = ""
+        obj.is_published = False
+        obj.published_at = None
+        obj.save()
+        
+        messages.success(request, "Notícia duplicada com sucesso! Você está editando a cópia.")
+        
+        from django.urls import reverse
+        return redirect(reverse('admin:news_news_change', args=[obj.pk]))
 
     fieldsets = (
         ("Identificacao", {
