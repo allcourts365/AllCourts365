@@ -1209,19 +1209,21 @@ def athlete_stats(request):
 
     profile_id = request.GET.get('profile_id')
     if profile_id:
-        active_profile = get_object_or_404(Player, id=profile_id, user=request.user)
+        active_profiles = [get_object_or_404(Player, id=profile_id, user=request.user)]
+        active_profile = active_profiles[0] # keep for compatibility with template if needed
     else:
-        active_profile = my_profiles.all().first()
+        active_profiles = list(my_profiles.all())
+        active_profile = active_profiles[0] if active_profiles else None
 
     from django.db.models import Q
     from clubs.models import Match, CategoryPlayer, Tournament
     import json
     import re
     
-    matches = Match.objects.filter(Q(player_a=active_profile) | Q(player_b=active_profile)).order_by('-id')
+    matches = Match.objects.filter(Q(player_a__in=active_profiles) | Q(player_b__in=active_profiles)).order_by('-id')
     
     total_matches = matches.filter(status='completed').count()
-    wins = matches.filter(status='completed', winner=active_profile).count()
+    wins = matches.filter(status='completed', winner__in=active_profiles).count()
     losses = total_matches - wins
     win_rate = (wins / total_matches * 100) if total_matches > 0 else 0
 
@@ -1270,14 +1272,14 @@ def athlete_stats(request):
             })
             continue
 
-        if m.winner == active_profile:
+        if m.winner in active_profiles:
             chart_data.append(1)
             result_text = "Vitória"
         else:
             chart_data.append(-1)
             result_text = "Derrota"
             
-        opponent = m.player_b if m.player_a == active_profile else m.player_a
+        opponent = m.player_b if m.player_a in active_profiles else m.player_a
         opponent_name = opponent.name if opponent else "Desconhecido"
         tournament_name = m.tournament.name if m.tournament else "Amistoso"
         
@@ -1287,7 +1289,7 @@ def athlete_stats(request):
             'result': result_text
         })
             
-    cat_players = CategoryPlayer.objects.filter(player=active_profile).select_related('category', 'category__tournament')
+    cat_players = CategoryPlayer.objects.filter(player__in=active_profiles).select_related('category', 'category__tournament')
     active_tournaments = list(cat_players.filter(category__tournament__is_finished=False).order_by('-id'))
     
     for cp in active_tournaments:
@@ -1320,13 +1322,13 @@ def athlete_stats(request):
         else:
             last_match = Match.objects.filter(
                 tournament=t, category=cp.category, status='completed'
-            ).filter(Q(player_a=active_profile) | Q(player_b=active_profile)).order_by('round_number').first()
+            ).filter(Q(player_a__in=active_profiles) | Q(player_b__in=active_profiles)).order_by('round_number').first()
             
             if last_match:
                 r = last_match.round_number
                 if r == 1:
-                    phase = "Campeão" if last_match.winner == active_profile else "Vice-Campeão"
-                    if last_match.winner == active_profile:
+                    phase = "Campeão" if last_match.winner in active_profiles else "Vice-Campeão"
+                    if last_match.winner in active_profiles:
                         is_champion = True
                         titles += 1
                 elif r == 2: phase = "Semifinal"
