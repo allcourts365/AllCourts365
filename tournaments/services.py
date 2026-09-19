@@ -108,8 +108,8 @@ def process_excel_tournament(file, tournament):
             user = User.objects.filter(email=pemail).first() or User.objects.filter(username=pemail).first()
             
             if user and club:
-                # User exists. Check if they already have a player globally
-                existing_player = Player.objects.filter(user=user).first()
+                # User exists. Check if they already have a player in this club
+                existing_player = Player.objects.filter(user=user, club=club).first()
                 if existing_player:
                     player = existing_player
                     
