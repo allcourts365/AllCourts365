@@ -52,6 +52,12 @@ def process_excel_tournament(file, tournament):
     xls = pd.ExcelFile(file)
     messages_list = []
     
+    from django.contrib.auth.models import User
+    from django.utils.crypto import get_random_string
+    from allauth.account.models import EmailAddress
+    from django.core.mail import send_mail
+    from django.conf import settings
+    
     # 1. Process Cadastro
     df_cadastro = pd.read_excel(xls, sheet_name=xls.sheet_names[0])
     if len(df_cadastro.columns) < 2:
@@ -60,14 +66,117 @@ def process_excel_tournament(file, tournament):
     names = df_cadastro.iloc[:, 0].astype(str).str.strip()
     categories = df_cadastro.iloc[:, 1].astype(str).str.strip()
     
+    emails = None
+    if len(df_cadastro.columns) > 2:
+        emails = df_cadastro.iloc[:, 2].astype(str).str.strip()
+        
+    verificados = None
+    if len(df_cadastro.columns) > 3:
+        verificados = df_cadastro.iloc[:, 3].astype(str).str.strip()
+    
     category_players_map = {}
     
-    for name, cat_name in zip(names, categories):
+    # Check if tournament has club
+    club = getattr(tournament, 'club', None)
+    
+    for i in range(len(names)):
+        name = names[i]
+        cat_name = categories[i]
+        
         if pd.isna(name) or name == 'nan' or pd.isna(cat_name) or cat_name == 'nan':
             continue
             
         category, _ = Category.objects.get_or_create(tournament=tournament, name=cat_name)
-        player, _ = Player.objects.get_or_create(name=name)
+        
+        pemail = None
+        if emails is not None:
+            val = emails[i]
+            if not pd.isna(val) and val != 'nan' and val:
+                pemail = val
+                
+        pverificado = False
+        if verificados is not None:
+            val = verificados[i].lower()
+            if not pd.isna(val) and val != 'nan' and val in ['sim', 's', 'yes', 'y']:
+                pverificado = True
+                
+        player = None
+        user = None
+        
+        if pemail:
+            # Tentar buscar usuario existente
+            user = User.objects.filter(email=pemail).first() or User.objects.filter(username=pemail).first()
+            
+            if user and club:
+                # User exists. Check if they already have a player in this club
+                existing_player = Player.objects.filter(user=user, club=club).first()
+                if existing_player:
+                    player = existing_player
+                    
+        if not player:
+            # Cria ou pega o player. Adiciona o club se existir (pra RankingTournament deve existir)
+            if club:
+                player, _ = Player.objects.get_or_create(club=club, name=name)
+            else:
+                player, _ = Player.objects.get_or_create(name=name)
+                
+        if pemail and not player.user:
+            if not user:
+                # Criar novo usuário
+                initial_password = get_random_string(8)
+                user = User.objects.create_user(username=pemail, email=pemail, password=initial_password)
+                user.first_name = name.split()[0]
+                user.save()
+                
+                # Definir o e-mail no allauth e verificar
+                email_address = EmailAddress.objects.create(
+                    user=user,
+                    email=pemail,
+                    verified=pverificado,
+                    primary=True
+                )
+                
+                # Enviar email com senha
+                club_name = club.name if club else "AllCourts365"
+                subject = f"Bem-vindo(a) ao {club_name}"
+                message = f"Olá {name},\n\nSeu cadastro no torneio '{tournament.name}' foi criado.\n\nSua senha inicial de acesso é: {initial_password}\n"
+                if pverificado:
+                    message += "Sua conta já está ativada e pronta para uso."
+                else:
+                    message += "Você receberá em instantes um e-mail com um link para confirmar e ativar sua conta."
+                    
+                try:
+                    send_mail(
+                        subject,
+                        message,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [pemail],
+                        fail_silently=True,
+                    )
+                except Exception:
+                    pass
+                    
+                # Se nao verificado, enviar email confirmacao do Allauth
+                if not pverificado:
+                    try:
+                        # Para enviar sem request explícito, passamos None
+                        email_address.send_confirmation(None)
+                    except Exception:
+                        pass
+                        
+            # Vincula o usuario
+            player.user = user
+            player.save()
+            
+            if club:
+                from core.models import PlayerLinkRequest
+                PlayerLinkRequest.objects.get_or_create(
+                    user=user,
+                    club=club,
+                    player=player,
+                    defaults={'status': 'approved'}
+                )
+            
         CategoryPlayer.objects.get_or_create(category=category, player=player)
         
         if category not in category_players_map:

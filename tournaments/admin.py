@@ -115,7 +115,7 @@ class RankingTournamentAdmin(admin.ModelAdmin):
     def download_template_view(self, request):
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df_cadastro = pd.DataFrame(columns=['Nome do Atleta', 'Categoria'])
+            df_cadastro = pd.DataFrame(columns=['Nome do Atleta', 'Categoria', 'E-mail', 'Verificado (Sim/Não)', 'Cabeça de Chave'])
             df_cadastro.to_excel(writer, sheet_name='Cadastro', index=False)
             
             df_confrontos = pd.DataFrame(columns=['Categoria', 'Rodada', 'Atleta A', 'Atleta B', 'Resultado'])
@@ -127,6 +127,7 @@ class RankingTournamentAdmin(admin.ModelAdmin):
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
         response['Content-Disposition'] = 'attachment; filename="template_ranking.xlsx"'
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         return response
 
 class KnockoutTournamentAdminForm(forms.ModelForm):
@@ -173,7 +174,7 @@ class KnockoutTournamentAdmin(admin.ModelAdmin):
     def download_template_view(self, request):
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df_cadastro = pd.DataFrame(columns=['Nome', 'Cabeça de Chave', 'Categoria'])
+            df_cadastro = pd.DataFrame(columns=['Nome do Atleta', 'Categoria', 'E-mail', 'Verificado (Sim/Não)', 'Cabeça de Chave'])
             df_cadastro.to_excel(writer, sheet_name='Atletas', index=False)
         output.seek(0)
         response = HttpResponse(

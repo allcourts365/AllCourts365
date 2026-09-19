@@ -148,7 +148,7 @@ class CourtAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
 
 @admin.register(Player)
 class PlayerAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
-    list_display = ('name', 'club', 'competitions')
+    list_display = ('name', 'club', 'user', 'competitions')
     search_fields = ('name',)
     list_filter = (('club', admin.RelatedOnlyFieldListFilter), ('categoryplayer__category__tournament', admin.RelatedOnlyFieldListFilter))
     
@@ -239,7 +239,6 @@ class TournamentFeeInline(admin.TabularInline):
     model = TournamentFee
     extra = 1
 
-@admin.register(Tournament)
 class TournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     class Media:
         js = ('admin/js/tournament_admin.js',)
@@ -262,7 +261,7 @@ class RankingTournamentForm(forms.ModelForm):
     excel_file = forms.FileField(
         required=False, 
         label="Upload Planilha de Sorteio Automático", 
-        help_text=mark_safe('Formato xlsx. Coluna A: Nome do Atleta, Coluna B: Categoria. <br><a href="/static/planilha_exemplo.xlsx" download>📥 Baixar planilha de sorteio</a>')
+        help_text=mark_safe('Formato xlsx. Col A: Nome do Atleta, Col B: Categoria, Col C: E-mail, Col D: Verificado (Sim/Não), Col E: Cabeça de Chave. <br><a href="/static/planilha_torneio.xlsx" download>📥 Baixar planilha de sorteio</a>')
     )
     
     history_file = forms.FileField(
@@ -337,24 +336,155 @@ class RankingTournamentAdmin(TournamentAdmin):
             sheet = wb.active
             
             categories_affected = set()
+            headers = {}
+            entries = []
             
             for i, row in enumerate(sheet.iter_rows(values_only=True)):
-                if not row or len(row) < 2:
+                if not row:
                     continue
                     
-                player_name = str(row[0]).strip() if row[0] else ""
-                category_name = str(row[1]).strip() if row[1] else ""
+                # Header processing
+                if not headers:
+                    temp_headers = {}
+                    for col_idx, val in enumerate(row):
+                        if val is not None:
+                            val = str(val).strip().lower()
+                            if val in ['nome', 'atleta', 'nome do atleta', 'jogador']:
+                                temp_headers['nome'] = col_idx
+                            elif val in ['categoria', 'cat']:
+                                temp_headers['categoria'] = col_idx
+                            elif val in ['e mail', 'email', 'e-mail']:
+                                temp_headers['email'] = col_idx
+                            elif val in ['verificado', 'verificado (sim/não)']:
+                                temp_headers['verificado'] = col_idx
+                    
+                    if 'nome' in temp_headers:
+                        headers = temp_headers
+                    continue
+
+                # Data processing
+                name_idx = headers.get('nome')
+                cat_idx = headers.get('categoria')
+                email_idx = headers.get('email')
+                verificado_idx = headers.get('verificado')
                 
-                if not player_name or not category_name:
+                player_name = str(row[name_idx]).strip() if name_idx is not None and len(row) > name_idx and row[name_idx] is not None else ''
+                
+                if not player_name or player_name.lower() == 'nan':
                     continue
                     
-                if i == 0 and player_name.lower() in ['nome', 'atleta', 'jogador', 'nome do atleta']:
-                    continue
-                    
-                category, _ = Category.objects.get_or_create(tournament=obj, name=category_name)
+                category_name = None
+                if cat_idx is not None and len(row) > cat_idx and row[cat_idx] is not None:
+                    category_name = str(row[cat_idx]).strip()
+                    if category_name.lower() == 'nan' or not category_name:
+                        category_name = None
+
+                pemail = None
+                if email_idx is not None and len(row) > email_idx and row[email_idx] is not None:
+                    val = str(row[email_idx]).strip()
+                    if val and val.lower() != 'nan':
+                        pemail = val
+
+                pverificado = False
+                if verificado_idx is not None and len(row) > verificado_idx and row[verificado_idx] is not None:
+                    val = str(row[verificado_idx]).strip().lower()
+                    if val in ['sim', 's', 'yes', 'y']:
+                        pverificado = True
+
+                if not category_name:
+                    category_name = "Sem Categoria"
+
+                entries.append((player_name, category_name, pemail, pverificado))
+
+            if not headers:
+                messages.error(request, "A coluna 'Nome' ou 'Atleta' não foi encontrada em nenhuma linha da planilha.")
+                return
+
+            if not entries:
+                messages.warning(request, 'Nenhum atleta encontrado na planilha.')
+                return
+                
+            for pname, cname, pemail, pverificado in entries:
+                category, _ = Category.objects.get_or_create(tournament=obj, name=cname)
                 categories_affected.add(category)
                 
-                player, _ = Player.objects.get_or_create(club=obj.club, name=player_name)
+                player = None
+                user = None
+                
+                if pemail:
+                    # Search for user by email
+                    from django.contrib.auth.models import User
+                    user = User.objects.filter(email=pemail).first() or User.objects.filter(username=pemail).first()
+                    
+                    if user:
+                        # User exists. Check if they already have a player in this club
+                        existing_player = Player.objects.filter(user=user, club=obj.club).first()
+                        if existing_player:
+                            player = existing_player
+                            
+                if not player:
+                    # If we didn't find an existing player by email/user, create/get by name
+                    player, _ = Player.objects.get_or_create(club=obj.club, name=pname)
+                
+                if pemail and not player.user:
+                    if not user:
+                        # Criar novo usuário
+                        from django.utils.crypto import get_random_string
+                        from allauth.account.models import EmailAddress
+                        from django.core.mail import send_mail
+                        from django.conf import settings
+                        
+                        initial_password = get_random_string(8)
+                        user = User.objects.create_user(username=pemail, email=pemail, password=initial_password)
+                        user.first_name = pname.split()[0]
+                        user.save()
+                        
+                        # Definir o e-mail no allauth e verificar
+                        email_address = EmailAddress.objects.create(
+                            user=user,
+                            email=pemail,
+                            verified=pverificado,
+                            primary=True
+                        )
+                        
+                        # Enviar email
+                        subject = f"Bem-vindo(a) ao {obj.club.name}"
+                        message = f"Olá {pname},\n\nSeu cadastro no ranking '{obj.name}' foi criado.\n\nSua senha inicial de acesso é: {initial_password}\n"
+                        if pverificado:
+                            message += "Sua conta já está ativada e pronta para uso."
+                        else:
+                            message += "Você receberá em instantes um e-mail com um link para confirmar e ativar sua conta."
+                            
+                        try:
+                            send_mail(
+                                subject,
+                                message,
+                                settings.DEFAULT_FROM_EMAIL,
+                                [pemail],
+                                fail_silently=True,
+                            )
+                        except Exception:
+                            pass
+                            
+                        # Se nao verificado, enviar email confirmacao do Allauth
+                        if not pverificado:
+                            try:
+                                email_address.send_confirmation(request)
+                            except Exception:
+                                pass
+                                
+                    # Vincula o usuario existente ou o recem criado
+                    player.user = user
+                    player.save()
+                    
+                    from core.models import PlayerLinkRequest
+                    PlayerLinkRequest.objects.get_or_create(
+                        user=user,
+                        club=obj.club,
+                        player=player,
+                        defaults={'status': 'approved'}
+                    )
+                    
                 CategoryPlayer.objects.get_or_create(category=category, player=player)
                 
             matches_created = 0
@@ -684,14 +814,24 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
 
             categories_data = defaultdict(lambda: {'players': [], 'seeds': []})
             for pname, cname, is_seed, pemail, pverificado in entries:
-                player, _ = Player.objects.get_or_create(club=obj.club, name=pname)
+                player = None
+                user = None
+                
+                if pemail:
+                    # Search for user by email
+                    user = User.objects.filter(email=pemail).first() or User.objects.filter(username=pemail).first()
+                    
+                    if user:
+                        # User exists. Check if they already have a player in this club
+                        existing_player = Player.objects.filter(user=user, club=obj.club).first()
+                        if existing_player:
+                            player = existing_player
+                            
+                if not player:
+                    # If we didn't find an existing player by email/user, create/get by name
+                    player, _ = Player.objects.get_or_create(club=obj.club, name=pname)
                 
                 if pemail and not player.user:
-                    # Tentar buscar usuario existente por email
-                    user = User.objects.filter(email=pemail).first()
-                    if not user:
-                        user = User.objects.filter(username=pemail).first()
-                    
                     if not user:
                         # Criar novo usuário
                         initial_password = get_random_string(8)
@@ -733,8 +873,17 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
                             except Exception:
                                 pass
                                 
+                    # Vincula o usuario existente ou o recem criado
                     player.user = user
                     player.save()
+                    
+                    from core.models import PlayerLinkRequest
+                    PlayerLinkRequest.objects.get_or_create(
+                        user=user,
+                        club=obj.club,
+                        player=player,
+                        defaults={'status': 'approved'}
+                    )
                     
                 categories_data[cname]['players'].append(player)
                 if is_seed:
