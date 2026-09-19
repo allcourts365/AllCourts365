@@ -148,43 +148,36 @@ class CourtAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
 
 @admin.register(Player)
 class PlayerAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
-    list_display = ('name', 'get_clubs', 'user', 'competitions')
     search_fields = ('name',)
     list_filter = (('club', admin.RelatedOnlyFieldListFilter), ('categoryplayer__category__tournament', admin.RelatedOnlyFieldListFilter))
-    
-    def get_clubs(self, obj):
-        clubs = set()
-        if obj.club:
-            clubs.add(obj.club.name)
-            
-        t_clubs = obj.categoryplayer_set.values_list('category__tournament__club__name', flat=True)
-        clubs.update(t_clubs)
-        
-        l_clubs = obj.playerlinkrequest_set.filter(status='approved').values_list('club__name', flat=True)
-        clubs.update(l_clubs)
-        
-        return " / ".join(sorted(filter(None, clubs)))
-    get_clubs.short_description = 'Clubes'
+
+    def get_list_display(self, request):
+        def dynamic_get_clubs(obj):
+            clubs = set()
+            if request.user.is_superuser:
+                if obj.club: clubs.add(obj.club.name)
+                clubs.update(obj.categoryplayer_set.values_list('category__tournament__club__name', flat=True))
+                clubs.update(obj.playerlinkrequest_set.filter(status='approved').values_list('club__name', flat=True))
+            else:
+                user_clubs = request.user.managed_clubs.values_list('name', flat=True)
+                if obj.club and obj.club.name in user_clubs: clubs.add(obj.club.name)
+                clubs.update(obj.categoryplayer_set.filter(category__tournament__club__name__in=user_clubs).values_list('category__tournament__club__name', flat=True))
+                clubs.update(obj.playerlinkrequest_set.filter(status='approved', club__name__in=user_clubs).values_list('club__name', flat=True))
+            return " / ".join(sorted(filter(None, clubs)))
+        dynamic_get_clubs.short_description = 'Clubes'
+
+        def dynamic_competitions(obj):
+            if request.user.is_superuser:
+                tournaments = obj.categoryplayer_set.values_list('category__tournament__name', flat=True).distinct()
+            else:
+                user_clubs = request.user.managed_clubs.all()
+                tournaments = obj.categoryplayer_set.filter(category__tournament__club__in=user_clubs).values_list('category__tournament__name', flat=True).distinct()
+            return ", ".join(tournaments) if tournaments else "-"
+        dynamic_competitions.short_description = 'Competições'
+
+        return ('name', dynamic_get_clubs, 'user', dynamic_competitions)
     
     def get_queryset(self, request):
-        qs = super(admin.ModelAdmin, self).get_queryset(request)
-        if request.user.is_superuser:
-            return qs.prefetch_related('categoryplayer_set__category__tournament')
-            
-        from django.db.models import Q
-        user_clubs = request.user.managed_clubs.all()
-        return qs.filter(
-            Q(club__in=user_clubs) |
-            Q(categoryplayer__category__tournament__club__in=user_clubs) |
-            Q(playerlinkrequest__club__in=user_clubs, playerlinkrequest__status='approved')
-        ).distinct().prefetch_related('categoryplayer_set__category__tournament')
-
-    def competitions(self, obj):
-        tournaments = obj.categoryplayer_set.values_list('category__tournament__name', flat=True).distinct()
-        if tournaments:
-            return ", ".join(tournaments)
-        return "-"
-    competitions.short_description = 'Competições'
 
     @admin.action(description="Mesclar atletas selecionados")
     def merge_players(self, request, queryset):
