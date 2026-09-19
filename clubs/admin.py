@@ -172,7 +172,7 @@ class PlayerAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
             return qs.prefetch_related('categoryplayer_set__category__tournament')
             
         from django.db.models import Q
-        user_clubs = request.user.clubs.all()
+        user_clubs = request.user.managed_clubs.all()
         return qs.filter(
             Q(club__in=user_clubs) |
             Q(categoryplayer__category__tournament__club__in=user_clubs) |
