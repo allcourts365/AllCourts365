@@ -70,12 +70,9 @@ class CustomUserAdmin(UserAdmin):
         qs = super().get_queryset(request)
         if not request.user.is_superuser:
             from django.db.models import Q
-            user_clubs = request.user.managed_clubs.all()
             return qs.filter(
-                Q(player_profiles__club__in=user_clubs) | 
-                Q(player_profiles__categoryplayer__category__tournament__club__in=user_clubs) |
-                Q(player_profiles__playerlinkrequest__club__in=user_clubs, player_profiles__playerlinkrequest__status='approved') |
-                Q(managed_clubs__in=user_clubs) |
+                Q(player_profiles__club__administrators=request.user) | 
+                Q(managed_clubs__administrators=request.user) |
                 Q(id=request.user.id)
             ).distinct()
         return qs
