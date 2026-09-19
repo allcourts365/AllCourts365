@@ -500,7 +500,7 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
             required=False,
             label="Upload Planilha de Atletas",
             help_text=mark_safe(
-                'Formato .xlsx — Col A: Nome do Atleta, Col B: Categoria, Col C: Cabeça de Chave (marque com "x").'
+                'Formato .xlsx — Col A: Nome do Atleta, Col B: Categoria, Col C: E-mail, Col D: Verificado (Sim/Não), Col E: Cabeça de Chave ("x").'
                 '<br><a href="/clubes/download/modelo-torneio/" download>📥 Baixar planilha modelo</a>'
             )
         )
@@ -594,6 +594,11 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     def _generate_knockout_bracket(self, request, obj, excel_file):
         import math, random
         from collections import defaultdict
+        from django.contrib.auth.models import User
+        from django.utils.crypto import get_random_string
+        from allauth.account.models import EmailAddress
+        from django.core.mail import send_mail
+        from django.conf import settings
 
         try:
             wb = openpyxl.load_workbook(excel_file)
@@ -619,6 +624,10 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
                                 temp_headers['categoria'] = col_idx
                             elif val in ['cabeça de chave', 'cabeca de chave', 'seed']:
                                 temp_headers['cabeça de chave'] = col_idx
+                            elif val in ['e mail', 'email', 'e-mail']:
+                                temp_headers['email'] = col_idx
+                            elif val in ['verificado']:
+                                temp_headers['verificado'] = col_idx
                     
                     if 'nome' in temp_headers:
                         headers = temp_headers
@@ -628,6 +637,8 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
                 name_idx = headers.get('nome')
                 cat_idx = headers.get('categoria')
                 seed_idx = headers.get('cabeça de chave')
+                email_idx = headers.get('email')
+                verificado_idx = headers.get('verificado')
                 
                 pname = str(row[name_idx]).strip() if name_idx is not None and len(row) > name_idx and row[name_idx] is not None else ''
                 
@@ -646,10 +657,22 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
                     if s_val == 'x':
                         is_seed = True
 
+                pemail = None
+                if email_idx is not None and len(row) > email_idx and row[email_idx] is not None:
+                    val = str(row[email_idx]).strip()
+                    if val and val.lower() != 'nan':
+                        pemail = val
+
+                pverificado = False
+                if verificado_idx is not None and len(row) > verificado_idx and row[verificado_idx] is not None:
+                    val = str(row[verificado_idx]).strip().lower()
+                    if val in ['sim', 's', 'yes', 'y']:
+                        pverificado = True
+
                 if not cname:
                     cname = "Sem Categoria"
 
-                entries.append((pname, cname, is_seed))
+                entries.append((pname, cname, is_seed, pemail, pverificado))
 
             if not headers:
                 messages.error(request, "A coluna 'Nome' ou 'Atleta' não foi encontrada em nenhuma linha da planilha.")
@@ -660,8 +683,59 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
                 return
 
             categories_data = defaultdict(lambda: {'players': [], 'seeds': []})
-            for pname, cname, is_seed in entries:
+            for pname, cname, is_seed, pemail, pverificado in entries:
                 player, _ = Player.objects.get_or_create(club=obj.club, name=pname)
+                
+                if pemail and not player.user:
+                    # Tentar buscar usuario existente por email
+                    user = User.objects.filter(email=pemail).first()
+                    if not user:
+                        user = User.objects.filter(username=pemail).first()
+                    
+                    if not user:
+                        # Criar novo usuário
+                        initial_password = get_random_string(8)
+                        user = User.objects.create_user(username=pemail, email=pemail, password=initial_password)
+                        user.first_name = pname.split()[0]
+                        user.save()
+                        
+                        # Definir o e-mail no allauth e verificar
+                        email_address = EmailAddress.objects.create(
+                            user=user,
+                            email=pemail,
+                            verified=pverificado,
+                            primary=True
+                        )
+                        
+                        # Enviar email
+                        subject = f"Bem-vindo(a) ao {obj.club.name}"
+                        message = f"Olá {pname},\n\nSeu cadastro no torneio '{obj.name}' foi criado.\n\nSua senha inicial de acesso é: {initial_password}\n"
+                        if pverificado:
+                            message += "Sua conta já está ativada e pronta para uso."
+                        else:
+                            message += "Você receberá em instantes um e-mail com um link para confirmar e ativar sua conta."
+                            
+                        try:
+                            send_mail(
+                                subject,
+                                message,
+                                settings.DEFAULT_FROM_EMAIL,
+                                [pemail],
+                                fail_silently=True,
+                            )
+                        except Exception:
+                            pass
+                            
+                        # Se nao verificado, enviar email confirmacao do Allauth
+                        if not pverificado:
+                            try:
+                                email_address.send_confirmation(request)
+                            except Exception:
+                                pass
+                                
+                    player.user = user
+                    player.save()
+                    
                 categories_data[cname]['players'].append(player)
                 if is_seed:
                     categories_data[cname]['seeds'].append(player)

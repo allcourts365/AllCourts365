@@ -15,9 +15,14 @@
     <p style="color: #94a3b8; font-size: 1.05rem; line-height: 1.6; margin-bottom: 30px;">
         Sua vaga na categoria escolhida foi reservada com sucesso.
         <br><br>
+        {% if latest_cp and latest_cp.payment_status == 'waitlist' %}
+        O seu status no momento é <strong style="color: #eab308;">Fila de Espera</strong>. 
+        Aguarde o contato da organização ou fale diretamente com eles para confirmar se há previsão de liberação de vagas.
+        {% else %}
         O seu status no momento é <strong style="color: #f59e0b;">Pendente de Pagamento</strong>. 
         Por favor, envie o comprovante do PIX para a organização do torneio. 
         <br>Assim que validado, sua inscrição será confirmada de forma definitiva.
+        {% endif %}
     </p>
 
     <div style="display: flex; flex-direction: column; gap: 15px;">

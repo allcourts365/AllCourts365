@@ -516,10 +516,18 @@ def registration_resume(request, club_id, tournament_id, cp_id):
 
 @login_required
 def registration_success(request, club_id, tournament_id):
-    from .models import Club, Tournament
+    from .models import Club, Tournament, CategoryPlayer
     club = get_object_or_404(Club, id=club_id)
     tournament = get_object_or_404(Tournament, id=tournament_id, club=club)
+    
+    # Pegar a última inscrição desse usuário nesse torneio para ver o status
+    latest_cp = CategoryPlayer.objects.filter(
+        player__user=request.user, 
+        category__tournament=tournament
+    ).order_by('-id').first()
+    
     return render(request, 'registration_success.html', {
         'club': club,
         'tournament': tournament,
+        'latest_cp': latest_cp,
     })
