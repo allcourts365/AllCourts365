@@ -330,10 +330,17 @@
         <div style="display: flex; flex-direction: column; gap: 20px;">
             
             {% if not tournament.has_matches and not tournament.is_finished %}
-            <!-- Botão Inscrever-se -->
-            <a href="{% url 'clubs:registration_step1' club.id tournament.id %}" style="display: flex; align-items: center; justify-content: center; width: 100%; background: var(--highlight-color); color: #fff; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: 700; text-transform: uppercase; text-decoration: none; box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                Inscrever-se
-            </a>
+                {% if tournament.use_site_registration %}
+                <!-- Botão Inscrever-se pelo site -->
+                <a href="{% url 'clubs:registration_step1' club.id tournament.id %}" style="display: flex; align-items: center; justify-content: center; width: 100%; background: var(--highlight-color); color: #fff; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: 700; text-transform: uppercase; text-decoration: none; box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                    Inscrever-se
+                </a>
+                {% else %}
+                <!-- Botão Inscrever-se externo (WhatsApp) -->
+                <a href="{{ tournament.whatsapp_group_link|default:'#' }}" style="display: flex; align-items: center; justify-content: center; width: 100%; background: var(--highlight-color); color: #fff; padding: 15px; border-radius: 8px; font-size: 1.1rem; font-weight: 700; text-transform: uppercase; text-decoration: none; box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'" onclick="{% if not tournament.whatsapp_group_link %}alert('Link de inscrição ainda não configurado pelo organizador.'); return false;{% endif %}">
+                    Inscrever-se
+                </a>
+                {% endif %}
             {% endif %}
 
             <!-- Onde Acontece -->

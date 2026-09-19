@@ -111,6 +111,7 @@ class Tournament(models.Model):
     end_date = models.DateField(verbose_name="Data de Fim", null=True, blank=True)
     number_of_brackets = models.IntegerField(default=1, verbose_name="Número de Chaves (Eliminatório)")
     registration_deadline = models.DateField(verbose_name="Data Limite de Inscrição", null=True, blank=True)
+    use_site_registration = models.BooleanField(default=True, verbose_name="Usar inscrição pelo Site", help_text="Se marcado, ativa o fluxo de inscrição em 3 etapas com pagamento no site. Se desmarcado, a inscrição é controlada externamente pelo ADM.")
     is_active = models.BooleanField(default=True, verbose_name="Ativo (Exibir no site)")
     is_finished = models.BooleanField(default=False, verbose_name="Encerrado")
     
@@ -201,7 +202,8 @@ class KnockoutTournament(Tournament):
 class Category(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='categories')
     name = models.CharField(max_length=100, verbose_name="Nome da Categoria")
-    max_players = models.IntegerField(null=True, blank=True, verbose_name="Limite de Inscritos", help_text="Deixe em branco para sem limite")
+    use_limited_registrations = models.BooleanField(default=False, verbose_name="Usar inscrições limitadas?")
+    max_players = models.IntegerField(null=True, blank=True, verbose_name="Limite de Inscritos", help_text="Válido se a opção acima estiver marcada")
     is_finished = models.BooleanField(default=False, verbose_name="Encerrada")
 
     def __str__(self):
@@ -338,6 +340,8 @@ class CategoryPlayer(models.Model):
     PAYMENT_STATUS_CHOICES = [
         ('pending', 'Pendente de Pagamento'),
         ('approved', 'Confirmada'),
+        ('waitlist', 'Fila de Espera'),
+        ('pending_waitlist', 'Pendente Fila de Espera'),
         ('cancelled', 'Cancelada'),
     ]
 

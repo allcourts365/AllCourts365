@@ -44,8 +44,16 @@
         </div>
     </div>
 
-    <!-- Pagamento PIX -->
+    <!-- Pagamento PIX / Fila de Espera -->
     <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 25px; margin-bottom: 30px; text-align: center;">
+        {% if is_waitlist_mode %}
+        <h4 style="color: #eab308; margin-bottom: 15px; font-size: 1.2rem;"><i class="fas fa-clock" style="margin-right: 8px;"></i> Vagas Esgotadas - Fila de Espera</h4>
+        <p style="color: #94a3b8; font-size: 0.95rem; margin-bottom: 20px;">
+            Infelizmente o limite de inscritos para esta categoria já foi atingido.
+            <br><br><strong style="color: #fff;">Deseja entrar na fila de espera?</strong>
+            <br>Se surgir uma vaga, o administrador irá acioná-lo para que você possa efetuar o pagamento e confirmar sua participação.
+        </p>
+        {% else %}
         <h4 style="color: #fff; margin-bottom: 15px; font-size: 1.1rem;"><i class="fas fa-qrcode" style="color: #10b981; margin-right: 8px;"></i> Pagamento via PIX</h4>
         <p style="color: #94a3b8; font-size: 0.95rem; margin-bottom: 20px;">
             Realize o pagamento do valor exato usando a chave ou código abaixo.
@@ -65,17 +73,31 @@
             O organizador ainda não disponibilizou o código PIX. Entre em contato com a organização.
         </div>
         {% endif %}
+        {% endif %}
     </div>
 
     <form method="POST" action="{% url 'clubs:registration_step3' club.id tournament.id %}">
         {% csrf_token %}
+        <input type="hidden" name="is_waitlist_mode" value="{% if is_waitlist_mode %}true{% else %}false{% endif %}">
         <div style="display: flex; justify-content: space-between; gap: 15px;">
+            {% if not is_pending_waitlist %}
             <a href="{% url 'clubs:registration_step2' club.id tournament.id %}" class="btn" style="padding: 12px 24px; border-radius: 8px; background: rgba(255,255,255,0.1); color: #fff; text-decoration: none; text-align: center; font-weight: 600; transition: background 0.2s;">
                 Voltar
             </a>
-            <button type="submit" class="btn-highlight" style="padding: 12px 24px; border-radius: 8px; border: none; background: #10b981; color: #fff; font-weight: 600; font-size: 1rem; cursor: pointer; transition: transform 0.2s, background 0.2s;">
-                <i class="fas fa-check-circle" style="margin-right: 8px;"></i> Reservar Vaga
+            {% else %}
+            <!-- Se for pending_waitlist o cara tá logando, voltar não faz sentido para a sessão -->
+            <div></div>
+            {% endif %}
+            
+            {% if is_waitlist_mode %}
+            <button type="submit" class="btn-highlight" style="padding: 12px 24px; border-radius: 8px; border: none; background: #eab308; color: #1e293b; font-weight: 600; font-size: 1rem; cursor: pointer; transition: transform 0.2s, background 0.2s;">
+                <i class="fas fa-clock" style="margin-right: 8px;"></i> Concordo, Entrar na Fila
             </button>
+            {% else %}
+            <button type="submit" class="btn-highlight" style="padding: 12px 24px; border-radius: 8px; border: none; background: #10b981; color: #fff; font-weight: 600; font-size: 1rem; cursor: pointer; transition: transform 0.2s, background 0.2s;">
+                <i class="fas fa-check-circle" style="margin-right: 8px;"></i> {% if is_pending_waitlist %}Confirmar Pagamento{% else %}Reservar Vaga{% endif %}
+            </button>
+            {% endif %}
         </div>
     </form>
 </div>

@@ -370,13 +370,19 @@ def registration_step1(request, club_id, tournament_id):
     club = get_object_or_404(Club, id=club_id)
     tournament = get_object_or_404(Tournament, id=tournament_id, club=club)
     
+    if not tournament.use_site_registration:
+        if tournament.tournament_type == 'knockout':
+            return redirect('clubs:knockout_detail', club_id=club.id, tournament_id=tournament.id)
+        else:
+            return redirect('clubs:ranking_detail', club_id=club.id, tournament_id=tournament.id)
+    
     categories = tournament.categories.all().order_by('name')
     
     # Prepara as categorias com info de limite de vagas
     for cat in categories:
         cat.current_players_count = cat.players.count()
         cat.is_full = False
-        if cat.max_players and cat.current_players_count >= cat.max_players:
+        if cat.use_limited_registrations and cat.max_players and cat.current_players_count >= cat.max_players:
             cat.is_full = True
 
     if request.method == 'POST':
@@ -447,16 +453,31 @@ def registration_step3(request, club_id, tournament_id):
             club=club, 
             defaults={'name': request.user.get_full_name() or request.user.username}
         )
+        
+    active_players_count = category.players.exclude(payment_status__in=['waitlist', 'cancelled']).count()
+    is_waitlist_mode = False
+    
+    existing_cp = CategoryPlayer.objects.filter(category=category, player=player_profile).first()
+    
+    if category.use_limited_registrations and category.max_players and active_players_count >= category.max_players:
+        if not (existing_cp and existing_cp.payment_status == 'pending_waitlist'):
+            is_waitlist_mode = True
     
     if request.method == 'POST':
+        is_waitlist_mode_post = request.POST.get('is_waitlist_mode') == 'true'
+        
         # Finaliza a inscrição
-        if not CategoryPlayer.objects.filter(category=category, player=player_profile).exists():
+        if not existing_cp:
+            status = 'waitlist' if is_waitlist_mode_post else 'pending'
             CategoryPlayer.objects.create(
                 category=category,
                 player=player_profile,
                 fee=fee,
-                payment_status='pending'
+                payment_status=status
             )
+        elif existing_cp.payment_status == 'pending_waitlist':
+            existing_cp.payment_status = 'pending'
+            existing_cp.save()
         
         # Limpa sessao
         if 'registration_category_id' in request.session: del request.session['registration_category_id']
@@ -471,7 +492,27 @@ def registration_step3(request, club_id, tournament_id):
         'category': category,
         'fee': fee,
         'player_profile': player_profile,
+        'is_waitlist_mode': is_waitlist_mode,
+        'is_pending_waitlist': existing_cp and existing_cp.payment_status == 'pending_waitlist',
     })
+
+@login_required
+def registration_resume(request, club_id, tournament_id, cp_id):
+    from .models import CategoryPlayer, Club, Tournament
+    club = get_object_or_404(Club, id=club_id)
+    tournament = get_object_or_404(Tournament, id=tournament_id, club=club)
+    cp = get_object_or_404(CategoryPlayer, id=cp_id, category__tournament=tournament)
+    
+    # Check if user owns this profile
+    if cp.player.user != request.user:
+        return redirect('athlete_dashboard')
+        
+    request.session['registration_tournament_id'] = tournament.id
+    request.session['registration_category_id'] = cp.category.id
+    if cp.fee:
+        request.session['registration_fee_id'] = cp.fee.id
+        
+    return redirect('clubs:registration_step3', club_id=club.id, tournament_id=tournament.id)
 
 @login_required
 def registration_success(request, club_id, tournament_id):

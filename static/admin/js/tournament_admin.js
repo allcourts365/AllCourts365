@@ -65,4 +65,46 @@ document.addEventListener('DOMContentLoaded', function() {
         feeInline.style.border = 'none';
         feeInline.style.padding = '0';
     }
+
+    // Logic for CategoryInline (use_limited_registrations -> max_players)
+    function toggleMaxPlayers(row) {
+        var checkbox = row.querySelector('input[name$="-use_limited_registrations"]');
+        var maxPlayersInput = row.querySelector('input[name$="-max_players"]');
+        if (checkbox && maxPlayersInput) {
+            maxPlayersInput.disabled = !checkbox.checked;
+            if (!checkbox.checked) {
+                maxPlayersInput.value = '';
+                maxPlayersInput.title = 'Ative a opção ao lado para usar limite de inscritos';
+            } else {
+                maxPlayersInput.title = '';
+            }
+        }
+    }
+
+    function initCategoryRows() {
+        var categoryRows = document.querySelectorAll('.inline-related.tabular table tbody tr.form-row, .inline-group[id="categories-group"] .inline-related');
+        categoryRows.forEach(function(row) {
+            // Only apply if this row belongs to categories
+            var checkbox = row.querySelector('input[name^="categories-"][name$="-use_limited_registrations"]');
+            if (checkbox) {
+                toggleMaxPlayers(row);
+                // Remove existing listener to prevent duplicates if called multiple times
+                var newCheckbox = checkbox.cloneNode(true);
+                checkbox.parentNode.replaceChild(newCheckbox, checkbox);
+                newCheckbox.addEventListener('change', function() {
+                    toggleMaxPlayers(row);
+                });
+            }
+        });
+    }
+
+    initCategoryRows();
+
+    if (typeof django !== 'undefined' && django.jQuery) {
+        django.jQuery(document).on('formset:added', function(event, $row, formsetName) {
+            if (formsetName === 'categories') {
+                initCategoryRows();
+            }
+        });
+    }
 });

@@ -24,4 +24,5 @@ urlpatterns = [
     path('<int:club_id>/torneio/<int:tournament_id>/inscricao/passo-2/', views.registration_step2, name='registration_step2'),
     path('<int:club_id>/torneio/<int:tournament_id>/inscricao/passo-3/', views.registration_step3, name='registration_step3'),
     path('<int:club_id>/torneio/<int:tournament_id>/inscricao/sucesso/', views.registration_success, name='registration_success'),
+    path('<int:club_id>/torneio/<int:tournament_id>/inscricao/resumo/<int:cp_id>/', views.registration_resume, name='registration_resume'),
 ]

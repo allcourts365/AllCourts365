@@ -282,7 +282,7 @@ class RankingTournamentAdmin(TournamentAdmin):
     fieldsets = (
         ('Informações do Ranking', {
             'fields': ('club', 'name', 'competition_type', 'set_format',
-                       'current_round', 'start_date', 'end_date', 'registration_deadline', 'number_of_brackets',
+                       'current_round', 'start_date', 'end_date', 'registration_deadline', 'use_site_registration', 'number_of_brackets',
                        'allow_player_scheduling', 'allow_player_results', 'match_duration',
                        'is_active', 'is_finished')
         }),
@@ -530,7 +530,7 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     fieldsets = (
         ('Informações do Torneio', {
             'fields': ('club', 'name', 'competition_type', 'set_format',
-                       'start_date', 'end_date', 'registration_deadline', 'number_of_brackets',
+                       'start_date', 'end_date', 'registration_deadline', 'use_site_registration', 'number_of_brackets',
                        'allow_player_scheduling', 'allow_player_results', 'match_duration',
                        'is_active', 'is_finished')
         }),

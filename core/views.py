@@ -33,6 +33,12 @@ def login_redirect(request):
     if user.managed_clubs.exists():
         return render(request, 'admin_redirect.html')
         
+    # 2.5 Se o usuário tiver inscrição 'pending_waitlist', forçar ida pro pagamento (Step 3)
+    from clubs.models import CategoryPlayer
+    pending_cp = CategoryPlayer.objects.filter(player__user=user, payment_status='pending_waitlist').first()
+    if pending_cp:
+        return redirect('clubs:registration_resume', club_id=pending_cp.category.tournament.club.id, tournament_id=pending_cp.category.tournament.id, cp_id=pending_cp.id)
+        
     # 3. Atletas, Usuários Novos vão pro Dashboard de Atleta
     club_id = request.GET.get('club')
     url = reverse('athlete_dashboard')

@@ -27,28 +27,27 @@
             <label style="
                 display: block; 
                 padding: 20px; 
-                background: {% if cat.is_full %}rgba(0,0,0,0.2){% else %}rgba(255,255,255,0.05){% endif %}; 
+                background: rgba(255,255,255,0.05); 
                 border: 1px solid rgba(255,255,255,0.1); 
                 border-radius: 8px; 
-                cursor: {% if cat.is_full %}not-allowed{% else %}pointer{% endif %}; 
+                cursor: pointer; 
                 transition: background 0.2s, transform 0.2s;
                 position: relative;
-                opacity: {% if cat.is_full %}0.6{% else %}1{% endif %};
             " class="cat-card">
                 
                 <div style="display: flex; align-items: center; justify-content: space-between;">
                     <div style="display: flex; align-items: center; gap: 15px;">
-                        {% if not cat.is_full %}
                         <input type="radio" name="category_id" value="{{ cat.id }}" required style="transform: scale(1.5); accent-color: var(--highlight-color, #ea580c);">
-                        {% else %}
-                        <i class="fas fa-ban" style="color: #ef4444; font-size: 1.2rem;"></i>
-                        {% endif %}
+                        
                         
                         <div>
                             <div style="font-weight: 600; font-size: 1.1rem; color: #fff;">{{ cat.name }}</div>
-                            {% if cat.max_players %}
+                            {% if cat.use_limited_registrations and cat.max_players %}
                             <div style="font-size: 0.85rem; color: var(--subtitle-color, #94a3b8); margin-top: 4px;">
                                 <i class="fas fa-users"></i> {{ cat.current_players_count }} de {{ cat.max_players }} vagas preenchidas
+                                {% if cat.is_full %}
+                                <span style="background: #eab308; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin-left: 5px;">Fila de Espera</span>
+                                {% endif %}
                             </div>
                             {% else %}
                             <div style="font-size: 0.85rem; color: var(--subtitle-color, #94a3b8); margin-top: 4px;">
