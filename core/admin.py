@@ -63,6 +63,38 @@ class CustomUserAdmin(UserAdmin):
     form = CustomUserForm
     add_form = CustomUserAddForm
     
+    def get_list_display(self, request):
+        def dynamic_get_clubs(obj):
+            clubs = set()
+            if request.user.is_superuser:
+                # Add club from Player if it exists
+                player = obj.player_profiles.first()
+                if player and player.club: clubs.add(player.club.name)
+                # Add clubs from tournaments
+                clubs.update(obj.player_profiles.values_list('categoryplayer__category__tournament__club__name', flat=True))
+                # Add clubs from approved player link requests
+                clubs.update(obj.link_requests.filter(status='approved').values_list('club__name', flat=True))
+                # Add clubs managed
+                clubs.update(obj.managed_clubs.values_list('name', flat=True))
+            else:
+                user_clubs = request.user.managed_clubs.values_list('name', flat=True)
+                player = obj.player_profiles.first()
+                if player and player.club and player.club.name in user_clubs: clubs.add(player.club.name)
+                clubs.update(obj.player_profiles.filter(categoryplayer__category__tournament__club__name__in=user_clubs).values_list('categoryplayer__category__tournament__club__name', flat=True))
+                clubs.update(obj.link_requests.filter(status='approved', club__name__in=user_clubs).values_list('club__name', flat=True))
+                
+            clubs.discard(None) # Remove None if it got in
+            return ", ".join(sorted(list(clubs)))
+            
+        dynamic_get_clubs.short_description = "Clubes"
+        
+        return ('username', 'email', 'first_name', 'last_name', 'is_staff', dynamic_get_clubs)
+
+    def get_readonly_fields(self, request, obj=None):
+        if not request.user.is_superuser and obj:
+            return ('username', 'email', 'first_name', 'last_name', 'is_staff', 'is_active', 'is_superuser', 'last_login', 'date_joined', 'groups', 'user_permissions')
+        return super().get_readonly_fields(request, obj)
+    
     add_fieldsets = UserAdmin.add_fieldsets + (
         ('Gestão de Clube/Liga', {'fields': ('managed_club',)}),
     )
@@ -70,9 +102,12 @@ class CustomUserAdmin(UserAdmin):
         qs = super().get_queryset(request)
         if not request.user.is_superuser:
             from django.db.models import Q
+            user_clubs = request.user.managed_clubs.all()
             return qs.filter(
-                Q(player_profiles__club__administrators=request.user) | 
-                Q(managed_clubs__administrators=request.user) |
+                Q(player_profiles__club__in=user_clubs) | 
+                Q(player_profiles__categoryplayer__category__tournament__club__in=user_clubs) |
+                Q(player_profiles__playerlinkrequest__club__in=user_clubs, player_profiles__playerlinkrequest__status='approved') |
+                Q(managed_clubs__in=user_clubs) |
                 Q(id=request.user.id)
             ).distinct()
         return qs

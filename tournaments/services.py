@@ -123,8 +123,10 @@ def process_excel_tournament(file, tournament):
         if pemail and not player.user:
             if not user:
                 # Criar novo usuário
+                from core.utils import generate_friendly_username
+                friendly_username = generate_friendly_username(name, pemail)
                 initial_password = get_random_string(8)
-                user = User.objects.create_user(username=pemail, email=pemail, password=initial_password)
+                user = User.objects.create_user(username=friendly_username, email=pemail, password=initial_password)
                 user.first_name = name.split()[0]
                 user.save()
                 
@@ -168,14 +170,14 @@ def process_excel_tournament(file, tournament):
             player.user = user
             player.save()
             
-            if club:
-                from core.models import PlayerLinkRequest
-                PlayerLinkRequest.objects.get_or_create(
-                    user=user,
-                    club=club,
-                    player=player,
-                    defaults={'status': 'approved'}
-                )
+        if user and club:
+            from core.models import PlayerLinkRequest
+            PlayerLinkRequest.objects.get_or_create(
+                user=user,
+                club=club,
+                player=player,
+                defaults={'status': 'approved'}
+            )
             
         CategoryPlayer.objects.get_or_create(category=category, player=player)
         

@@ -150,6 +150,18 @@ class CourtAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
 class PlayerAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     search_fields = ('name',)
     list_filter = (('club', admin.RelatedOnlyFieldListFilter), ('categoryplayer__category__tournament', admin.RelatedOnlyFieldListFilter))
+    
+    def get_queryset(self, request):
+        qs = super(admin.ModelAdmin, self).get_queryset(request)
+        if not request.user.is_superuser:
+            from django.db.models import Q
+            user_clubs = request.user.managed_clubs.all()
+            return qs.filter(
+                Q(club__in=user_clubs) |
+                Q(categoryplayer__category__tournament__club__in=user_clubs) |
+                Q(playerlinkrequest__club__in=user_clubs, playerlinkrequest__status='approved')
+            ).distinct()
+        return qs
 
     def get_list_display(self, request):
         def dynamic_get_clubs(obj):
@@ -443,7 +455,7 @@ class RankingTournamentAdmin(TournamentAdmin):
                     user = User.objects.filter(email=pemail).first() or User.objects.filter(username=pemail).first()
                     
                     if user:
-                        # User exists. Check if they already have a player in this club
+                        # User exists. Check if they already have a player
                         existing_player = Player.objects.filter(user=user).first()
                         if existing_player:
                             player = existing_player
@@ -460,8 +472,10 @@ class RankingTournamentAdmin(TournamentAdmin):
                         from django.core.mail import send_mail
                         from django.conf import settings
                         
+                        from core.utils import generate_friendly_username
+                        friendly_username = generate_friendly_username(pname, pemail)
                         initial_password = get_random_string(8)
-                        user = User.objects.create_user(username=pemail, email=pemail, password=initial_password)
+                        user = User.objects.create_user(username=friendly_username, email=pemail, password=initial_password)
                         user.first_name = pname.split()[0]
                         user.save()
                         
@@ -503,6 +517,7 @@ class RankingTournamentAdmin(TournamentAdmin):
                     player.user = user
                     player.save()
                     
+                if user:
                     from core.models import PlayerLinkRequest
                     PlayerLinkRequest.objects.get_or_create(
                         user=user,
@@ -848,7 +863,7 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
                     user = User.objects.filter(email=pemail).first() or User.objects.filter(username=pemail).first()
                     
                     if user:
-                        # User exists. Check if they already have a player in this club
+                        # User exists. Check if they already have a player
                         existing_player = Player.objects.filter(user=user).first()
                         if existing_player:
                             player = existing_player
@@ -860,8 +875,10 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
                 if pemail and not player.user:
                     if not user:
                         # Criar novo usuário
+                        from core.utils import generate_friendly_username
+                        friendly_username = generate_friendly_username(pname, pemail)
                         initial_password = get_random_string(8)
-                        user = User.objects.create_user(username=pemail, email=pemail, password=initial_password)
+                        user = User.objects.create_user(username=friendly_username, email=pemail, password=initial_password)
                         user.first_name = pname.split()[0]
                         user.save()
                         
@@ -903,6 +920,7 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
                     player.user = user
                     player.save()
                     
+                if user:
                     from core.models import PlayerLinkRequest
                     PlayerLinkRequest.objects.get_or_create(
                         user=user,

@@ -191,7 +191,7 @@ class RankingTournament(Tournament):
     class Meta:
         proxy = True
         verbose_name = "Torneio Sazonal"
-        verbose_name_plural = "Torneios Seasonais"
+        verbose_name_plural = "Torneios Sazonais"
 
 class KnockoutTournament(Tournament):
     class Meta:
