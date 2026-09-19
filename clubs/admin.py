@@ -178,7 +178,17 @@ class PlayerAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
         return ('name', dynamic_get_clubs, 'user', dynamic_competitions)
     
     def get_queryset(self, request):
-
+        qs = super(admin.ModelAdmin, self).get_queryset(request)
+        if request.user.is_superuser:
+            return qs.prefetch_related('categoryplayer_set__category__tournament')
+            
+        from django.db.models import Q
+        user_clubs = request.user.managed_clubs.all()
+        return qs.filter(
+            Q(club__in=user_clubs) |
+            Q(categoryplayer__category__tournament__club__in=user_clubs) |
+            Q(playerlinkrequest__club__in=user_clubs, playerlinkrequest__status='approved')
+        ).distinct().prefetch_related('categoryplayer_set__category__tournament')
     @admin.action(description="Mesclar atletas selecionados")
     def merge_players(self, request, queryset):
         if 'apply_merge' in request.POST:
