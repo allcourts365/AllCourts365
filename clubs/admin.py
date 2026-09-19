@@ -148,13 +148,36 @@ class CourtAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
 
 @admin.register(Player)
 class PlayerAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
-    list_display = ('name', 'club', 'user', 'competitions')
+    list_display = ('name', 'get_clubs', 'user', 'competitions')
     search_fields = ('name',)
     list_filter = (('club', admin.RelatedOnlyFieldListFilter), ('categoryplayer__category__tournament', admin.RelatedOnlyFieldListFilter))
     
+    def get_clubs(self, obj):
+        clubs = set()
+        if obj.club:
+            clubs.add(obj.club.name)
+            
+        t_clubs = obj.categoryplayer_set.values_list('category__tournament__club__name', flat=True)
+        clubs.update(t_clubs)
+        
+        l_clubs = obj.playerlinkrequest_set.filter(status='approved').values_list('club__name', flat=True)
+        clubs.update(l_clubs)
+        
+        return " / ".join(sorted(filter(None, clubs)))
+    get_clubs.short_description = 'Clubes'
+    
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs.prefetch_related('categoryplayer_set__category__tournament')
+        qs = super(admin.ModelAdmin, self).get_queryset(request)
+        if request.user.is_superuser:
+            return qs.prefetch_related('categoryplayer_set__category__tournament')
+            
+        from django.db.models import Q
+        user_clubs = request.user.clubs.all()
+        return qs.filter(
+            Q(club__in=user_clubs) |
+            Q(categoryplayer__category__tournament__club__in=user_clubs) |
+            Q(playerlinkrequest__club__in=user_clubs, playerlinkrequest__status='approved')
+        ).distinct().prefetch_related('categoryplayer_set__category__tournament')
 
     def competitions(self, obj):
         tournaments = obj.categoryplayer_set.values_list('category__tournament__name', flat=True).distinct()
@@ -418,7 +441,7 @@ class RankingTournamentAdmin(TournamentAdmin):
                     
                     if user:
                         # User exists. Check if they already have a player in this club
-                        existing_player = Player.objects.filter(user=user, club=obj.club).first()
+                        existing_player = Player.objects.filter(user=user).first()
                         if existing_player:
                             player = existing_player
                             
@@ -823,7 +846,7 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
                     
                     if user:
                         # User exists. Check if they already have a player in this club
-                        existing_player = Player.objects.filter(user=user, club=obj.club).first()
+                        existing_player = Player.objects.filter(user=user).first()
                         if existing_player:
                             player = existing_player
                             
