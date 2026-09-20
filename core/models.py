@@ -80,7 +80,13 @@ class UserProfile(models.Model):
     # Dados Pessoais & Contato
     phone = models.CharField(max_length=20, blank=True, verbose_name="WhatsApp / Telefone")
     birth_date = models.DateField(null=True, blank=True, verbose_name="Data de Nascimento")
-    city = models.CharField(max_length=100, blank=True, verbose_name="Cidade / Endereço")
+    city = models.CharField(max_length=100, blank=True, verbose_name="Cidade")
+    state = models.CharField(max_length=2, blank=True, verbose_name="Estado")
+    cep = models.CharField(max_length=20, blank=True, verbose_name="CEP")
+    address = models.CharField(max_length=200, blank=True, verbose_name="Endereço")
+    number = models.CharField(max_length=20, blank=True, verbose_name="Número")
+    complement = models.CharField(max_length=100, blank=True, verbose_name="Complemento")
+    neighborhood = models.CharField(max_length=100, blank=True, verbose_name="Bairro")
     shirt_size = models.CharField(max_length=5, choices=[('P', 'P'), ('M', 'M'), ('G', 'G'), ('GG', 'GG'), ('XG', 'XG')], blank=True, verbose_name="Tamanho da Camiseta")
     
     # Ficha Técnica e Preferências

@@ -25,7 +25,7 @@ class UserProfileForm(forms.ModelForm):
         model = UserProfile
         fields = [
             'full_name', 'racket', 'handedness', 'backhand',
-            'phone', 'birth_date', 'city', 'shirt_size',
+            'phone', 'birth_date', 'cep', 'address', 'number', 'complement', 'neighborhood', 'city', 'state', 'shirt_size',
             'string_tension', 'string_type', 'play_style', 'best_shot',
             'tennis_idol', 'preferred_time', 'avatar'
         ]

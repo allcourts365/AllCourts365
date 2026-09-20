@@ -833,9 +833,35 @@
                             <label for="{{ profile_form.birth_date.id_for_label }}">Data de Nascimento</label>
                             {{ profile_form.birth_date }}
                         </div>
-                        <div class="custom-form-group">
-                            <label for="{{ profile_form.city.id_for_label }}">Cidade / Endereço</label>
-                            {{ profile_form.city }}
+                        <div class="form-grid form-full-width">
+                            <div class="custom-form-group">
+                                <label for="{{ profile_form.cep.id_for_label }}">CEP</label>
+                                {{ profile_form.cep }}
+                            </div>
+                            <div class="custom-form-group">
+                                <label for="{{ profile_form.address.id_for_label }}">Endereço</label>
+                                {{ profile_form.address }}
+                            </div>
+                            <div class="custom-form-group">
+                                <label for="{{ profile_form.number.id_for_label }}">Número</label>
+                                {{ profile_form.number }}
+                            </div>
+                            <div class="custom-form-group">
+                                <label for="{{ profile_form.complement.id_for_label }}">Complemento</label>
+                                {{ profile_form.complement }}
+                            </div>
+                            <div class="custom-form-group">
+                                <label for="{{ profile_form.neighborhood.id_for_label }}">Bairro</label>
+                                {{ profile_form.neighborhood }}
+                            </div>
+                            <div class="custom-form-group">
+                                <label for="{{ profile_form.city.id_for_label }}">Cidade</label>
+                                {{ profile_form.city }}
+                            </div>
+                            <div class="custom-form-group">
+                                <label for="{{ profile_form.state.id_for_label }}">Estado</label>
+                                {{ profile_form.state }}
+                            </div>
                         </div>
                         <div class="custom-form-group">
                             <label for="{{ profile_form.shirt_size.id_for_label }}">Tamanho da Camiseta</label>
@@ -955,8 +981,32 @@
                             {{ profile_form.birth_date }}
                         </div>
                         <div class="custom-form-group">
-                            <label for="{{ profile_form.city.id_for_label }}_mobile">Cidade / Endereço</label>
+                            <label for="{{ profile_form.cep.id_for_label }}_mobile">CEP</label>
+                            {{ profile_form.cep }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.address.id_for_label }}_mobile">Endereço</label>
+                            {{ profile_form.address }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.number.id_for_label }}_mobile">Número</label>
+                            {{ profile_form.number }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.complement.id_for_label }}_mobile">Complemento</label>
+                            {{ profile_form.complement }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.neighborhood.id_for_label }}_mobile">Bairro</label>
+                            {{ profile_form.neighborhood }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.city.id_for_label }}_mobile">Cidade</label>
                             {{ profile_form.city }}
+                        </div>
+                        <div class="custom-form-group">
+                            <label for="{{ profile_form.state.id_for_label }}_mobile">Estado</label>
+                            {{ profile_form.state }}
                         </div>
                         <div class="custom-form-group">
                             <label for="{{ profile_form.shirt_size.id_for_label }}_mobile">Tamanho da Camiseta</label>
@@ -2079,5 +2129,39 @@
             let modalEl = document.getElementById('avatar-modal-' + safeId);
             if(modalEl) modalEl.style.borderColor = 'var(--highlight-color)';
         }
+
+        // ViaCEP integration
+        const cepInputs = document.querySelectorAll('input[name="cep"]');
+        cepInputs.forEach(cepInput => {
+            cepInput.addEventListener('blur', function() {
+                let cep = this.value.replace(/\D/g, '');
+                if (cep.length === 8) {
+                    fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!data.erro) {
+                                // Find the parent form to scope the selectors
+                                const form = this.closest('form');
+                                if (form) {
+                                    const addressInput = form.querySelector('input[name="address"]');
+                                    const neighborhoodInput = form.querySelector('input[name="neighborhood"]');
+                                    const cityInput = form.querySelector('input[name="city"]');
+                                    const stateInput = form.querySelector('input[name="state"]');
+                                    
+                                    if(addressInput) addressInput.value = data.logradouro;
+                                    if(neighborhoodInput) neighborhoodInput.value = data.bairro;
+                                    if(cityInput) cityInput.value = data.localidade;
+                                    if(stateInput) stateInput.value = data.uf;
+                                    
+                                    // Focus on number
+                                    const numberInput = form.querySelector('input[name="number"]');
+                                    if(numberInput) numberInput.focus();
+                                }
+                            }
+                        })
+                        .catch(error => console.error('Error fetching CEP:', error));
+                }
+            });
+        });
     });
 {% endblock %}
