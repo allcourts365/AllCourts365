@@ -26,6 +26,7 @@ def club_detail(request, club_id):
         'departments': departments,
     })
 
+@xframe_options_sameorigin
 def department_detail(request, club_id, department_id):
     club = get_object_or_404(Club, id=club_id)
     department = get_object_or_404(club.departments, id=department_id, is_active=True)
