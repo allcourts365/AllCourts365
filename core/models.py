@@ -199,8 +199,4 @@ class ClubLead(models.Model):
 
     def __str__(self):
         return f"{self.club_name} - {self.name}"
-class ClubUser(Player):
     class Meta:
-        proxy = True
-        verbose_name = "Usuário por Clube"
-        verbose_name_plural = "Usuários por Clube"

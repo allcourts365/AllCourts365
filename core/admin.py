@@ -80,7 +80,7 @@ class CustomUserAdmin(UserAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if not request.user.is_superuser and obj:
-            return ('username', 'email', 'first_name', 'last_name', 'is_staff', 'is_active', 'is_superuser', 'last_login', 'date_joined', 'groups', 'user_permissions')
+            return ('is_superuser', 'groups', 'user_permissions', 'is_staff', 'last_login', 'date_joined')
         return super().get_readonly_fields(request, obj)
     
     add_fieldsets = UserAdmin.add_fieldsets + (
