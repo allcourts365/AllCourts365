@@ -1120,7 +1120,7 @@ class DepartmentForm(forms.ModelForm):
 @admin.register(Department)
 class DepartmentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     class Media:
-        js = ('admin/js/slider_preview.js',)
+        js = ('admin/js/slider_preview.js', 'admin/js/dept_preview.js')
         
     form = DepartmentForm
     list_display = ('name', 'club', 'is_active')
