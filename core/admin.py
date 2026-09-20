@@ -80,6 +80,8 @@ class CustomUserAdmin(UserAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if not request.user.is_superuser and obj:
+            if request.user.managed_clubs.exists():
+                return ('is_superuser', 'user_permissions', 'is_staff', 'last_login', 'date_joined')
             return ('is_superuser', 'groups', 'user_permissions', 'is_staff', 'last_login', 'date_joined')
         return super().get_readonly_fields(request, obj)
     
@@ -149,8 +151,13 @@ class CustomUserAdmin(UserAdmin):
                 
                 # Se for a seção de permissões que contém is_superuser
                 if 'is_superuser' in fields:
-                    # Remove campos sensíveis, mantendo apenas is_active
-                    new_opts['fields'] = tuple(f for f in fields if f in ['is_active'])
+                    # Remove campos sensíveis
+                    if request.user.managed_clubs.exists():
+                        # Admin de clube pode ver grupos
+                        new_opts['fields'] = tuple(f for f in fields if f in ['is_active', 'groups'])
+                    else:
+                        # Outros não superusers veem apenas is_active
+                        new_opts['fields'] = tuple(f for f in fields if f in ['is_active'])
                 
                 new_fieldsets.append((name, new_opts))
             return new_fieldsets

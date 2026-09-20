@@ -14,13 +14,13 @@ class ClubScopedAdminMixin:
         model_name = self.model.__name__
         from django.db.models import Q
         if model_name == 'Club':
-            return qs.filter(Q(administrators=request.user) | Q(departments__administrators=request.user)).distinct()
+            return qs.filter(administrators=request.user).distinct()
         elif model_name == 'Department':
             return qs.filter(Q(administrators=request.user) | Q(club__administrators=request.user)).distinct()
         elif model_name in ['Player', 'Tournament', 'RankingTournament', 'KnockoutTournament', 'PlayerLinkRequest']:
             return qs.filter(Q(club__administrators=request.user) | Q(department__administrators=request.user)).distinct()
         elif model_name == 'Court':
-            return qs.filter(club__administrators=request.user).distinct()
+            return qs.filter(Q(club__administrators=request.user) | Q(club__departments__administrators=request.user)).distinct()
         elif model_name in ['Category', 'Match']:
             return qs.filter(Q(tournament__club__administrators=request.user) | Q(tournament__department__administrators=request.user)).distinct()
         elif model_name == 'CategoryPlayer':
