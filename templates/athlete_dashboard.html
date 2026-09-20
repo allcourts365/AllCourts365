@@ -433,6 +433,9 @@
             <i class="fas fa-exchange-alt" style="color: var(--highlight-color);"></i>
             <label for="club-switcher" style="color: var(--subtitle-color); font-weight: 600; margin: 0;">Alternar Clube:</label>
             <select id="club-switcher" onchange="window.location.href='?club='+this.value" style="background: transparent; color: #fff; border: none; font-size: 1.05rem; font-weight: bold; cursor: pointer; outline: none; appearance: none; padding-right: 15px;">
+                <option value="all" style="background: #1e293b; color: #fff;" {% if not linked_club and not all_pending_requests %}selected{% endif %}>
+                    Visão Global (Todos)
+                </option>
                 {% for req in all_pending_requests %}
                 <option value="{{ req.club.id }}" style="background: #1e293b; color: #fff;" {% if linked_club and req.club.id == linked_club.id %}selected{% endif %}>
                     {{ req.club.name }} (Em Análise...)
@@ -1128,7 +1131,7 @@
                                 </div>
                             {% endif %}
                             <h3 class="tournament-title">
-                                {{ t.name }}
+                                {{ t.name }} <span style="font-size: 0.8rem; color: #aaa;">({{ t.club.name }})</span>
                             </h3>
                             <p style="margin-bottom: 5px; color: #ccc;"><strong>Competição:</strong> Simples</p>
                             <p style="margin-bottom: 20px; color: #ccc;"><strong>Rodada Atual:</strong> {{ t.current_round|default:1 }}</p>
@@ -1161,7 +1164,7 @@
                                 </div>
                             {% endif %}
                             <h3 class="tournament-title">
-                                {{ t.name }}
+                                {{ t.name }} <span style="font-size: 0.8rem; color: #aaa;">({{ t.club.name }})</span>
                             </h3>
                             <p style="margin-bottom: 5px; color: #ccc;"><strong>Competição:</strong> Simples</p>
                             <p style="margin-bottom: 20px; color: #ccc;"><strong>Rodada Atual:</strong> {{ t.current_round|default:1 }}</p>
@@ -1194,7 +1197,7 @@
                     <div class="match-card-item" data-tournament-id="{{ match.tournament.id }}" data-round="{{ match.round_number }}" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; display: none;">
                         <div class="match-card-header">
                             <div>
-                                <span class="tournament-badge" style="background: var(--highlight-color); color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">{{ match.tournament.name }}</span>
+                                <span class="tournament-badge" style="background: var(--highlight-color); color: #fff; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">{{ match.tournament.name }} ({{ match.tournament.club.name }})</span>
                                 <span style="color: var(--subtitle-color); font-size: 0.9rem; margin-left: 10px;">Rodada {{ match.round_number }}</span>
                             </div>
                             <div>

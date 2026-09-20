@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from clubs.models import Player
 
 class SiteConfiguration(models.Model):
     POSITION_CHOICES = [
@@ -198,3 +199,8 @@ class ClubLead(models.Model):
 
     def __str__(self):
         return f"{self.club_name} - {self.name}"
+class ClubUser(Player):
+    class Meta:
+        proxy = True
+        verbose_name = "Usuário por Clube"
+        verbose_name_plural = "Usuários por Clube"

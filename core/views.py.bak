@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -53,12 +53,8 @@ def athlete_dashboard(request):
     
     # 1. Determinar o Clube Ativo e o Perfil de Atleta (Player) correspondente
     club_id_str = request.GET.get('club') or request.POST.get('active_club_id') or request.session.get('active_club_id')
-    
-    if not club_id_str:
-        club_id_str = 'all'
-        
     club_id = None
-    if club_id_str and club_id_str != 'all':
+    if club_id_str:
         try:
             club_id = int(club_id_str)
         except ValueError:
@@ -76,22 +72,17 @@ def athlete_dashboard(request):
             except Club.DoesNotExist:
                 pass
                 
-    # Para a aba Meu Perfil, definimos um default player_profile se houver, 
-    # mesmo que a visão seja global, para poder atualizar dados do usuário.
-    default_profile = my_profiles.first()
-    
-    print(f'DEBUG: club_id_str={club_id_str}, club_id={club_id}, active_profile={active_profile}, linked_club={linked_club}')
-    if club_id_str == 'all':
-        request.session['active_club_id'] = 'all'
-        request.session['current_club_id'] = 'all'
-        # linked_club e active_profile permanecem None na visão global
-    elif active_profile:
+    if not club_id and not active_profile and my_profiles.exists():
+        active_profile = my_profiles.first()
+        
+    print(f'DEBUG: club_id={club_id}, active_profile={active_profile}, linked_club={linked_club}')
+    if active_profile:
         linked_club = active_profile.club
-        request.session['active_club_id'] = str(linked_club.id)
-        request.session['current_club_id'] = str(linked_club.id)
+        request.session['active_club_id'] = linked_club.id
+        request.session['current_club_id'] = linked_club.id
     elif linked_club:
-        request.session['active_club_id'] = str(linked_club.id)
-        request.session['current_club_id'] = str(linked_club.id)
+        request.session['active_club_id'] = linked_club.id
+        request.session['current_club_id'] = linked_club.id
         
     user_form = UserForm(instance=user)
     profile_form = UserProfileForm(instance=profile)
@@ -519,28 +510,8 @@ def athlete_dashboard(request):
     my_knockouts = []
     my_tournaments = []
     courts = []
-    print(f'DEBUG: club_id_str={club_id_str}, club_id={club_id}, active_profile={active_profile}, linked_club={linked_club}')
-    
-    if club_id_str == 'all' and my_profiles.exists():
-        my_matches = Match.objects.filter(Q(player_a__in=my_profiles) | Q(player_b__in=my_profiles)).select_related('tournament', 'player_a', 'player_b', 'court').order_by('-tournament__current_round', 'round_number')
-        
-        seen_t = set()
-        for m in my_matches:
-            if m.tournament and m.tournament.id not in seen_t:
-                seen_t.add(m.tournament.id)
-                my_tournaments.append(m.tournament)
-                if m.tournament.tournament_type == 'ranking':
-                    my_rankings.append(m.tournament)
-                elif m.tournament.tournament_type == 'knockout':
-                    my_knockouts.append(m.tournament)
-        
-        # When in global view, courts can be from all clubs the user is in.
-        # This allows the schedule modal to pick any court.
-        # However, the api_court_agenda relies on court.club
-        clubs_of_user = my_profiles.values_list('club_id', flat=True)
-        courts = Court.objects.filter(club__in=clubs_of_user, is_ranking_court=True)
-        
-    elif active_profile:
+    print(f'DEBUG: club_id={club_id}, active_profile={active_profile}, linked_club={linked_club}')
+    if active_profile:
         p = active_profile
         my_matches = Match.objects.filter(Q(player_a=p) | Q(player_b=p)).select_related('tournament', 'player_a', 'player_b', 'court').order_by('-tournament__current_round', 'round_number')
         
@@ -616,7 +587,7 @@ def athlete_dashboard(request):
         'user_messages': page_obj,
         'athlete_messages': page_obj,
         'unread_messages_count': unread_messages_count,
-        'my_player_profile': active_profile or default_profile,
+        'my_player_profile': active_profile,
         'my_profiles': my_profiles,
         'available_avatars': available_avatars,
     }
@@ -1311,13 +1282,11 @@ def athlete_stats(request):
         opponent = m.player_b if m.player_a in active_profiles else m.player_a
         opponent_name = opponent.name if opponent else "Desconhecido"
         tournament_name = m.tournament.name if m.tournament else "Amistoso"
-        club_name = m.tournament.club.name if m.tournament and m.tournament.club else "-"
         
         chart_details.append({
             'opponent': opponent_name,
             'tournament': tournament_name,
-            'result': result_text,
-            'club': club_name
+            'result': result_text
         })
             
     cat_players = CategoryPlayer.objects.filter(player__in=active_profiles).select_related('category', 'category__tournament')
