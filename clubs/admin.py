@@ -1109,8 +1109,17 @@ class MatchAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
         })
     )
 
+class DepartmentForm(forms.ModelForm):
+    class Meta:
+        model = Department
+        exclude = ('administrators',)
+        widgets = {
+            'image_size': forms.NumberInput(attrs={'type': 'range', 'min': '10', 'max': '300', 'step': '1'}),
+        }
+
 @admin.register(Department)
 class DepartmentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
+    form = DepartmentForm
     list_display = ('name', 'club', 'is_active')
     list_filter = ('club', 'is_active')
     search_fields = ('name',)

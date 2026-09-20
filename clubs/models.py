@@ -64,6 +64,7 @@ class Department(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='departments', verbose_name="Clube")
     name = models.CharField(max_length=200, verbose_name="Nome do Departamento")
     image = models.ImageField(upload_to='departments/cards/', null=True, blank=True, verbose_name="Imagem/Card do Departamento")
+    image_size = models.IntegerField(default=100, verbose_name="Tamanho da Imagem (%)", help_text="Ajuste o zoom da imagem no card.")
     administrators = models.ManyToManyField(User, related_name='managed_departments', blank=True, verbose_name="Administradores do Departamento")
     is_active = models.BooleanField(default=True, verbose_name="Ativo")
     created_at = models.DateTimeField(auto_now_add=True)
