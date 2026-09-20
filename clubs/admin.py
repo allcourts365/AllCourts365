@@ -17,8 +17,10 @@ class ClubScopedAdminMixin:
             return qs.filter(administrators=request.user).distinct()
         elif model_name == 'Department':
             return qs.filter(Q(administrators=request.user) | Q(club__administrators=request.user)).distinct()
-        elif model_name in ['Player', 'Tournament', 'RankingTournament', 'KnockoutTournament', 'PlayerLinkRequest']:
+        elif model_name in ['Player', 'Tournament', 'RankingTournament', 'KnockoutTournament']:
             return qs.filter(Q(club__administrators=request.user) | Q(department__administrators=request.user)).distinct()
+        elif model_name == 'PlayerLinkRequest':
+            return qs.filter(Q(club__administrators=request.user) | Q(player__department__administrators=request.user)).distinct()
         elif model_name == 'Court':
             return qs.filter(Q(club__administrators=request.user) | Q(club__departments__administrators=request.user)).distinct()
         elif model_name in ['Category', 'Match']:
