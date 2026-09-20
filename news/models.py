@@ -26,6 +26,15 @@ class News(models.Model):
         verbose_name="Clube / Liga",
         help_text="Clube ou liga a qual a noticia pertence."
     )
+    department = models.ForeignKey(
+        'clubs.Department',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='news',
+        verbose_name="Departamento",
+        help_text="Selecione o departamento caso o clube possua departamentos."
+    )
 
     # Conteudo
     author = models.CharField(
@@ -101,6 +110,7 @@ class BroadcastMessage(models.Model):
     body = models.TextField(verbose_name="Mensagem")
     is_global = models.BooleanField(default=False, verbose_name="Mensagem Global (Todos os Usuários)")
     club = models.ForeignKey('clubs.Club', on_delete=models.CASCADE, null=True, blank=True, verbose_name="Clube/Liga")
+    department = models.ForeignKey('clubs.Department', on_delete=models.CASCADE, null=True, blank=True, verbose_name="Departamento", help_text="Selecione o departamento se aplicável.")
     sender = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Remetente")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Enviada em")
 

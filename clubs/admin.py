@@ -12,14 +12,19 @@ class ClubScopedAdminMixin:
             return qs
         
         model_name = self.model.__name__
+        from django.db.models import Q
         if model_name == 'Club':
-            return qs.filter(administrators=request.user).distinct()
-        elif model_name in ['Player', 'Tournament', 'RankingTournament', 'KnockoutTournament', 'PlayerLinkRequest', 'Court']:
+            return qs.filter(Q(administrators=request.user) | Q(departments__administrators=request.user)).distinct()
+        elif model_name == 'Department':
+            return qs.filter(Q(administrators=request.user) | Q(club__administrators=request.user)).distinct()
+        elif model_name in ['Player', 'Tournament', 'RankingTournament', 'KnockoutTournament', 'PlayerLinkRequest']:
+            return qs.filter(Q(club__administrators=request.user) | Q(department__administrators=request.user)).distinct()
+        elif model_name == 'Court':
             return qs.filter(club__administrators=request.user).distinct()
         elif model_name in ['Category', 'Match']:
-            return qs.filter(tournament__club__administrators=request.user).distinct()
+            return qs.filter(Q(tournament__club__administrators=request.user) | Q(tournament__department__administrators=request.user)).distinct()
         elif model_name == 'CategoryPlayer':
-            return qs.filter(category__tournament__club__administrators=request.user).distinct()
+            return qs.filter(Q(category__tournament__club__administrators=request.user) | Q(category__tournament__department__administrators=request.user)).distinct()
         return qs
 
     def has_module_permission(self, request):
@@ -39,19 +44,23 @@ class ClubScopedAdminMixin:
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if not request.user.is_superuser:
+            from django.db.models import Q
+            from .models import Department
             if db_field.name == "club":
-                kwargs["queryset"] = Club.objects.filter(administrators=request.user)
+                kwargs["queryset"] = Club.objects.filter(Q(administrators=request.user) | Q(departments__administrators=request.user)).distinct()
+            elif db_field.name == "department":
+                kwargs["queryset"] = Department.objects.filter(Q(administrators=request.user) | Q(club__administrators=request.user)).distinct()
             elif db_field.name == "tournament":
-                kwargs["queryset"] = Tournament.objects.filter(club__administrators=request.user)
+                kwargs["queryset"] = Tournament.objects.filter(Q(club__administrators=request.user) | Q(department__administrators=request.user)).distinct()
             elif db_field.name == "category":
-                kwargs["queryset"] = Category.objects.filter(tournament__club__administrators=request.user)
+                kwargs["queryset"] = Category.objects.filter(Q(tournament__club__administrators=request.user) | Q(tournament__department__administrators=request.user)).distinct()
             elif db_field.name in ["player", "player_a", "player_b", "winner"]:
-                kwargs["queryset"] = Player.objects.filter(club__administrators=request.user)
+                kwargs["queryset"] = Player.objects.filter(Q(club__administrators=request.user) | Q(department__administrators=request.user)).distinct()
             elif db_field.name == "user":
                 from django.contrib.auth.models import User
-                from django.db.models import Q
                 kwargs["queryset"] = User.objects.filter(
                     Q(player_profiles__club__administrators=request.user) | 
+                    Q(player_profiles__department__administrators=request.user) |
                     Q(id=request.user.id)
                 ).distinct()
                 
@@ -1099,3 +1108,12 @@ class MatchAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
             ),
         })
     )
+
+ @ a d m i n . r e g i s t e r ( D e p a r t m e n t ) 
+ c l a s s   D e p a r t m e n t A d m i n ( C l u b S c o p e d A d m i n M i x i n ,   a d m i n . M o d e l A d m i n ) : 
+         l i s t _ d i s p l a y   =   ( ' n a m e ' ,   ' c l u b ' ,   ' i s _ a c t i v e ' ) 
+         l i s t _ f i l t e r   =   ( ' c l u b ' ,   ' i s _ a c t i v e ' ) 
+         s e a r c h _ f i e l d s   =   ( ' n a m e ' , ) 
+         f i l t e r _ h o r i z o n t a l   =   ( ' a d m i n i s t r a t o r s ' , ) 
+  
+ 

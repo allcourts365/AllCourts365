@@ -57,7 +57,7 @@ class NewsAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ("Identificacao", {
-            "fields": ("title", "subtitle", "slug", "is_global", "club")
+            "fields": ("title", "subtitle", "slug", "is_global", "club", "department")
         }),
         ("Redacao", {
             "fields": ("author", "content")
@@ -93,24 +93,35 @@ class NewsAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             form.base_fields["club"].queryset = Club.objects.all().order_by("name")
             form.base_fields["club"].required = False
+            from clubs.models import Department
+            form.base_fields["department"].queryset = Department.objects.all().order_by("name")
         else:
-            # Admin do clube: so ve o seu clube, campo obrigatorio
+            # Admin do clube: so ve o seu clube
             managed = Club.objects.filter(administrators=request.user)
+            from clubs.models import Department
+            managed_depts = Department.objects.filter(administrators=request.user)
+            
             form.base_fields["club"].queryset = managed
-            form.base_fields["club"].required = True
-            # Pre-preenche o autor com "Redacao <nome do clube>"
-            if not obj and managed.exists():
-                club = managed.first()
-                form.base_fields["author"].initial = f"Redacao {club.name}"
+            form.base_fields["club"].required = False
+            form.base_fields["department"].queryset = managed_depts
+            
+            # Pre-preenche o autor com "Redacao <nome do clube/dept>"
+            if not obj:
+                if managed_depts.exists():
+                    dept = managed_depts.first()
+                    form.base_fields["author"].initial = f"Redação {dept.name} - {dept.club.name}"
+                elif managed.exists():
+                    club = managed.first()
+                    form.base_fields["author"].initial = f"Redacao {club.name}"
         return form
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
             return qs
-        # Admin do clube so ve as noticias do seu clube
-        managed_clubs = Club.objects.filter(administrators=request.user)
-        return qs.filter(club__in=managed_clubs)
+        # Admin do clube ou departamento
+        from django.db.models import Q
+        return qs.filter(Q(club__administrators=request.user) | Q(department__administrators=request.user)).distinct()
 
     def save_model(self, request, obj, form, change):
         if not obj.pk:
@@ -152,6 +163,7 @@ class BroadcastMessageAdmin(admin.ModelAdmin):
                 initial['body'] = original.body
                 initial['is_global'] = original.is_global
                 initial['club'] = original.club_id
+                initial['department'] = original.department_id
             except BroadcastMessage.DoesNotExist:
                 pass
         return initial
@@ -165,11 +177,11 @@ class BroadcastMessageAdmin(admin.ModelAdmin):
     def get_fieldsets(self, request, obj=None):
         if request.user.is_superuser:
             return (
-                ("Destino", {"fields": ("is_global", "club")}),
+                ("Destino", {"fields": ("is_global", "club", "department")}),
                 ("Conteúdo", {"fields": ("subject", "body")}),
             )
         return (
-            ("Destino", {"fields": ("club",)}),
+            ("Destino", {"fields": ("club", "department")}),
             ("Conteúdo", {"fields": ("subject", "body")}),
         )
 
@@ -179,19 +191,28 @@ class BroadcastMessageAdmin(admin.ModelAdmin):
             if "club" in form.base_fields:
                 form.base_fields["club"].queryset = Club.objects.all().order_by("name")
                 form.base_fields["club"].required = False
+            if "department" in form.base_fields:
+                from clubs.models import Department
+                form.base_fields["department"].queryset = Department.objects.all().order_by("name")
+                form.base_fields["department"].required = False
         else:
             managed = Club.objects.filter(administrators=request.user)
+            from clubs.models import Department
+            managed_depts = Department.objects.filter(administrators=request.user)
             if "club" in form.base_fields:
                 form.base_fields["club"].queryset = managed
-                form.base_fields["club"].required = True
+                form.base_fields["club"].required = False
+            if "department" in form.base_fields:
+                form.base_fields["department"].queryset = managed_depts
+                form.base_fields["department"].required = False
         return form
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
             return qs
-        managed_clubs = Club.objects.filter(administrators=request.user)
-        return qs.filter(club__in=managed_clubs)
+        from django.db.models import Q
+        return qs.filter(Q(club__administrators=request.user) | Q(department__administrators=request.user)).distinct()
 
     def save_model(self, request, obj, form, change):
         if not obj.pk:
@@ -202,6 +223,8 @@ class BroadcastMessageAdmin(admin.ModelAdmin):
         if not change:
             if obj.is_global:
                 target_users = User.objects.filter(is_active=True).exclude(id=request.user.id)
+            elif obj.department:
+                target_users = User.objects.filter(is_active=True, player_profiles__department=obj.department).exclude(id=request.user.id).distinct()
             elif obj.club:
                 # Todos os usuários que tem o jogador vinculado ao clube
                 target_users = User.objects.filter(is_active=True, player_profiles__club=obj.club).exclude(id=request.user.id).distinct()
@@ -210,7 +233,9 @@ class BroadcastMessageAdmin(admin.ModelAdmin):
             
             # Create signature
             signature = f"\n\n---\nEnviado por: {request.user.get_full_name() or request.user.username}"
-            if obj.club:
+            if obj.department:
+                signature += f" (Administração - {obj.department.name} - {obj.department.club.name})"
+            elif obj.club:
                 signature += f" (Administração - {obj.club.name})"
             else:
                 signature += " (Administração - AllCourts365)"
@@ -230,7 +255,9 @@ class BroadcastMessageAdmin(admin.ModelAdmin):
         else:
             # Se for uma edição, atualiza os textos de todas as mensagens que já foram enviadas
             signature = f"\n\n---\nEnviado por: {request.user.get_full_name() or request.user.username}"
-            if obj.club:
+            if obj.department:
+                signature += f" (Administração - {obj.department.name} - {obj.department.club.name})"
+            elif obj.club:
                 signature += f" (Administração - {obj.club.name})"
             else:
                 signature += " (Administração - AllCourts365)"

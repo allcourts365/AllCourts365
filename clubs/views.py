@@ -14,8 +14,26 @@ def club_detail(request, club_id):
     club = get_object_or_404(Club, id=club_id)
     rankings  = club.tournaments.filter(is_active=True, tournament_type='ranking')
     knockouts = club.tournaments.filter(is_active=True, tournament_type='knockout')
+    
+    departments = None
+    if club.has_departments:
+        departments = club.departments.filter(is_active=True)
+        
     return render(request, 'club_detail.html', {
         'club': club,
+        'rankings': rankings,
+        'knockouts': knockouts,
+        'departments': departments,
+    })
+
+def department_detail(request, club_id, department_id):
+    club = get_object_or_404(Club, id=club_id)
+    department = get_object_or_404(club.departments, id=department_id, is_active=True)
+    rankings  = department.tournaments.filter(is_active=True, tournament_type='ranking')
+    knockouts = department.tournaments.filter(is_active=True, tournament_type='knockout')
+    return render(request, 'department_detail.html', {
+        'club': club,
+        'department': department,
         'rankings': rankings,
         'knockouts': knockouts,
     })

@@ -9,9 +9,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         group, created = Group.objects.get_or_create(name='Administradores de Clubes')
+        dept_group, dept_created = Group.objects.get_or_create(name='Administradores de Departamento')
         
-        # Modelos que o admin do clube pode gerenciar
-        models_to_manage = [Club, Court, Player, Match, Category, CategoryPlayer, Tournament, RankingTournament, KnockoutTournament, News, BroadcastMessage]
+        # Modelos que os admins (clube e departamento) podem gerenciar
+        from clubs.models import Department
+        models_to_manage = [Club, Department, Court, Player, Match, Category, CategoryPlayer, Tournament, RankingTournament, KnockoutTournament, News, BroadcastMessage]
         
         permissions = []
         for model in models_to_manage:
@@ -29,8 +31,14 @@ class Command(BaseCommand):
             permissions.extend(Permission.objects.filter(content_type=ct))
 
         group.permissions.set(permissions)
+        dept_group.permissions.set(permissions)
         
         if created:
             self.stdout.write(self.style.SUCCESS('Grupo "Administradores de Clubes" criado com sucesso!'))
         else:
             self.stdout.write(self.style.SUCCESS('Grupo "Administradores de Clubes" atualizado com sucesso!'))
+            
+        if dept_created:
+            self.stdout.write(self.style.SUCCESS('Grupo "Administradores de Departamento" criado com sucesso!'))
+        else:
+            self.stdout.write(self.style.SUCCESS('Grupo "Administradores de Departamento" atualizado com sucesso!'))

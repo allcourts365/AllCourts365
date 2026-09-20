@@ -22,6 +22,7 @@ class Club(models.Model):
     address = models.CharField(max_length=300, blank=True, verbose_name="Endereço")
     rules_pdf = models.FileField(upload_to='clubs/rules/', null=True, blank=True, verbose_name="Regulamento (PDF)", help_text="Upload do regulamento do clube em formato PDF.")
     administrators = models.ManyToManyField(User, related_name='managed_clubs', blank=True, verbose_name="Administradores")
+    has_departments = models.BooleanField(default=False, verbose_name="Possui Departamentos?", help_text="Marque se o clube organiza seus torneios e usuários em departamentos separados (Ex: Tênis, Beach Tennis).")
     
     # Configurações Visuais Específicas do Clube (Sobrescrevem o Global se preenchidas)
     favicon = models.ImageField(upload_to='clubs/favicons/', null=True, blank=True, verbose_name="Favicon", help_text="Imagem que aparece na guia do navegador (recomendado: 32x32 ou 64x64)")
@@ -59,6 +60,21 @@ class Club(models.Model):
         verbose_name = "Clube / Liga"
         verbose_name_plural = "Clubes / Ligas"
 
+class Department(models.Model):
+    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='departments', verbose_name="Clube")
+    name = models.CharField(max_length=200, verbose_name="Nome do Departamento")
+    image = models.ImageField(upload_to='departments/cards/', null=True, blank=True, verbose_name="Imagem/Card do Departamento")
+    administrators = models.ManyToManyField(User, related_name='managed_departments', blank=True, verbose_name="Administradores do Departamento")
+    is_active = models.BooleanField(default=True, verbose_name="Ativo")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.club.name})"
+
+    class Meta:
+        verbose_name = "Departamento"
+        verbose_name_plural = "Departamentos"
+
 class Court(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='courts', verbose_name="Clube")
     name = models.CharField(max_length=100, verbose_name="Nome da Quadra")
@@ -75,6 +91,7 @@ class Court(models.Model):
 class Player(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='player_profiles', verbose_name="Usuário do Sistema")
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='players', verbose_name="Clube")
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='players', verbose_name="Departamento", help_text="Válido apenas se o clube utilizar departamentos.")
     name = models.CharField(max_length=200, verbose_name="Nome do Atleta")
 
     def __str__(self):
@@ -101,6 +118,7 @@ class Tournament(models.Model):
     ]
 
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='tournaments', verbose_name="Clube")
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True, related_name='tournaments', verbose_name="Departamento", help_text="Obrigatório caso o clube use departamentos.")
     name = models.CharField(max_length=200, verbose_name="Nome do Torneio/Ranking")
     tournament_type = models.CharField(max_length=20, choices=TOURNAMENT_TYPES, default='ranking', verbose_name="Tipo")
     competition_type = MultiSelectField(max_length=50, choices=COMPETITION_TYPES, default='simples', verbose_name="Competição")
