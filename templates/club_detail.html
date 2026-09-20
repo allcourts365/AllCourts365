@@ -155,8 +155,8 @@
         
         <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
             {% if club.rules_pdf %}
-            <a href="{{ club.rules_pdf.url }}" target="_blank" class="btn-highlight" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 200px; box-sizing: border-box; background: rgba(255,255,255,0.05); color: #fff; padding: 12px 20px; border-radius: 30px; text-decoration: none; font-weight: 600; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.2); transition: all 0.2s; white-space: nowrap;" onmouseover="this.style.background='var(--highlight-color)'; this.style.borderColor='var(--highlight-color)';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.2)';">
-                <i class="fas fa-file-pdf"></i> Regulamento
+            <a href="{{ club.rules_pdf.url }}" target="_blank" class="btn-highlight" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 250px; box-sizing: border-box; background: rgba(255,255,255,0.05); color: #fff; padding: 12px 20px; border-radius: 30px; text-decoration: none; font-weight: 600; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.2); transition: all 0.2s; white-space: nowrap;" onmouseover="this.style.background='var(--highlight-color)'; this.style.borderColor='var(--highlight-color)';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.2)';">
+                <i class="fas fa-file-pdf"></i> Regras Gerais do Clube
             </a>
             {% else %}
             <button class="btn-highlight" onclick="alert('Este clube/liga ainda não tem o regulamento publicado.');" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 200px; box-sizing: border-box; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.5); padding: 12px 20px; border-radius: 30px; font-weight: 600; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.1); cursor: not-allowed; white-space: nowrap;">

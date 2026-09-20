@@ -20,7 +20,7 @@ class Club(models.Model):
     logo_size = models.IntegerField(default=100, verbose_name="Tamanho do Logo (%)", help_text="Ajuste o tamanho do logo.")
     description = models.TextField(blank=True, verbose_name="Descrição")
     address = models.CharField(max_length=300, blank=True, verbose_name="Endereço")
-    rules_pdf = models.FileField(upload_to='clubs/rules/', null=True, blank=True, verbose_name="Regulamento (PDF)", help_text="Upload do regulamento do clube em formato PDF.")
+    rules_pdf = models.FileField(upload_to='clubs/rules/', null=True, blank=True, verbose_name="Regras Gerais do Clube (PDF)", help_text="Upload das regras gerais do clube em formato PDF.")
     administrators = models.ManyToManyField(User, related_name='managed_clubs', blank=True, verbose_name="Administradores")
     has_departments = models.BooleanField(default=False, verbose_name="Possui Departamentos?", help_text="Marque se o clube organiza seus torneios e usuários em departamentos separados (Ex: Tênis, Beach Tennis).")
     
@@ -65,6 +65,7 @@ class Department(models.Model):
     name = models.CharField(max_length=200, verbose_name="Nome do Departamento")
     image = models.ImageField(upload_to='departments/cards/', null=True, blank=True, verbose_name="Imagem/Card do Departamento")
     image_size = models.IntegerField(default=100, verbose_name="Tamanho da Imagem (%)", help_text="Ajuste o zoom da imagem no card.")
+    rules_pdf = models.FileField(upload_to='departments/rules/', null=True, blank=True, verbose_name="Regulamento (PDF)", help_text="Upload do regulamento do departamento em formato PDF.")
     administrators = models.ManyToManyField(User, related_name='managed_departments', blank=True, verbose_name="Administradores do Departamento")
     is_active = models.BooleanField(default=True, verbose_name="Ativo")
     created_at = models.DateTimeField(auto_now_add=True)
