@@ -2,11 +2,10 @@ document.addEventListener("DOMContentLoaded", function() {
     const rangeInputs = document.querySelectorAll('input[type="range"]');
     
     rangeInputs.forEach(input => {
-        let valDisplay = document.createElement('div');
-        valDisplay.style.marginTop = '5px';
+        let valDisplay = document.createElement('span');
+        valDisplay.style.marginLeft = '10px';
         valDisplay.style.fontWeight = 'bold';
         valDisplay.style.color = '#fff';
-        valDisplay.style.fontSize = '1.1rem';
         
         // Append it after the input
         input.parentNode.appendChild(valDisplay);
