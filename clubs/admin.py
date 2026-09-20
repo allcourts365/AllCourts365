@@ -120,7 +120,7 @@ class ClubAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     
     fieldsets = (
         ('Informações Básicas', {
-            'fields': ('name', 'website', 'description', 'address', 'rules_pdf')
+            'fields': ('name', 'website', 'description', 'address', 'rules_pdf', 'has_departments')
         }),
         ('Horários de Funcionamento', {
             'fields': (
