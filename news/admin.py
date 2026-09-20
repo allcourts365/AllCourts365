@@ -105,14 +105,14 @@ class NewsAdmin(admin.ModelAdmin):
             form.base_fields["club"].required = False
             form.base_fields["department"].queryset = managed_depts
             
-            # Pre-preenche o autor com "Redacao <nome do clube/dept>"
+            # Pre-preenche o autor com "Administrador <nome do clube/dept>"
             if not obj:
                 if managed_depts.exists():
                     dept = managed_depts.first()
-                    form.base_fields["author"].initial = f"Redação {dept.name} - {dept.club.name}"
+                    form.base_fields["author"].initial = f"Administrador {dept.name}"
                 elif managed.exists():
                     club = managed.first()
-                    form.base_fields["author"].initial = f"Redacao {club.name}"
+                    form.base_fields["author"].initial = f"Administrador {club.name}"
         return form
 
     def get_queryset(self, request):
@@ -128,10 +128,12 @@ class NewsAdmin(admin.ModelAdmin):
             obj.created_by = request.user
         # Garante autor padrao
         if not obj.author:
-            if obj.club:
-                obj.author = f"Redacao {obj.club.name}"
+            if obj.department:
+                obj.author = f"Administrador {obj.department.name}"
+            elif obj.club:
+                obj.author = f"Administrador {obj.club.name}"
             else:
-                obj.author = "Redacao AllCourts365"
+                obj.author = "Administrador AllCourts365"
         super().save_model(request, obj, form, change)
 
 from .models import BroadcastMessage
@@ -234,11 +236,11 @@ class BroadcastMessageAdmin(admin.ModelAdmin):
             # Create signature
             signature = f"\n\n---\nEnviado por: {request.user.get_full_name() or request.user.username}"
             if obj.department:
-                signature += f" (Administração - {obj.department.name} - {obj.department.club.name})"
+                signature += f" (Administrador {obj.department.name})"
             elif obj.club:
-                signature += f" (Administração - {obj.club.name})"
+                signature += f" (Administrador {obj.club.name})"
             else:
-                signature += " (Administração - AllCourts365)"
+                signature += " (Administrador AllCourts365)"
 
             messages_to_create = []
             for user in target_users:
@@ -256,11 +258,11 @@ class BroadcastMessageAdmin(admin.ModelAdmin):
             # Se for uma edição, atualiza os textos de todas as mensagens que já foram enviadas
             signature = f"\n\n---\nEnviado por: {request.user.get_full_name() or request.user.username}"
             if obj.department:
-                signature += f" (Administração - {obj.department.name} - {obj.department.club.name})"
+                signature += f" (Administrador {obj.department.name})"
             elif obj.club:
-                signature += f" (Administração - {obj.club.name})"
+                signature += f" (Administrador {obj.club.name})"
             else:
-                signature += " (Administração - AllCourts365)"
+                signature += " (Administrador AllCourts365)"
                 
             obj.delivered_messages.update(
                 subject=obj.subject,

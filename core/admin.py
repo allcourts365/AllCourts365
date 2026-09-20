@@ -102,9 +102,11 @@ class CustomUserAdmin(UserAdmin):
         if not request.user.is_superuser:
             from django.db.models import Q
             user_clubs = request.user.managed_clubs.all()
+            user_depts = request.user.managed_departments.all()
             qs = qs.annotate(annotated_club_name=F('player_profiles__club__name'))
             return qs.filter(
                 Q(annotated_club_name__in=user_clubs.values_list('name', flat=True)) |
+                Q(player_profiles__department__in=user_depts) |
                 Q(managed_clubs__in=user_clubs) |
                 Q(managed_departments__club__in=user_clubs) |
                 Q(id=request.user.id)
@@ -123,10 +125,20 @@ class CustomUserAdmin(UserAdmin):
                 email_address.verified = True
                 email_address.save()
                 
-        # Se for um Admin de Clube criando um NOVO usuário, vincula automaticamente a um Player no clube dele
+        # Vincula automaticamente a um Player no clube ou departamento dele
         if not change and not request.user.is_superuser:
             club = request.user.managed_clubs.first()
-            if club:
+            dept = request.user.managed_departments.first()
+            
+            if dept:
+                from clubs.models import Player
+                Player.objects.get_or_create(
+                    user=obj,
+                    club=dept.club,
+                    department=dept,
+                    defaults={'name': obj.get_full_name() or obj.username}
+                )
+            elif club:
                 from clubs.models import Player
                 Player.objects.get_or_create(
                     user=obj,
