@@ -3,7 +3,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 from allauth.account.models import EmailAddress
-from .models import SiteConfiguration, UserProfile, PlayerLinkRequest, ClubLead, Message
+from .models import SiteConfiguration, FooterLink, UserProfile, PlayerLinkRequest, ClubLead, Message
 from django.contrib.auth.forms import UserChangeForm, AdminUserCreationForm
 from clubs.models import Club
 from clubs.admin import ClubScopedAdminMixin
@@ -189,11 +189,22 @@ class SiteConfigurationForm(forms.ModelForm):
             'subtitle_color': forms.TextInput(attrs={'type': 'color'}),
         }
 
+class FooterLinkInline(admin.TabularInline):
+    model = FooterLink
+    extra = 1
+    fields = ('url', 'label', 'order')
+    verbose_name = "Link do Rodapé"
+    verbose_name_plural = "Links Dinâmicos do Rodapé"
+    ordering = ('order',)
+
+
 @admin.register(SiteConfiguration)
 class SiteConfigurationAdmin(admin.ModelAdmin):
     form = SiteConfigurationForm
     list_display = ['__str__', 'background_color', 'highlight_color']
-    
+    inlines = [FooterLinkInline]
+    change_form_template = 'admin/core/siteconfiguration/change_form.html'
+
     fieldsets = (
         ('Imagens / Vídeos / Marca d\'Água', {
             'fields': ('favicon', 'background_image', 'background_video', 'watermark_image', 'watermark_position', 'watermark_opacity', 'watermark_size_percent')
@@ -202,7 +213,10 @@ class SiteConfigurationAdmin(admin.ModelAdmin):
             'fields': ('background_color', 'overlay_color', 'overlay_opacity', 'highlight_color', 'title_color', 'subtitle_color')
         }),
         ('Rodapé (Footer)', {
-            'fields': ('footer_show', 'footer_text', 'footer_width', 'footer_padding', 'footer_instagram', 'footer_facebook', 'footer_whatsapp')
+            'description': '<div style="background:#e8f5e9;padding:10px;border-radius:6px;margin-bottom:10px;color:#1b5e20;font-size:13px;">'
+                           '<strong>💡 Links Dinâmicos:</strong> Adicione os links do rodapé na tabela abaixo desta seção. '
+                           'O ícone é detectado automaticamente pela URL (Instagram, Facebook, WhatsApp, YouTube, etc.).</div>',
+            'fields': ('footer_show', 'footer_text', 'footer_width', 'footer_padding')
         }),
         ('Monitoramento e SEO', {
             'fields': ('google_analytics_id',)

@@ -1,0 +1,15 @@
+﻿{% extends "admin/change_form.html" %}
+{% load i18n admin_urls %}
+
+{% block field_sets %}
+{% for fieldset in adminform %}
+    {% include "admin/includes/fieldset.html" %}
+    {% if "Rodap" in fieldset.name %}
+        {% for inline_admin_formset in inline_admin_formsets %}
+            {% include inline_admin_formset.opts.template %}
+        {% endfor %}
+    {% endif %}
+{% endfor %}
+{% endblock %}
+
+{% block inline_field_sets %}{% endblock %}

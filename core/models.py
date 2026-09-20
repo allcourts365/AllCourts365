@@ -71,6 +71,78 @@ class SiteConfiguration(models.Model):
         obj, created = cls.objects.get_or_create(pk=1)
         return obj
 
+class FooterLink(models.Model):
+    """Link dinâmico do rodapé com detecção automática de ícone."""
+    site_config = models.ForeignKey(
+        SiteConfiguration,
+        on_delete=models.CASCADE,
+        related_name='footer_links',
+        verbose_name="Configuração do Site"
+    )
+    url = models.CharField(
+        max_length=500,
+        verbose_name="URL / Endereço",
+        help_text="Ex: https://instagram.com/meuclube ou https://wa.me/5511999999999"
+    )
+    label = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="Rótulo (opcional)",
+        help_text="Texto opcional que aparece ao lado do ícone. Deixe em branco para exibir só o ícone."
+    )
+    order = models.PositiveIntegerField(default=0, verbose_name="Ordem de exibição")
+
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = "Link do Rodapé"
+        verbose_name_plural = "Links do Rodapé"
+
+    def __str__(self):
+        return self.url
+
+    @property
+    def icon_class(self):
+        """Retorna a classe FontAwesome correta baseada na URL."""
+        url = self.url.lower()
+        if 'instagram.com' in url:
+            return 'fab fa-instagram'
+        elif 'facebook.com' in url or 'fb.com' in url:
+            return 'fab fa-facebook-square'
+        elif 'wa.me' in url or 'whatsapp.com' in url or 'api.whatsapp' in url:
+            return 'fab fa-whatsapp'
+        elif 'youtube.com' in url or 'youtu.be' in url:
+            return 'fab fa-youtube'
+        elif 'twitter.com' in url or 'x.com' in url:
+            return 'fab fa-x-twitter'
+        elif 'linkedin.com' in url:
+            return 'fab fa-linkedin'
+        elif 'tiktok.com' in url:
+            return 'fab fa-tiktok'
+        elif 'telegram.me' in url or 't.me' in url:
+            return 'fab fa-telegram'
+        elif 'mailto:' in url:
+            return 'fas fa-envelope'
+        elif url.startswith('tel:'):
+            return 'fas fa-phone'
+        elif 'maps.google' in url or 'goo.gl/maps' in url or 'maps.app' in url:
+            return 'fas fa-map-marker-alt'
+        elif 'spotify.com' in url:
+            return 'fab fa-spotify'
+        elif 'pinterest.com' in url:
+            return 'fab fa-pinterest'
+        else:
+            return 'fas fa-globe'
+
+    @property
+    def href(self):
+        """Retorna o href correto (garante links de WhatsApp limpos)."""
+        url = self.url.strip()
+        # Se for número de WhatsApp puro (só dígitos), monta o link correto
+        if url.isdigit():
+            return f'https://wa.me/{url}'
+        return url
+
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     full_name = models.CharField(max_length=200, blank=True, verbose_name="Nome Completo")
