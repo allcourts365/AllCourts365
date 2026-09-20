@@ -7,6 +7,7 @@ from .models import SiteConfiguration, FooterLink, UserProfile, PlayerLinkReques
 from django.contrib.auth.forms import UserChangeForm, AdminUserCreationForm
 from clubs.models import Club
 from clubs.admin import ClubScopedAdminMixin
+from ckeditor.widgets import CKEditorWidget
 
 class CustomUserForm(UserChangeForm):
     managed_club = forms.ModelChoiceField(

@@ -100,10 +100,20 @@ class FooterLink(models.Model):
     def __str__(self):
         return self.url
 
+    @staticmethod
+    def _is_phone_number(url):
+        """Verifica se a string parece um número de telefone."""
+        import re
+        cleaned = re.sub(r'[\s\-\(\)\+\.]', '', url)
+        return cleaned.isdigit() and len(cleaned) >= 8
+
     @property
     def icon_class(self):
         """Retorna a classe FontAwesome correta baseada na URL."""
-        url = self.url.lower()
+        url = self.url.strip().lower()
+        # Detecta número de telefone → WhatsApp
+        if self._is_phone_number(url):
+            return 'fab fa-whatsapp'
         if 'instagram.com' in url:
             return 'fab fa-instagram'
         elif 'facebook.com' in url or 'fb.com' in url:
@@ -123,7 +133,7 @@ class FooterLink(models.Model):
         elif 'mailto:' in url:
             return 'fas fa-envelope'
         elif url.startswith('tel:'):
-            return 'fas fa-phone'
+            return 'fab fa-whatsapp'
         elif 'maps.google' in url or 'goo.gl/maps' in url or 'maps.app' in url:
             return 'fas fa-map-marker-alt'
         elif 'spotify.com' in url:
@@ -135,11 +145,17 @@ class FooterLink(models.Model):
 
     @property
     def href(self):
-        """Retorna o href correto (garante links de WhatsApp limpos)."""
+        """Retorna o href correto. Números de telefone viram links wa.me."""
+        import re
         url = self.url.strip()
-        # Se for número de WhatsApp puro (só dígitos), monta o link correto
-        if url.isdigit():
-            return f'https://wa.me/{url}'
+        # Número de telefone puro → WhatsApp
+        if self._is_phone_number(url):
+            cleaned = re.sub(r'[\s\-\(\)\+\.]', '', url)
+            return f'https://wa.me/{cleaned}'
+        # tel: → WhatsApp
+        if url.lower().startswith('tel:'):
+            cleaned = re.sub(r'[^\d]', '', url)
+            return f'https://wa.me/{cleaned}'
         return url
 
 

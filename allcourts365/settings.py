@@ -233,5 +233,18 @@ CKEDITOR_CONFIGS = {
         'filebrowserUploadUrl': '/ckeditor/upload/',
         'filebrowserBrowseUrl': '/ckeditor/browse/',
         'extraPlugins': ','.join(['uploadimage']),
+    },
+    'footer_editor': {
+        'skin': 'moono-lisa',
+        'toolbar_Footer': [
+            ['Bold', 'Italic', 'Underline', '-', 'TextColor'],
+            ['Link', 'Unlink'],
+            ['SpecialChar', '-', 'Source'],
+        ],
+        'toolbar': 'Footer',
+        'height': 120,
+        'width': '100%',
+        'removePlugins': 'elementspath',
+        'resize_enabled': False,
     }
 }
