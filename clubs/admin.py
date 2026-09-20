@@ -489,7 +489,14 @@ class RankingTournamentAdmin(TournamentAdmin):
                         
                         # Enviar email
                         subject = f"Bem-vindo(a) ao {obj.club.name}"
-                        message = f"Olá {pname},\n\nSeu cadastro no ranking '{obj.name}' foi criado.\n\nSua senha inicial de acesso é: {initial_password}\n"
+                        message = (
+                            f"Olá {pname},\n\n"
+                            f"Seu cadastro no {obj.name} do {obj.club.name} foi criado.\n\n"
+                            f"Entre com seu usuário {friendly_username} ou seu email {pemail}.\n"
+                            f"Sua senha inicial de acesso é: {initial_password}\n\n"
+                            f"Sugerimos que ao acessar o Painel de Atleta na aba Meu Perfil faça a redefinição de sua senha.\n\n"
+                            f"Obrigado e um ótimo torneio!\n\n"
+                        )
                         if pverificado:
                             message += "Sua conta já está ativada e pronta para uso."
                         else:
@@ -892,7 +899,14 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
                         
                         # Enviar email
                         subject = f"Bem-vindo(a) ao {obj.club.name}"
-                        message = f"Olá {pname},\n\nSeu cadastro no torneio '{obj.name}' foi criado.\n\nSua senha inicial de acesso é: {initial_password}\n"
+                        message = (
+                            f"Olá {pname},\n\n"
+                            f"Seu cadastro no {obj.name} do {obj.club.name} foi criado.\n\n"
+                            f"Entre com seu usuário {friendly_username} ou seu email {pemail}.\n"
+                            f"Sua senha inicial de acesso é: {initial_password}\n\n"
+                            f"Sugerimos que ao acessar o Painel de Atleta na aba Meu Perfil faça a redefinição de sua senha.\n\n"
+                            f"Obrigado e um ótimo torneio!\n\n"
+                        )
                         if pverificado:
                             message += "Sua conta já está ativada e pronta para uso."
                         else:

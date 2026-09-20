@@ -141,7 +141,14 @@ def process_excel_tournament(file, tournament):
                 # Enviar email com senha
                 club_name = club.name if club else "AllCourts365"
                 subject = f"Bem-vindo(a) ao {club_name}"
-                message = f"Olá {name},\n\nSeu cadastro no torneio '{tournament.name}' foi criado.\n\nSua senha inicial de acesso é: {initial_password}\n"
+                message = (
+                    f"Olá {name},\n\n"
+                    f"Seu cadastro no {tournament.name} do {club_name} foi criado.\n\n"
+                    f"Entre com seu usuário {friendly_username} ou seu email {pemail}.\n"
+                    f"Sua senha inicial de acesso é: {initial_password}\n\n"
+                    f"Sugerimos que ao acessar o Painel de Atleta na aba Meu Perfil faça a redefinição de sua senha.\n\n"
+                    f"Obrigado e um ótimo torneio!\n\n"
+                )
                 if pverificado:
                     message += "Sua conta já está ativada e pronta para uso."
                 else:

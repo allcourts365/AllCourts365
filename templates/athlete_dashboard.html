@@ -805,7 +805,10 @@
                         <!-- Avatar Selection Desktop -->
                         <div class="custom-form-group form-full-width" style="display: flex; justify-content: center; margin-bottom: 20px;">
                             <div style="position: relative; display: inline-block; cursor: pointer;" onclick="openAvatarModal()">
-                                <img id="current-avatar-img-desktop" src="{% if user.profile.avatar %}{% static 'Avatares/'|add:user.profile.avatar %}{% else %}{% static 'Avatares/avatar1.png' %}{% endif %}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--highlight-color); background: rgba(255,255,255,0.1);">
+                                <img id="current-avatar-img-desktop" src="{% if user.profile.avatar %}{% static 'Avatares/'|add:user.profile.avatar %}{% endif %}" style="{% if not user.profile.avatar %}display:none;{% endif %} width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--highlight-color); background: rgba(255,255,255,0.1);">
+                                <div id="avatar-placeholder-desktop" style="{% if user.profile.avatar %}display:none;{% else %}display:flex;{% endif %} width: 100px; height: 100px; border-radius: 50%; border: 3px dashed var(--highlight-color); background: rgba(255,255,255,0.05); align-items: center; justify-content: center; flex-direction: column;">
+                                    <i class="fas fa-camera" style="font-size: 2rem; color: var(--highlight-color); opacity: 0.8;"></i>
+                                </div>
                                 <div style="position: absolute; bottom: 0; right: 0; background: var(--highlight-color); color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 3px solid #0f172a; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
                                     <i class="fas fa-pencil-alt" style="font-size: 0.85rem;"></i>
                                 </div>
@@ -953,7 +956,10 @@
                         <!-- Avatar Selection Mobile -->
                         <div class="custom-form-group" style="display: flex; justify-content: center; margin-bottom: 10px;">
                             <div style="position: relative; display: inline-block; cursor: pointer;" onclick="openAvatarModal()">
-                                <img id="current-avatar-img-mobile" src="{% if user.profile.avatar %}{% static 'Avatares/'|add:user.profile.avatar %}{% else %}{% static 'Avatares/avatar1.png' %}{% endif %}" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--highlight-color); background: rgba(255,255,255,0.1);">
+                                <img id="current-avatar-img-mobile" src="{% if user.profile.avatar %}{% static 'Avatares/'|add:user.profile.avatar %}{% endif %}" style="{% if not user.profile.avatar %}display:none;{% endif %} width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--highlight-color); background: rgba(255,255,255,0.1);">
+                                <div id="avatar-placeholder-mobile" style="{% if user.profile.avatar %}display:none;{% else %}display:flex;{% endif %} width: 90px; height: 90px; border-radius: 50%; border: 3px dashed var(--highlight-color); background: rgba(255,255,255,0.05); align-items: center; justify-content: center; flex-direction: column;">
+                                    <i class="fas fa-camera" style="font-size: 1.8rem; color: var(--highlight-color); opacity: 0.8;"></i>
+                                </div>
                                 <div style="position: absolute; bottom: 0; right: 0; background: var(--highlight-color); color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border: 3px solid #0f172a;">
                                     <i class="fas fa-pencil-alt" style="font-size: 0.8rem;"></i>
                                 </div>
@@ -2115,9 +2121,19 @@
         // Atualiza a imagem no formulário
         let dImg = document.getElementById('current-avatar-img-desktop');
         let mImg = document.getElementById('current-avatar-img-mobile');
+        let dPlace = document.getElementById('avatar-placeholder-desktop');
+        let mPlace = document.getElementById('avatar-placeholder-mobile');
         let newSrc = "{% static 'Avatares/' %}" + filename;
-        if(dImg) dImg.src = newSrc;
-        if(mImg) mImg.src = newSrc;
+        if(dImg) {
+            dImg.src = newSrc;
+            dImg.style.display = 'block';
+        }
+        if(mImg) {
+            mImg.src = newSrc;
+            mImg.style.display = 'block';
+        }
+        if(dPlace) dPlace.style.display = 'none';
+        if(mPlace) mPlace.style.display = 'none';
         
         closeAvatarModal();
     }

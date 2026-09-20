@@ -98,7 +98,7 @@ class UserProfile(models.Model):
     preferred_time = models.CharField(max_length=100, blank=True, verbose_name="Horários Preferidos para Jogar")
     
     # Avatar
-    avatar = models.CharField(max_length=100, blank=True, verbose_name="Avatar", default="avatar1.png")
+    avatar = models.CharField(max_length=100, blank=True, verbose_name="Avatar", default="")
 
     def __str__(self):
         return f"Perfil de {self.user.username}"
