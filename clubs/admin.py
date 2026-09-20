@@ -1,5 +1,5 @@
 from django.contrib import admin, messages
-from .models import Club, Player, Tournament, RankingTournament, KnockoutTournament, Category, CategoryPlayer, Match, Court, TournamentFee
+from .models import Club, Department, Player, Tournament, RankingTournament, KnockoutTournament, Category, CategoryPlayer, Match, Court, TournamentFee
 import openpyxl
 
 from django import forms
@@ -1109,11 +1109,10 @@ class MatchAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
         })
     )
 
- @ a d m i n . r e g i s t e r ( D e p a r t m e n t ) 
- c l a s s   D e p a r t m e n t A d m i n ( C l u b S c o p e d A d m i n M i x i n ,   a d m i n . M o d e l A d m i n ) : 
-         l i s t _ d i s p l a y   =   ( ' n a m e ' ,   ' c l u b ' ,   ' i s _ a c t i v e ' ) 
-         l i s t _ f i l t e r   =   ( ' c l u b ' ,   ' i s _ a c t i v e ' ) 
-         s e a r c h _ f i e l d s   =   ( ' n a m e ' , ) 
-         f i l t e r _ h o r i z o n t a l   =   ( ' a d m i n i s t r a t o r s ' , ) 
-  
- 
+@admin.register(Department)
+class DepartmentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
+    list_display = ('name', 'club', 'is_active')
+    list_filter = ('club', 'is_active')
+    search_fields = ('name',)
+    filter_horizontal = ('administrators',)
+
