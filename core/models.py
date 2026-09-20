@@ -199,4 +199,3 @@ class ClubLead(models.Model):
 
     def __str__(self):
         return f"{self.club_name} - {self.name}"
-    class Meta:
