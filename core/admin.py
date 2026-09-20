@@ -28,11 +28,12 @@ class CustomUserForm(UserChangeForm):
         if commit:
             user.save()
         if user.pk:
-            club = self.cleaned_data.get('managed_club')
-            if club:
-                user.managed_clubs.set([club])
-            else:
-                user.managed_clubs.clear()
+            if 'managed_club' in self.cleaned_data:
+                club = self.cleaned_data.get('managed_club')
+                if club:
+                    user.managed_clubs.set([club])
+                else:
+                    user.managed_clubs.clear()
         return user
 
 class CustomUserAddForm(AdminUserCreationForm):
@@ -48,11 +49,12 @@ class CustomUserAddForm(AdminUserCreationForm):
         if commit:
             user.save()
         if user.pk:
-            club = self.cleaned_data.get('managed_club')
-            if club:
-                user.managed_clubs.set([club])
-            else:
-                user.managed_clubs.clear()
+            if 'managed_club' in self.cleaned_data:
+                club = self.cleaned_data.get('managed_club')
+                if club:
+                    user.managed_clubs.set([club])
+                else:
+                    user.managed_clubs.clear()
         return user
 
 
@@ -104,6 +106,7 @@ class CustomUserAdmin(UserAdmin):
             return qs.filter(
                 Q(annotated_club_name__in=user_clubs.values_list('name', flat=True)) |
                 Q(managed_clubs__in=user_clubs) |
+                Q(managed_departments__club__in=user_clubs) |
                 Q(id=request.user.id)
             ).distinct()
         return qs
