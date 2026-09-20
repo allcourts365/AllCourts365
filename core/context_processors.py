@@ -28,10 +28,10 @@ def site_config(request):
     elif request.path.startswith('/accounts/') or request.path.startswith('/painel-atleta/') or request.path.startswith('/redirecionar/'):
         club_id = request.session.get('current_club_id')
 
-    if club_id:
+    if club_id and club_id != 'all':
         try:
             club_override = Club.objects.get(id=club_id)
-        except Club.DoesNotExist:
+        except (Club.DoesNotExist, ValueError):
             pass
             
     # Se o club_override existir, podemos retornar ele também

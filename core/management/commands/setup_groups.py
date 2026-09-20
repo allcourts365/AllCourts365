@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
-from clubs.models import Club, Court, Player, Match, Category, CategoryPlayer, Tournament, RankingTournament, KnockoutTournament
+from clubs.models import Club, Court, Player, Match, Category, CategoryPlayer, Tournament, RankingTournament, KnockoutTournament, TournamentFee
 from news.models import News, BroadcastMessage
 
 class Command(BaseCommand):
@@ -13,7 +13,7 @@ class Command(BaseCommand):
         
         # Modelos que os admins (clube e departamento) podem gerenciar
         from clubs.models import Department
-        models_to_manage = [Club, Department, Court, Player, Match, Category, CategoryPlayer, Tournament, RankingTournament, KnockoutTournament, News, BroadcastMessage]
+        models_to_manage = [Club, Department, Court, Player, Match, Category, CategoryPlayer, Tournament, RankingTournament, KnockoutTournament, TournamentFee, News, BroadcastMessage]
         
         permissions = []
         for model in models_to_manage:
