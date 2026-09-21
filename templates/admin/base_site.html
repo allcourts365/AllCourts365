@@ -14,7 +14,13 @@
         {% elif request.user.is_superuser %}
             Painel Geral - AllCourts365
         {% else %}
-            Painel ADM do {{ request.user.managed_clubs.first.name|default:"AllCourts365" }}
+            {% if request.user.managed_clubs.exists %}
+                Painel ADM do {{ request.user.managed_clubs.first.name }}
+            {% elif request.user.managed_departments.exists %}
+                Painel ADM | {{ request.user.managed_departments.first.name }} - {{ request.user.managed_departments.first.club.name }}
+            {% else %}
+                Painel ADM do AllCourts365
+            {% endif %}
         {% endif %}
     </a>
 </h1>

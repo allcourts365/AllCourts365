@@ -55,7 +55,11 @@ def athlete_dashboard(request):
     club_id_str = request.GET.get('club') or request.POST.get('active_club_id') or request.session.get('active_club_id')
     
     if not club_id_str:
-        club_id_str = 'all'
+        first_profile = user.player_profiles.first()
+        if first_profile:
+            club_id_str = str(first_profile.club_id)
+        else:
+            club_id_str = 'all'
         
     club_id = None
     if club_id_str and club_id_str != 'all':

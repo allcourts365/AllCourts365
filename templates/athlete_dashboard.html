@@ -22,6 +22,11 @@
         background-position: center !important;
         background-attachment: fixed !important;
     }
+    {% else %}
+    body {
+        background-image: none !important;
+        background-color: var(--bg-color, #0a0f1c) !important;
+    }
     {% endif %}
     
     {% if linked_club.watermark_image %}

@@ -9,55 +9,80 @@ from clubs.models import Club
 from clubs.admin import ClubScopedAdminMixin
 from ckeditor.widgets import CKEditorWidget
 
-class CustomUserForm(UserChangeForm):
+from django.contrib.auth.models import Group
+from clubs.models import Department
+
+ADMIN_TYPE_CHOICES = (
+    ('', 'Nenhum'),
+    ('clube', 'Administrador do Clube'),
+    ('departamento', 'Administrador de Departamento'),
+)
+
+class BaseCustomUserForm(forms.ModelForm):
+    is_staff = forms.BooleanField(
+        required=False,
+        label='Membro da Equipe (Acesso ao painel administrativo)'
+    )
+    admin_type = forms.ChoiceField(
+        choices=ADMIN_TYPE_CHOICES,
+        required=False,
+        label="Tipo de Administrador"
+    )
     managed_club = forms.ModelChoiceField(
         queryset=Club.objects.all(),
         required=False,
-        label="Clube/Liga que irá administrar",
+        label="Clube/Liga (Apenas Superusers)",
         empty_label="Nenhum"
+    )
+    managed_department = forms.ModelChoiceField(
+        queryset=Department.objects.none(),
+        required=False,
+        label="Departamento",
+        empty_label="-- Selecione um Departamento --"
     )
 
     def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
         super().__init__(*args, **kwargs)
+        
         if self.instance and self.instance.pk:
+            self.initial['is_staff'] = self.instance.is_staff
+            is_club_admin = self.instance.groups.filter(name='Administradores de Clubes').exists()
+            is_dept_admin = self.instance.groups.filter(name='Administradores de Departamento').exists()
+            
+            if is_club_admin:
+                self.initial['admin_type'] = 'clube'
+            elif is_dept_admin:
+                self.initial['admin_type'] = 'departamento'
+                first_dept = self.instance.managed_departments.first()
+                if first_dept:
+                    self.initial['managed_department'] = first_dept
+            
             first_club = self.instance.managed_clubs.first()
             if first_club:
                 self.initial['managed_club'] = first_club
 
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        if commit:
-            user.save()
-        if user.pk:
-            if 'managed_club' in self.cleaned_data:
-                club = self.cleaned_data.get('managed_club')
-                if club:
-                    user.managed_clubs.set([club])
-                else:
-                    user.managed_clubs.clear()
-        return user
-
-class CustomUserAddForm(AdminUserCreationForm):
-    managed_club = forms.ModelChoiceField(
-        queryset=Club.objects.all(),
-        required=False,
-        label="Clube/Liga que irá administrar",
-        empty_label="Nenhum"
-    )
+        if self.request:
+            if self.request.user.is_superuser:
+                self.fields['managed_department'].queryset = Department.objects.all()
+            else:
+                user_clubs = self.request.user.managed_clubs.all()
+                self.fields['managed_department'].queryset = Department.objects.filter(club__in=user_clubs)
 
     def save(self, commit=True):
         user = super().save(commit=False)
+        if 'is_staff' in self.cleaned_data:
+            user.is_staff = self.cleaned_data['is_staff']
+            
         if commit:
             user.save()
-        if user.pk:
-            if 'managed_club' in self.cleaned_data:
-                club = self.cleaned_data.get('managed_club')
-                if club:
-                    user.managed_clubs.set([club])
-                else:
-                    user.managed_clubs.clear()
         return user
 
+class CustomUserForm(UserChangeForm, BaseCustomUserForm):
+    pass
+
+class CustomUserAddForm(AdminUserCreationForm, BaseCustomUserForm):
+    pass
 
 admin.site.unregister(User)
 
@@ -70,7 +95,6 @@ class CustomUserAdmin(UserAdmin):
         if hasattr(obj, 'annotated_club_name') and obj.annotated_club_name:
             return obj.annotated_club_name
         
-        # Fallback para admins sem profile
         clubs = set()
         clubs.update(obj.managed_clubs.values_list('name', flat=True))
         return ", ".join(sorted(list(clubs))) if clubs else "-"
@@ -83,21 +107,31 @@ class CustomUserAdmin(UserAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if not request.user.is_superuser and obj:
+            # ADM de departamento: pode editar usuarios mas NAO pode setar is_superuser nem is_staff
+            if request.user.managed_departments.exists():
+                return ('is_superuser', 'is_staff', 'groups', 'user_permissions', 'last_login', 'date_joined')
+            # ADM de clube: pode setar is_staff e grupos via campos customizados, mas NAO is_superuser
             if request.user.managed_clubs.exists():
                 return ('is_superuser', 'user_permissions', 'last_login', 'date_joined')
+            # Outros staff sem clube/dept vinculado: restricao maxima
             return ('is_superuser', 'groups', 'user_permissions', 'is_staff', 'last_login', 'date_joined')
         return super().get_readonly_fields(request, obj)
     
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Gestão de Clube/Liga', {'fields': ('managed_club',)}),
+        ('Controle de Acesso - Equipe', {
+            'classes': ('wide',),
+            'fields': ('is_staff', 'admin_type', 'managed_club', 'managed_department'),
+        }),
     )
+    
+    class Media:
+        js = ('admin/js/user_role_toggle.js',)
     
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         from django.db.models import F
         
         if request.user.is_superuser:
-            # Para o superadmin ver separado por clube, NÃO usamos distinct()
             return qs.annotate(annotated_club_name=F('player_profiles__club__name'))
             
         if not request.user.is_superuser:
@@ -114,6 +148,57 @@ class CustomUserAdmin(UserAdmin):
             ).distinct()
         return qs
         
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        
+        user = form.instance
+        if not user.pk:
+            return
+        
+        # Ler dados do form - is_staff pode vir como booleano do model ou do campo customizado
+        # Na tela de criacao o campo is_staff vem do nosso BaseCustomUserForm
+        # Na tela de edicao o campo is_staff do UserChangeForm pode sobrescrever
+        admin_type = form.cleaned_data.get('admin_type', '')
+        
+        # Se nao ha admin_type definido, nao interferimos na atribuicao de grupos
+        if not admin_type:
+            return
+            
+        is_staff = form.cleaned_data.get('is_staff', user.is_staff)
+        
+        print(f'[save_related] user={user.username}, is_staff={is_staff}, admin_type={admin_type!r}')
+        
+        try:
+            club_group = Group.objects.get(name='Administradores de Clubes')
+            dept_group = Group.objects.get(name='Administradores de Departamento')
+            
+            # Remove dos grupos admin (manteremos outros grupos que possam existir)
+            user.groups.remove(club_group, dept_group)
+            user.managed_clubs.clear()
+            user.managed_departments.clear()
+            
+            if is_staff:
+                if admin_type == 'clube':
+                    user.groups.add(club_group)
+                    target_club = None
+                    if request.user and not request.user.is_superuser:
+                        target_club = request.user.managed_clubs.first()
+                    else:
+                        target_club = form.cleaned_data.get('managed_club')
+                        
+                    if target_club:
+                        user.managed_clubs.add(target_club)
+                    print(f'[save_related] Adicionado ao grupo Administradores de Clubes, clube={target_club}')
+                        
+                elif admin_type == 'departamento':
+                    user.groups.add(dept_group)
+                    target_dept = form.cleaned_data.get('managed_department')
+                    if target_dept:
+                        user.managed_departments.add(target_dept)
+                    print(f'[save_related] Adicionado ao grupo Administradores de Departamento, dept={target_dept}')
+        except Group.DoesNotExist as e:
+            print(f'[save_related] ERRO: Grupo nao encontrado - {e}')
+
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
         if obj.email:
@@ -126,7 +211,6 @@ class CustomUserAdmin(UserAdmin):
                 email_address.verified = True
                 email_address.save()
                 
-        # Vincula automaticamente a um Player no clube ou departamento dele
         if not change and not request.user.is_superuser:
             club = request.user.managed_clubs.first()
             dept = request.user.managed_departments.first()
@@ -147,6 +231,14 @@ class CustomUserAdmin(UserAdmin):
                     defaults={'name': obj.get_full_name() or obj.username}
                 )
 
+    def get_form(self, request, obj=None, **kwargs):
+        form_class = super().get_form(request, obj, **kwargs)
+        class FormWithRequest(form_class):
+            def __init__(self, *args, **kwargs):
+                kwargs['request'] = request
+                super().__init__(*args, **kwargs)
+        return FormWithRequest
+
     def get_fieldsets(self, request, obj=None):
         if not obj:
             fieldsets = list(self.add_fieldsets)
@@ -161,20 +253,19 @@ class CustomUserAdmin(UserAdmin):
         else:
             new_fieldsets = []
             for name, opts in fieldsets:
-                # Copiamos o dicionário para não alterar o original da classe
                 new_opts = opts.copy()
                 fields = new_opts.get('fields', ())
                 
-                # Se for a seção de permissões que contém is_superuser
                 if 'is_superuser' in fields:
-                    # Remove campos sensíveis
                     if request.user.managed_clubs.exists():
-                        # Admin de clube pode ver grupos e is_staff
                         new_opts['fields'] = tuple(f for f in fields if f in ['is_active', 'groups', 'is_staff'])
                     else:
-                        # Outros não superusers veem apenas is_active
                         new_opts['fields'] = tuple(f for f in fields if f in ['is_active'])
                 
+                if 'is_staff' in new_opts.get('fields', ()):
+                    new_fields = ('is_staff', 'admin_type', 'managed_club', 'managed_department')
+                    new_opts['fields'] = tuple(f for f in new_opts['fields'] if f not in new_fields) + new_fields
+                    
                 new_fieldsets.append((name, new_opts))
             return new_fieldsets
 

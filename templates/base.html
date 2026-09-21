@@ -271,7 +271,7 @@
                     {% endif %}
                     
                     {% if user.is_authenticated %}
-                        <a href="{% url 'athlete_dashboard' %}" class="btn-highlight" style="background: var(--global-highlight-color);"><i class="fas fa-user"></i> Entrar</a>
+                        <a href="{% url 'account_logout' %}" class="btn-highlight" style="background: transparent; border: 1px solid var(--global-highlight-color); color: var(--global-highlight-color);"><i class="fas fa-sign-out-alt"></i> Sair</a>
                     {% else %}
                         <a href="{% url 'account_login' %}" class="btn-highlight" style="background: var(--global-highlight-color);"><i class="fas fa-user"></i> Entrar</a>
                     {% endif %}
