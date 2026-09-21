@@ -27,3 +27,42 @@
 {% endblock %}
 
 {% block nav-global %}{% endblock %}
+
+{% if request.user.is_superuser %}
+{% block extrahead %}
+{{ block.super }}
+<script>
+(function() {
+    function injectLeadsBadge(count) {
+        if (count === 0) return;
+        // Busca em toda a página: na tabela da home e no nav lateral
+        var links = document.querySelectorAll('a[href*="/core/clublead/"]');
+        links.forEach(function(link) {
+            // Só injeta no link principal (não o de adicionar/modificar)
+            if (link.classList.contains('addlink') || link.classList.contains('changelink')) return;
+            if (link.querySelector('.leads-badge')) return;
+            var badge = document.createElement('span');
+            badge.className = 'leads-badge';
+            badge.textContent = count;
+            badge.style.cssText = 'background:#ef4444;color:#fff;padding:1px 6px;border-radius:10px;font-size:0.72rem;font-weight:700;margin-left:6px;vertical-align:middle;display:inline-block;line-height:1.4;';
+            link.appendChild(badge);
+        });
+    }
+
+    function fetchCount() {
+        fetch('/api/admin/leads-count/')
+            .then(function(r) { return r.json(); })
+            .then(function(data) { injectLeadsBadge(data.count || 0); })
+            .catch(function(e) { console.warn('leads-count error:', e); });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', fetchCount);
+    } else {
+        fetchCount();
+    }
+})();
+</script>
+{% endblock %}
+{% endif %}
+

@@ -773,6 +773,16 @@ def club_landing_page(request):
     return render(request, 'presentation.html')
 
 
+def api_uncontacted_leads_count(request):
+    """Retorna o número de leads (ClubLead) que ainda não foram contatados. Apenas superusuários."""
+    from django.http import JsonResponse
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        return JsonResponse({'count': 0})
+    from .models import ClubLead
+    count = ClubLead.objects.filter(contacted=False).count()
+    return JsonResponse({'count': count})
+
+
 @login_required
 def athlete_calendar(request):
     user = request.user
