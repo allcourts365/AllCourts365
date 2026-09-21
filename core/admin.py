@@ -389,7 +389,18 @@ class PlayerLinkRequestAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
 
 @admin.register(ClubLead)
 class ClubLeadAdmin(admin.ModelAdmin):
-    list_display = ('club_name', 'name', 'phone', 'contacted', 'created_at')
+    list_display = ('club_name', 'status_novo', 'name', 'phone', 'contacted', 'created_at')
     list_filter = ('contacted', 'created_at')
     search_fields = ('club_name', 'name', 'email', 'phone')
     list_editable = ('contacted',)
+
+    @admin.display(description='', ordering='contacted')
+    def status_novo(self, obj):
+        from django.utils.safestring import mark_safe
+        if not obj.contacted:
+            return mark_safe(
+                '<span style="background:#ef4444;color:#fff;padding:2px 8px;'
+                'border-radius:10px;font-size:0.72rem;font-weight:700;'
+                'letter-spacing:0.5px;">NOVO</span>'
+            )
+        return ''

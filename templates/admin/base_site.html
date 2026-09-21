@@ -28,41 +28,55 @@
 
 {% block nav-global %}{% endblock %}
 
-{% if request.user.is_superuser %}
 {% block extrahead %}
 {{ block.super }}
+{% if request.user.is_superuser %}
 <script>
 (function() {
-    function injectLeadsBadge(count) {
-        if (count === 0) return;
-        // Busca em toda a página: na tabela da home e no nav lateral
-        var links = document.querySelectorAll('a[href*="/core/clublead/"]');
-        links.forEach(function(link) {
-            // Só injeta no link principal (não o de adicionar/modificar)
-            if (link.classList.contains('addlink') || link.classList.contains('changelink')) return;
-            if (link.querySelector('.leads-badge')) return;
-            var badge = document.createElement('span');
-            badge.className = 'leads-badge';
-            badge.textContent = count;
-            badge.style.cssText = 'background:#ef4444;color:#fff;padding:1px 6px;border-radius:10px;font-size:0.72rem;font-weight:700;margin-left:6px;vertical-align:middle;display:inline-block;line-height:1.4;';
-            link.appendChild(badge);
+    var cachedCount = null;
+
+    function addBadge(link, count) {
+        if (link.classList.contains('addlink') || link.classList.contains('changelink')) return;
+        if (link.querySelector('.lead-count-badge')) return;
+        var badge = document.createElement('span');
+        badge.className = 'lead-count-badge';
+        badge.textContent = count;
+        badge.style.cssText = (
+            'background:#ef4444;color:#fff;padding:1px 7px;border-radius:10px;' +
+            'font-size:0.72rem;font-weight:700;margin-left:6px;vertical-align:middle;' +
+            'display:inline-block;line-height:1.5;'
+        );
+        link.appendChild(badge);
+    }
+
+    function injectAll(count) {
+        if (!count) return;
+        document.querySelectorAll('a[href$="/core/clublead/"]').forEach(function(link) {
+            addBadge(link, count);
         });
     }
 
-    function fetchCount() {
+    function run() {
+        if (cachedCount !== null) { injectAll(cachedCount); return; }
         fetch('/api/admin/leads-count/')
             .then(function(r) { return r.json(); })
-            .then(function(data) { injectLeadsBadge(data.count || 0); })
-            .catch(function(e) { console.warn('leads-count error:', e); });
+            .then(function(data) {
+                cachedCount = data.count || 0;
+                injectAll(cachedCount);
+            })
+            .catch(function() {});
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', fetchCount);
-    } else {
-        fetchCount();
-    }
+    // Observa mutações no DOM para pegar links adicionados dinamicamente pelo nav_sidebar.js
+    var observer = new MutationObserver(function() {
+        if (cachedCount !== null) { injectAll(cachedCount); }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        observer.observe(document.body, { childList: true, subtree: true });
+        run();
+    });
 })();
 </script>
-{% endblock %}
 {% endif %}
-
+{% endblock %}
