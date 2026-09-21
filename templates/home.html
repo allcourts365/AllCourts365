@@ -67,12 +67,12 @@
             </div>
             <!-- Info -->
             <div style="padding: 45px 20px 30px 20px; text-align: center; display: flex; flex-direction: column; flex-grow: 1;">
-                <h3 style="font-size: 1.4rem; margin-bottom: 10px; color: #fff;">Eleve o nível do seu Clube</h3>
-                <p style="font-size: 0.95rem; margin-bottom: 15px; color: var(--subtitle-color);">Automatize a gestão de Torneios, Rankings e Agendamento de Quadras. Ofereça uma experiência premium para seus atletas enquanto você economiza horas de trabalho no WhatsApp e planilhas.</p>
+                <h3 style="font-size: 1.4rem; margin-bottom: 10px; color: #fff;">{{ site_config.club_cta_title }}</h3>
+                <p style="font-size: 0.95rem; margin-bottom: 15px; color: var(--subtitle-color);">{{ site_config.club_cta_text }}</p>
                 <p style="font-size: 0.9rem; margin-top: auto;">
                     <a href="{% url 'club_landing_page' %}" style="color: var(--highlight-color); text-decoration: underline; font-weight: 600;">Clique aqui</a> ou Fale conosco e traga seu clube para a plataforma! 
-                    <a href="https://wa.me/5516997063560" target="_blank" style="display: inline-block; margin-top: 10px; color: #25D366; font-weight: bold; text-decoration: none; font-size: 1.05rem; padding: 8px 15px; background: rgba(37, 211, 102, 0.1); border-radius: 20px;">
-                        <i class="fab fa-whatsapp"></i> (16) 99706-3560
+                    <a href="https://wa.me/{{ site_config.clean_club_whatsapp }}" target="_blank" style="display: inline-block; margin-top: 10px; color: #25D366; font-weight: bold; text-decoration: none; font-size: 1.05rem; padding: 8px 15px; background: rgba(37, 211, 102, 0.1); border-radius: 20px;">
+                        <i class="fab fa-whatsapp"></i> {{ site_config.club_cta_whatsapp }}
                     </a>
                 </p>
             </div>

@@ -47,11 +47,20 @@ class SiteConfiguration(models.Model):
     
     # Recursos e Exibição
     show_clubs_cta = models.BooleanField(default=True, verbose_name="Exibir botão 'Para Clubes' no menu", help_text="Se desmarcado, a opção de prospectar novos clubes não aparecerá no topo do site.")
+    club_cta_title = models.CharField(max_length=100, default="Eleve o nível do seu Clube", verbose_name="Título do Card Para Clubes")
+    club_cta_text = models.TextField(default="Automatize a gestão de Torneios, Rankings e Agendamento de Quadras. Ofereça uma experiência premium para seus atletas enquanto você economiza horas de trabalho no WhatsApp e planilhas.", verbose_name="Texto do Card Para Clubes")
+    club_cta_whatsapp = models.CharField(max_length=50, default="5516997063560", verbose_name="WhatsApp para Vendas (Card Clubes)", help_text="Apenas números, com DDD (ex: 5516997063560)")
 
     @property
     def clean_whatsapp(self):
         if self.footer_whatsapp:
             return ''.join(filter(str.isdigit, self.footer_whatsapp))
+        return ''
+
+    @property
+    def clean_club_whatsapp(self):
+        if self.club_cta_whatsapp:
+            return ''.join(filter(str.isdigit, self.club_cta_whatsapp))
         return ''
 
     class Meta:

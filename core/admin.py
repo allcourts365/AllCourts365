@@ -322,7 +322,7 @@ class SiteConfigurationAdmin(admin.ModelAdmin):
             'fields': ('google_analytics_id',)
         }),
         ('Recursos e Exibição', {
-            'fields': ('show_clubs_cta',)
+            'fields': ('show_clubs_cta', 'club_cta_title', 'club_cta_text', 'club_cta_whatsapp')
         }),
     )
     
