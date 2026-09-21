@@ -96,8 +96,10 @@ class NewsAdmin(admin.ModelAdmin):
             from clubs.models import Department
             form.base_fields["department"].queryset = Department.objects.all().order_by("name")
         else:
-            # Admin do clube: so ve o seu clube
-            managed = Club.objects.filter(administrators=request.user)
+            # Admin do clube ou departamento
+            managed = Club.objects.filter(
+                Q(administrators=request.user) | Q(departments__administrators=request.user)
+            ).distinct()
             from clubs.models import Department
             managed_depts = Department.objects.filter(administrators=request.user)
             
@@ -121,7 +123,11 @@ class NewsAdmin(admin.ModelAdmin):
             return qs
         # Admin do clube ou departamento
         from django.db.models import Q
-        return qs.filter(Q(club__administrators=request.user) | Q(department__administrators=request.user)).distinct()
+        return qs.filter(
+            Q(club__administrators=request.user) | 
+            Q(club__departments__administrators=request.user) |
+            Q(department__administrators=request.user)
+        ).distinct()
 
     def save_model(self, request, obj, form, change):
         if not obj.pk:
@@ -198,7 +204,10 @@ class BroadcastMessageAdmin(admin.ModelAdmin):
                 form.base_fields["department"].queryset = Department.objects.all().order_by("name")
                 form.base_fields["department"].required = False
         else:
-            managed = Club.objects.filter(administrators=request.user)
+            from django.db.models import Q
+            managed = Club.objects.filter(
+                Q(administrators=request.user) | Q(departments__administrators=request.user)
+            ).distinct()
             from clubs.models import Department
             managed_depts = Department.objects.filter(administrators=request.user)
             if "club" in form.base_fields:
@@ -214,7 +223,11 @@ class BroadcastMessageAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         from django.db.models import Q
-        return qs.filter(Q(club__administrators=request.user) | Q(department__administrators=request.user)).distinct()
+        return qs.filter(
+            Q(club__administrators=request.user) | 
+            Q(club__departments__administrators=request.user) |
+            Q(department__administrators=request.user)
+        ).distinct()
 
     def save_model(self, request, obj, form, change):
         if not obj.pk:

@@ -143,6 +143,7 @@ class CustomUserAdmin(UserAdmin):
             qs = qs.filter(
                 Q(annotated_club_name__in=user_clubs.values_list('name', flat=True)) |
                 Q(player_profiles__department__in=user_depts) |
+                Q(player_profiles__club__departments__in=user_depts) |
                 Q(managed_clubs__in=user_clubs) |
                 Q(managed_departments__club__in=user_clubs) |
                 Q(id=request.user.id)
@@ -355,7 +356,8 @@ class UserProfileAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
         if not request.user.is_superuser:
             from django.db.models import Q
             return qs.filter(
-                Q(user__player_profiles__club__administrators=request.user) | 
+                Q(user__player_profiles__club__administrators=request.user) |
+                Q(user__player_profiles__club__departments__administrators=request.user) |
                 Q(user__managed_clubs__administrators=request.user) |
                 Q(user_id=request.user.id)
             ).distinct()

@@ -13,20 +13,41 @@ class ClubScopedAdminMixin:
         
         model_name = self.model.__name__
         from django.db.models import Q
+        
+        # Acesso via clube direto OU via departamento do clube
+        club_access = Q(club__administrators=request.user) | Q(club__departments__administrators=request.user)
+        dept_access = Q(department__administrators=request.user)
+        
         if model_name == 'Club':
-            return qs.filter(administrators=request.user).distinct()
+            return qs.filter(
+                Q(administrators=request.user) | Q(departments__administrators=request.user)
+            ).distinct()
         elif model_name == 'Department':
-            return qs.filter(Q(administrators=request.user) | Q(club__administrators=request.user)).distinct()
+            return qs.filter(
+                Q(administrators=request.user) | Q(club__administrators=request.user) | Q(club__departments__administrators=request.user)
+            ).distinct()
         elif model_name in ['Player', 'Tournament', 'RankingTournament', 'KnockoutTournament']:
-            return qs.filter(Q(club__administrators=request.user) | Q(department__administrators=request.user)).distinct()
+            return qs.filter(club_access | dept_access).distinct()
         elif model_name == 'PlayerLinkRequest':
-            return qs.filter(Q(club__administrators=request.user) | Q(player__department__administrators=request.user)).distinct()
+            return qs.filter(
+                Q(club__administrators=request.user) |
+                Q(club__departments__administrators=request.user) |
+                Q(player__department__administrators=request.user)
+            ).distinct()
         elif model_name == 'Court':
-            return qs.filter(Q(club__administrators=request.user) | Q(club__departments__administrators=request.user)).distinct()
+            return qs.filter(club_access).distinct()
         elif model_name in ['Category', 'Match']:
-            return qs.filter(Q(tournament__club__administrators=request.user) | Q(tournament__department__administrators=request.user)).distinct()
+            return qs.filter(
+                Q(tournament__club__administrators=request.user) |
+                Q(tournament__club__departments__administrators=request.user) |
+                Q(tournament__department__administrators=request.user)
+            ).distinct()
         elif model_name == 'CategoryPlayer':
-            return qs.filter(Q(category__tournament__club__administrators=request.user) | Q(category__tournament__department__administrators=request.user)).distinct()
+            return qs.filter(
+                Q(category__tournament__club__administrators=request.user) |
+                Q(category__tournament__club__departments__administrators=request.user) |
+                Q(category__tournament__department__administrators=request.user)
+            ).distinct()
         return qs
 
     def has_module_permission(self, request):
@@ -162,32 +183,27 @@ class PlayerAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
     search_fields = ('name',)
     list_filter = (('club', admin.RelatedOnlyFieldListFilter), ('categoryplayer__category__tournament', admin.RelatedOnlyFieldListFilter))
     
-    def get_queryset(self, request):
-        qs = super(admin.ModelAdmin, self).get_queryset(request)
-        if not request.user.is_superuser:
-            from django.db.models import Q
-            user_clubs = request.user.managed_clubs.all()
-            return qs.filter(
-                Q(club__in=user_clubs) |
-                Q(categoryplayer__category__tournament__club__in=user_clubs) |
-                Q(playerlinkrequest__club__in=user_clubs, playerlinkrequest__status='approved')
-            ).distinct()
-        return qs
-
     def get_list_display(self, request):
         return ('name', 'club', 'user')
-    
+
     def get_queryset(self, request):
-        qs = super(admin.ModelAdmin, self).get_queryset(request)
+        # Chama super() para aplicar o filtro basico do ClubScopedAdminMixin
+        qs = super().get_queryset(request)
+        
         if request.user.is_superuser:
             return qs.prefetch_related('categoryplayer_set__category__tournament')
             
         from django.db.models import Q
         user_clubs = request.user.managed_clubs.all()
+        user_depts = request.user.managed_departments.all()
+        
+        # A mixin base ja filtrou por clube/departamento
+        # Mas para garantir que vemos jogadores com playerlinkrequest aprovado,
+        # vamos aplicar um OR extra apenas para seguranca
         return qs.filter(
-            Q(club__in=user_clubs) |
-            Q(categoryplayer__category__tournament__club__in=user_clubs) |
-            Q(playerlinkrequest__club__in=user_clubs, playerlinkrequest__status='approved')
+            Q(id__in=qs.values_list('id', flat=True)) | 
+            Q(playerlinkrequest__club__in=user_clubs, playerlinkrequest__status='approved') |
+            Q(playerlinkrequest__club__departments__in=user_depts, playerlinkrequest__status='approved')
         ).distinct().prefetch_related('categoryplayer_set__category__tournament')
     @admin.action(description="Mesclar atletas selecionados")
     def merge_players(self, request, queryset):
