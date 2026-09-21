@@ -139,13 +139,20 @@ class CustomUserAdmin(UserAdmin):
             user_clubs = request.user.managed_clubs.all()
             user_depts = request.user.managed_departments.all()
             qs = qs.annotate(annotated_club_name=F('player_profiles__club__name'))
-            return qs.filter(
+            
+            qs = qs.filter(
                 Q(annotated_club_name__in=user_clubs.values_list('name', flat=True)) |
                 Q(player_profiles__department__in=user_depts) |
                 Q(managed_clubs__in=user_clubs) |
                 Q(managed_departments__club__in=user_clubs) |
                 Q(id=request.user.id)
             ).distinct()
+            
+            # ADM de departamento: só vê usuários normais (não-staff, não-superuser)
+            if request.user.managed_departments.exists() and not request.user.managed_clubs.exists():
+                qs = qs.filter(is_staff=False, is_superuser=False)
+                
+            return qs
         return qs
         
     def save_related(self, request, form, formsets, change):

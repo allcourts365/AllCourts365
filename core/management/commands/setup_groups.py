@@ -68,10 +68,19 @@ class Command(BaseCommand):
             ('core', 'userprofile'),
             ('news', 'broadcastmessage'),
             ('news', 'news'),
-            # SEM auth.user - ADM de dept NAO cria/edita staff/superusers
+            # view e change de user (somente usuarios normais - filtrado pelo get_queryset)
+            # SEM add_user - ADM de dept NAO cria staff/superusers
         ]
 
+        # Permissoes especificas de view+change para auth.user
         perms = self._get_perms(allowed)
+        try:
+            from django.contrib.contenttypes.models import ContentType
+            ct = ContentType.objects.get(app_label='auth', model='user')
+            user_view_change = Permission.objects.filter(content_type=ct, codename__in=['view_user', 'change_user'])
+            perms = perms | user_view_change
+        except ContentType.DoesNotExist:
+            pass
         group.permissions.set(perms)
 
         verb = 'criado' if created else 'atualizado'
