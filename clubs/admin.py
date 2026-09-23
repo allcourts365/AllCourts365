@@ -173,10 +173,6 @@ class ClubAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
             if 'is_visible' not in fields:
                 fields.insert(1, 'is_visible')
             fieldsets[0][1]['fields'] = tuple(fields)
-            # Garante que a seção Controle de Acesso existe e está visível
-        else:
-            # Remove a seção "Controle de Acesso" para não-superusers
-            fieldsets = [fs for fs in fieldsets if fs[0] != 'Controle de Acesso']
             
         return tuple(fieldsets)
 
