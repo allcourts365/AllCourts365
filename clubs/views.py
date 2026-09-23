@@ -19,10 +19,6 @@ def my_clubs(request):
         is_visible=True
     ).distinct().order_by('name')
 
-    # Se só tem 1 clube, vai direto para ele
-    if user_clubs.count() == 1:
-        return redirect('clubs:detail', club_id=user_clubs.first().id)
-
     return render(request, 'my_clubs.html', {'clubs': user_clubs})
 
 
