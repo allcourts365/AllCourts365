@@ -158,7 +158,12 @@
 {% endblock %}
 
 {% block content %}
-<div class="login-container">
+<div style="margin-top: 10px; margin-bottom: 25px; margin-left: 20px;">
+    <a href="{% url 'home' %}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--highlight-color, #00BFFF); text-decoration: none; font-size: 0.95rem; font-weight: 600;">
+        <i class="fas fa-arrow-left"></i> Voltar para a Home
+    </a>
+</div>
+<div class="login-container" style="padding-top: 0px; min-height: calc(70vh - 60px);">
     <div class="glass-card login-card">
         <h2 style="font-size: 2rem; color: #fff; margin-bottom: 10px; font-weight: 800;">Bem-vindo</h2>
         <p style="color: var(--subtitle-color, #ccc); margin-bottom: 30px;">Faça login para acessar sua conta.</p>
