@@ -108,10 +108,16 @@ def process_excel_tournament(file, tournament):
             user = User.objects.filter(email=pemail).first() or User.objects.filter(username=pemail).first()
             
             if user:
-                # Tenta encontrar o player já vinculado a esse usuário
-                existing_player = Player.objects.filter(user=user).first()
-                if existing_player:
-                    player = existing_player
+                # Mantém o nome do atleta que já existe, caso ele já tenha perfil
+                existing_any_player = Player.objects.filter(user=user).first()
+                if existing_any_player:
+                    name = existing_any_player.name
+                    
+                # Só aproveita o player se for do MESMO CLUBE
+                if club:
+                    player = Player.objects.filter(user=user, club=club).first()
+                else:
+                    player = Player.objects.filter(user=user, club__isnull=True).first()
                     
         if not player:
             # Cria ou pega o player. Adiciona o club se existir (pra RankingTournament deve existir)
@@ -119,6 +125,11 @@ def process_excel_tournament(file, tournament):
                 player, _ = Player.objects.get_or_create(club=club, name=name)
             else:
                 player, _ = Player.objects.get_or_create(name=name)
+                
+            # Se já tínhamos um usuário existente, vincula este novo player a ele
+            if user and not player.user:
+                player.user = user
+                player.save()
                 
         if pemail and not player.user:
             if not user:
@@ -382,8 +393,12 @@ def process_excel_knockout(file, tournament):
         seeded_players = []
         unseeded_players = []
         
+        club = getattr(tournament, 'club', None)
         for pd_item in group_players:
-            player, _ = Player.objects.get_or_create(name=pd_item['name'])
+            if club:
+                player, _ = Player.objects.get_or_create(club=club, name=pd_item['name'])
+            else:
+                player, _ = Player.objects.get_or_create(name=pd_item['name'])
             if category_obj:
                 CategoryPlayer.objects.get_or_create(category=category_obj, player=player)
                 

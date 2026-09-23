@@ -296,3 +296,9 @@ class ClubLead(models.Model):
 
     def __str__(self):
         return f"{self.club_name} - {self.name}"
+
+class GlobalLogin(User):
+    class Meta:
+        proxy = True
+        verbose_name = "Usuário"
+        verbose_name_plural = "Usuários"

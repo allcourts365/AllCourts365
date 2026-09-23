@@ -82,25 +82,53 @@ class CustomUserForm(UserChangeForm, BaseCustomUserForm):
     pass
 
 class CustomUserAddForm(AdminUserCreationForm, BaseCustomUserForm):
-    pass
+    first_name = forms.CharField(max_length=150, required=False, label='Primeiro nome')
+    last_name = forms.CharField(max_length=150, required=False, label='Último nome')
+    email = forms.EmailField(required=False, label='Endereço de email')
+
+    class Meta(AdminUserCreationForm.Meta):
+        fields = ('username', 'email', 'first_name', 'last_name')
+        
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.first_name = self.cleaned_data.get('first_name', '')
+        user.last_name = self.cleaned_data.get('last_name', '')
+        user.email = self.cleaned_data.get('email', '')
+        if commit:
+            user.save()
+        return user
 
 admin.site.unregister(User)
 
-@admin.register(User)
-class CustomUserAdmin(UserAdmin):
+from .models import GlobalLogin
+
+class PlayerInline(admin.TabularInline):
+    from clubs.models import Player
+    model = Player
+    extra = 0
+    fields = ('club', 'name')
+    readonly_fields = ('club', 'name')
+    can_delete = True
+    verbose_name = "Vínculo no Clube (Atleta)"
+    verbose_name_plural = "Vínculos em Clubes (Atletas)"
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+@admin.register(GlobalLogin)
+class GlobalLoginAdmin(UserAdmin):
     form = CustomUserForm
     add_form = CustomUserAddForm
+    inlines = [PlayerInline]
     
     def dynamic_get_clubs(self, obj):
-        if hasattr(obj, 'annotated_club_name') and obj.annotated_club_name:
-            return obj.annotated_club_name
-        
+        # Busca todos os clubes pelos perfis de Player vinculados ao usuário
         clubs = set()
-        clubs.update(obj.managed_clubs.values_list('name', flat=True))
+        clubs.update(obj.player_profiles.values_list('club__name', flat=True))
+        clubs.discard(None)
         return ", ".join(sorted(list(clubs))) if clubs else "-"
         
     dynamic_get_clubs.short_description = "Clube"
-    dynamic_get_clubs.admin_order_field = 'annotated_club_name'
 
     def get_list_display(self, request):
         return ('username', 'email', 'first_name', 'last_name', 'is_staff', 'dynamic_get_clubs')
@@ -118,6 +146,10 @@ class CustomUserAdmin(UserAdmin):
         return super().get_readonly_fields(request, obj)
     
     add_fieldsets = UserAdmin.add_fieldsets + (
+        ('Informações Pessoais', {
+            'classes': ('wide',),
+            'fields': ('first_name', 'last_name', 'email'),
+        }),
         ('Controle de Acesso - Equipe', {
             'classes': ('wide',),
             'fields': ('is_staff', 'admin_type', 'managed_club', 'managed_department'),
@@ -129,32 +161,30 @@ class CustomUserAdmin(UserAdmin):
     
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        from django.db.models import F
         
         if request.user.is_superuser:
-            return qs.annotate(annotated_club_name=F('player_profiles__club__name'))
-            
-        if not request.user.is_superuser:
-            from django.db.models import Q
-            user_clubs = request.user.managed_clubs.all()
-            user_depts = request.user.managed_departments.all()
-            qs = qs.annotate(annotated_club_name=F('player_profiles__club__name'))
-            
-            qs = qs.filter(
-                Q(annotated_club_name__in=user_clubs.values_list('name', flat=True)) |
-                Q(player_profiles__department__in=user_depts) |
-                Q(player_profiles__club__departments__in=user_depts) |
-                Q(managed_clubs__in=user_clubs) |
-                Q(managed_departments__club__in=user_clubs) |
-                Q(id=request.user.id)
-            ).distinct()
-            
-            # ADM de departamento: só vê usuários normais (não-staff, não-superuser)
-            if request.user.managed_departments.exists() and not request.user.managed_clubs.exists():
-                qs = qs.filter(is_staff=False, is_superuser=False)
-                
+            # Superuser vê todos, sem annotation problemática (dynamic_get_clubs busca os clubes via queryset próprio)
             return qs
+            
+        from django.db.models import Q
+        user_clubs = request.user.managed_clubs.all()
+        user_depts = request.user.managed_departments.all()
+        
+        qs = qs.filter(
+            Q(player_profiles__club__in=user_clubs) |
+            Q(player_profiles__department__in=user_depts) |
+            Q(player_profiles__club__departments__in=user_depts) |
+            Q(managed_clubs__in=user_clubs) |
+            Q(managed_departments__club__in=user_clubs) |
+            Q(id=request.user.id)
+        ).distinct()
+        
+        # ADM de departamento: só vê usuários normais (não-staff, não-superuser)
+        if request.user.managed_departments.exists() and not request.user.managed_clubs.exists():
+            qs = qs.filter(is_staff=False, is_superuser=False)
+            
         return qs
+
         
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)
@@ -252,6 +282,9 @@ class CustomUserAdmin(UserAdmin):
             fieldsets = list(self.add_fieldsets)
             if not request.user.is_superuser:
                 fieldsets = [f for f in fieldsets if f[0] != 'Gestão de Clube/Liga']
+                # ADM de departamento não pode criar staff, removemos o bloco de equipe
+                if request.user.managed_departments.exists() and not request.user.managed_clubs.exists():
+                    fieldsets = [f for f in fieldsets if f[0] != 'Controle de Acesso - Equipe']
             return fieldsets
 
         fieldsets = list(super(UserAdmin, self).get_fieldsets(request, obj))

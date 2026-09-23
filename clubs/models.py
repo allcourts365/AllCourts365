@@ -23,6 +23,7 @@ class Club(models.Model):
     rules_pdf = models.FileField(upload_to='clubs/rules/', null=True, blank=True, verbose_name="Regras Gerais do Clube (PDF)", help_text="Upload das regras gerais do clube em formato PDF.")
     administrators = models.ManyToManyField(User, related_name='managed_clubs', blank=True, verbose_name="Administradores")
     has_departments = models.BooleanField(default=False, verbose_name="Possui Departamentos?", help_text="Marque se o clube organiza seus torneios e usuários em departamentos separados (Ex: Tênis, Beach Tennis).")
+    allow_visitors = models.BooleanField(default=True, verbose_name="Permitir Visitantes?", help_text="Se marcado, qualquer pessoa pode visitar as páginas do clube sem login. Se desmarcado, apenas membros cadastrados podem visualizar.")
     
     # Configurações Visuais Específicas do Clube (Sobrescrevem o Global se preenchidas)
     favicon = models.ImageField(upload_to='clubs/favicons/', null=True, blank=True, verbose_name="Favicon", help_text="Imagem que aparece na guia do navegador (recomendado: 32x32 ou 64x64)")

@@ -1,6 +1,7 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import FileResponse, Http404
 from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from .models import Club, Match
 import os
@@ -9,26 +10,78 @@ def club_list(request):
     clubs = Club.objects.filter(is_visible=True).order_by('name')
     return render(request, 'club_list.html', {'clubs': clubs})
 
+
+@login_required
+def my_clubs(request):
+    """Lista apenas os clubes onde o usuário tem um perfil de Player vinculado."""
+    user_clubs = Club.objects.filter(
+        players__user=request.user,
+        is_visible=True
+    ).distinct().order_by('name')
+
+    # Se só tem 1 clube, vai direto para ele
+    if user_clubs.count() == 1:
+        return redirect('clubs:detail', club_id=user_clubs.first().id)
+
+    return render(request, 'my_clubs.html', {'clubs': user_clubs})
+
+
+def _check_club_access(request, club):
+    """
+    Retorna None se o acesso é permitido, ou um HttpResponse de acesso negado.
+    Regra: se allow_visitors=False, exige login + vínculo (Player ou Admin ou Superuser).
+    """
+    if club.allow_visitors:
+        return None  # acesso livre
+
+    # Clube privado
+    if not request.user.is_authenticated:
+        return render(request, 'club_access_denied.html', {'club': club})
+
+    # Verifica vínculo
+    is_member = request.user.player_profiles.filter(club=club).exists()
+    is_admin = request.user.managed_clubs.filter(id=club.id).exists()
+    if not is_member and not is_admin and not request.user.is_superuser:
+        return render(request, 'club_access_denied.html', {'club': club})
+
+    return None  # acesso permitido
+
 @xframe_options_sameorigin
 def club_detail(request, club_id):
     club = get_object_or_404(Club, id=club_id)
+
+    # Controle de acesso
+    denied = _check_club_access(request, club)
+    if denied:
+        return denied
+
     rankings  = club.tournaments.filter(is_active=True, tournament_type='ranking')
     knockouts = club.tournaments.filter(is_active=True, tournament_type='knockout')
-    
+
     departments = None
     if club.has_departments:
         departments = club.departments.filter(is_active=True)
-        
+
+    # Verifica se o usuário logado tem vínculo com o clube (para exibir botão Painel do Atleta)
+    user_is_member = (
+        request.user.is_authenticated and
+        request.user.player_profiles.filter(club=club).exists()
+    )
+
     return render(request, 'club_detail.html', {
         'club': club,
         'rankings': rankings,
         'knockouts': knockouts,
         'departments': departments,
+        'user_is_member': user_is_member,
     })
 
 @xframe_options_sameorigin
 def department_detail(request, club_id, department_id):
     club = get_object_or_404(Club, id=club_id)
+    denied = _check_club_access(request, club)
+    if denied:
+        return denied
     department = get_object_or_404(club.departments, id=department_id, is_active=True)
     rankings  = department.tournaments.filter(is_active=True, tournament_type='ranking')
     knockouts = department.tournaments.filter(is_active=True, tournament_type='knockout')
@@ -41,6 +94,9 @@ def department_detail(request, club_id, department_id):
 
 def ranking_detail(request, club_id, ranking_id):
     club    = get_object_or_404(Club, id=club_id)
+    denied = _check_club_access(request, club)
+    if denied:
+        return denied
     ranking = get_object_or_404(club.tournaments, id=ranking_id, tournament_type='ranking', is_active=True)
 
     categories = ranking.categories.all()
@@ -70,6 +126,9 @@ def knockout_detail(request, club_id, tournament_id):
     """Página principal do torneio eliminatório — exibe os cards de categorias."""
     from .models import Match, CategoryPlayer
     club       = get_object_or_404(Club, id=club_id)
+    denied = _check_club_access(request, club)
+    if denied:
+        return denied
     tournament = get_object_or_404(club.tournaments, id=tournament_id, tournament_type='knockout', is_active=True)
     categories = tournament.categories.all()
     
@@ -104,6 +163,9 @@ def knockout_detail(request, club_id, tournament_id):
 def knockout_bracket(request, club_id, tournament_id, category_id):
     """Página de visualização do chaveamento de uma categoria no formato TC22A."""
     club       = get_object_or_404(Club, id=club_id)
+    denied = _check_club_access(request, club)
+    if denied:
+        return denied
     tournament = get_object_or_404(club.tournaments, id=tournament_id, tournament_type='knockout', is_active=True)
     category   = get_object_or_404(tournament.categories, id=category_id)
 

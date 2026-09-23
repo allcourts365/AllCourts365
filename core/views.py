@@ -39,12 +39,9 @@ def login_redirect(request):
     if pending_cp:
         return redirect('clubs:registration_resume', club_id=pending_cp.category.tournament.club.id, tournament_id=pending_cp.category.tournament.id, cp_id=pending_cp.id)
         
-    # 3. Atletas, Usuários Novos vão pro Dashboard de Atleta
-    club_id = request.GET.get('club')
-    url = reverse('athlete_dashboard')
-    if club_id:
-        url += f'?club={club_id}'
-    return redirect(url)
+    # 3. Atletas e usuários novos vão para a seleção de clube
+    # (a view my_clubs redireciona automaticamente se só houver 1 clube)
+    return redirect('clubs:my_clubs')
 
 @login_required
 def athlete_dashboard(request):

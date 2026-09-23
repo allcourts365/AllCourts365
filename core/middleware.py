@@ -25,6 +25,7 @@ class AutoLogoutMiddleware(MiddlewareMixin):
                 r'^/__debug__/',
                 r'^/static/',
                 r'^/media/',
+                r'^/clubes/meus-clubes/',
             ]
             
             is_allowed = any(re.match(pattern, path) for pattern in allowed_patterns)

@@ -368,8 +368,8 @@
 {% block content %}
 {% if linked_club %}
 <div style="margin-top: 10px; margin-bottom: 25px;">
-    <a href="{% url 'clubs:list' %}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--subtitle-color); text-decoration: none; font-size: 0.95rem; font-weight: 600; padding: 8px 16px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.color='var(--subtitle-color)';">
-        <i class="fas fa-arrow-left"></i> Voltar para os Clubes
+    <a href="{% url 'clubs:detail' linked_club.id %}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600;">
+        <i class="fas fa-arrow-left"></i> Voltar para {{ linked_club.name }}
     </a>
 </div>
 <div class="glass-card club-header-card" style="padding: 0; overflow: hidden; margin-bottom: 40px; border-radius: 20px;">

@@ -111,6 +111,101 @@
             box-shadow: 0 4px 15px var(--global-highlight-color) !important;
         }
 
+        /* Avatar do Usuário Logado */
+        .user-avatar-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--global-highlight-color);
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px solid rgba(255,255,255,0.2);
+            transition: box-shadow 0.2s, transform 0.2s;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .user-avatar:hover {
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.15);
+            transform: scale(1.05);
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            min-width: 190px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
+            padding: 8px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px);
+            transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+            z-index: 9999;
+        }
+
+        .user-avatar-wrapper:hover .user-dropdown,
+        .user-dropdown.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-dropdown a {
+            display: flex !important;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            color: #e2e8f0 !important;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background 0.15s;
+        }
+
+        .user-dropdown a:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff !important;
+        }
+
+        .user-dropdown a i {
+            width: 16px;
+            text-align: center;
+            color: var(--global-highlight-color);
+        }
+
+        .user-dropdown .dropdown-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.08);
+            margin: 6px 8px;
+        }
+
+        .user-name-label {
+            padding: 8px 14px 4px;
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.35);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
         /* Toasts Globais */
         .toast-container {
             position: fixed;
@@ -254,27 +349,42 @@
             <a href="/" class="brand">AllCourts<span style="background: linear-gradient(to bottom, #ffb347, #c43a00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">365</span>&reg; <span style="font-size: 0.35em; color: #a0aec0; letter-spacing: 1px; vertical-align: baseline; margin-left: 5px; font-weight: 500;">by EVO<span style="background: linear-gradient(to bottom, #ffb347, #c43a00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">2</span>WIN</span></a>
             
             <div class="nav-links" id="nav-links">
-                <a href="{% if user.is_authenticated %}{% url 'logout_redirect' %}?next=/{% else %}/{% endif %}">Home</a>
-                <a href="{% if user.is_authenticated %}{% url 'logout_redirect' %}?next={% url 'clubs:list' %}{% else %}{% url 'clubs:list' %}{% endif %}">Clubes / Ligas</a>
+                <a href="/">Home</a>
+                <a href="{% url 'clubs:list' %}">Clubes / Ligas</a>
                 {% if club_context %}
                     <a href="{% url 'clubs:news_list' club_context.id %}">Noticias {{ club_context.name }}</a>
-                    {% if site_config.show_clubs_cta %}
-                    <a href="{% url 'club_landing_page' %}" style="border: 1px solid var(--global-highlight-color); color: var(--global-highlight-color); padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: 600;"><i class="fas fa-rocket"></i> Para Clubes</a>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'athlete_dashboard' %}?club={{ club_context.id }}" style="background: var(--global-highlight-color); color: #fff; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: 600;"><i class="fas fa-table-tennis"></i> Painel do Atleta</a>
                     {% endif %}
-                    {% if not user.is_authenticated %}
-                        <a href="{% url 'account_login' %}" class="btn-highlight" style="background: var(--global-highlight-color);"><i class="fas fa-user"></i> Entrar</a>
+                    {% if site_config.show_clubs_cta and not user.is_authenticated %}
+                    <a href="{% url 'club_landing_page' %}" style="border: 1px solid var(--global-highlight-color); color: var(--global-highlight-color); padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: 600;"><i class="fas fa-rocket"></i> Para Clubes</a>
                     {% endif %}
                 {% else %}
                     <a href="{% url 'news:global_list' %}">Noticias AllCourts365</a>
-                    {% if site_config.show_clubs_cta %}
+                    {% if site_config.show_clubs_cta and not user.is_authenticated %}
                     <a href="{% url 'club_landing_page' %}" style="border: 1px solid var(--global-highlight-color); color: var(--global-highlight-color); padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: 600;"><i class="fas fa-rocket"></i> Para Clubes</a>
                     {% endif %}
-                    
-                    {% if user.is_authenticated %}
-                        <a href="{% url 'account_logout' %}" class="btn-highlight" style="background: transparent; border: 1px solid var(--global-highlight-color); color: var(--global-highlight-color);"><i class="fas fa-sign-out-alt"></i> Sair</a>
-                    {% else %}
-                        <a href="{% url 'account_login' %}" class="btn-highlight" style="background: var(--global-highlight-color);"><i class="fas fa-user"></i> Entrar</a>
-                    {% endif %}
+                {% endif %}
+
+                {% if user.is_authenticated %}
+                    <!-- Avatar com dropdown para usuário logado -->
+                    <div class="user-avatar-wrapper" id="userAvatarWrapper">
+                        <div class="user-avatar" id="userAvatarBtn" title="{{ user.first_name|default:user.username }}">
+                            {{ user.first_name|first|upper }}{% if not user.first_name %}{{ user.email|first|upper }}{% endif %}
+                        </div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="user-name-label">{{ user.first_name|default:user.username }}</div>
+                            <a href="{% url 'clubs:my_clubs' %}">
+                                <i class="fas fa-home"></i> Meus Clubes
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{% url 'account_logout' %}">
+                                <i class="fas fa-sign-out-alt"></i> Sair
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{% url 'account_login' %}" class="btn-highlight" style="background: var(--global-highlight-color);"><i class="fas fa-user"></i> Entrar</a>
                 {% endif %}
             </div>
         </div>
@@ -406,6 +516,24 @@
                 });
             }
         });
+
+        // Avatar Dropdown — toggle ao clicar (suporte mobile/touch)
+        (function() {
+            const avatarWrapper = document.getElementById('userAvatarWrapper');
+            const avatarBtn = document.getElementById('userAvatarBtn');
+            const dropdown = document.getElementById('userDropdown');
+            if (avatarBtn && dropdown) {
+                avatarBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    dropdown.classList.toggle('open');
+                });
+                document.addEventListener('click', function(e) {
+                    if (avatarWrapper && !avatarWrapper.contains(e.target)) {
+                        dropdown.classList.remove('open');
+                    }
+                });
+            }
+        })();
 
         {% block extra_scripts %}
         {% endblock %}

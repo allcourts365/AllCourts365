@@ -145,6 +145,10 @@ class ClubAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
         ('Informações Básicas', {
             'fields': ('name', 'website', 'description', 'address', 'rules_pdf', 'has_departments')
         }),
+        ('Controle de Acesso', {
+            'fields': ('allow_visitors',),
+            'description': 'Defina quem pode visualizar as páginas públicas deste clube.'
+        }),
         ('Horários de Funcionamento', {
             'fields': (
                 ('weekday_open', 'weekday_close'),
@@ -169,6 +173,10 @@ class ClubAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
             if 'is_visible' not in fields:
                 fields.insert(1, 'is_visible')
             fieldsets[0][1]['fields'] = tuple(fields)
+            # Garante que a seção Controle de Acesso existe e está visível
+        else:
+            # Remove a seção "Controle de Acesso" para não-superusers
+            fieldsets = [fs for fs in fieldsets if fs[0] != 'Controle de Acesso']
             
         return tuple(fieldsets)
 
@@ -459,14 +467,22 @@ class RankingTournamentAdmin(TournamentAdmin):
                     user = User.objects.filter(email=pemail).first() or User.objects.filter(username=pemail).first()
                     
                     if user:
-                        # User exists. Check if they already have a player
-                        existing_player = Player.objects.filter(user=user).first()
-                        if existing_player:
-                            player = existing_player
+                        # Mantém o nome do atleta que já existe, caso ele já tenha perfil
+                        existing_any_player = Player.objects.filter(user=user).first()
+                        if existing_any_player:
+                            pname = existing_any_player.name
+                            
+                        # Só aproveita o player se for do MESMO CLUBE
+                        player = Player.objects.filter(user=user, club=obj.club).first()
                             
                 if not player:
                     # If we didn't find an existing player by email/user, create/get by name
                     player, _ = Player.objects.get_or_create(club=obj.club, name=pname)
+                    
+                # Se já tínhamos um usuário existente, vincula este novo player a ele
+                if user and not player.user:
+                    player.user = user
+                    player.save()
                 
                 if pemail and not player.user:
                     if not user:
@@ -874,14 +890,22 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
                     user = User.objects.filter(email=pemail).first() or User.objects.filter(username=pemail).first()
                     
                     if user:
-                        # User exists. Check if they already have a player
-                        existing_player = Player.objects.filter(user=user).first()
-                        if existing_player:
-                            player = existing_player
+                        # Mantém o nome do atleta que já existe, caso ele já tenha perfil
+                        existing_any_player = Player.objects.filter(user=user).first()
+                        if existing_any_player:
+                            pname = existing_any_player.name
+                            
+                        # Só aproveita o player se for do MESMO CLUBE
+                        player = Player.objects.filter(user=user, club=obj.club).first()
                             
                 if not player:
                     # If we didn't find an existing player by email/user, create/get by name
                     player, _ = Player.objects.get_or_create(club=obj.club, name=pname)
+                    
+                # Se já tínhamos um usuário existente, vincula este novo player a ele
+                if user and not player.user:
+                    player.user = user
+                    player.save()
                 
                 if pemail and not player.user:
                     if not user:

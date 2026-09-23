@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Acesso Restrito — {{ club.name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root {
+        {% if club.background_color %}--bg-color: {{ club.background_color }};{% endif %}
+        {% if club.overlay_color %}--overlay-color: {{ club.overlay_color }};{% endif %}
+        {% if club.overlay_opacity is not None %}--overlay-opacity: {{ club.overlay_opacity|stringformat:"s" }};{% endif %}
+        {% if club.highlight_color %}--highlight-color: {{ club.highlight_color }};{% endif %}
+        {% if club.title_color %}--title-color: {{ club.title_color }};{% endif %}
+        {% if club.subtitle_color %}--subtitle-color: {{ club.subtitle_color }};{% endif %}
+    }
+    {% if club.background_image and not club.background_video %}
+    body { background-image: url("{{ club.background_image.url }}") !important; background-size: cover !important; background-position: center !important; background-attachment: fixed !important; }
+    {% endif %}
+    .access-denied-wrapper { display: flex; justify-content: center; align-items: center; min-height: 70vh; padding: 40px 20px; }
+    .access-denied-card { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; padding: 60px 50px; max-width: 520px; width: 100%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.4); animation: fadeUp 0.5s ease-out; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    .club-logo-circle { width: 110px; height: 110px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 3px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 0 auto 30px; box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+    .lock-icon-wrapper { width: 80px; height: 80px; border-radius: 50%; background: rgba(239,68,68,0.12); border: 2px solid rgba(239,68,68,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 30px; }
+    .lock-icon-wrapper i { font-size: 2rem; color: #ef4444; }
+    .access-denied-card h1 { font-size: 1.7rem; font-weight: 800; color: var(--title-color,#fff); margin-bottom: 12px; line-height: 1.3; }
+    .club-name-highlight { color: var(--highlight-color,#3b82f6); }
+    .access-denied-card p { color: var(--subtitle-color,#94a3b8); font-size: 1rem; line-height: 1.6; margin-bottom: 10px; }
+    .hint { font-size: 0.9rem; color: rgba(255,255,255,0.4); margin-top: 8px; margin-bottom: 35px; }
+    .action-buttons { display: flex; flex-direction: column; gap: 12px; }
+    .btn-login-primary { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 30px; border-radius: 30px; background: var(--highlight-color,#3b82f6); color: #fff; font-weight: 700; font-size: 1rem; text-decoration: none; transition: box-shadow 0.2s, transform 0.2s; }
+    .btn-login-primary:hover { box-shadow: 0 6px 20px var(--highlight-color,#3b82f6); transform: translateY(-2px); }
+    .btn-back-secondary { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 13px 30px; border-radius: 30px; background: transparent; color: var(--subtitle-color,#94a3b8); font-weight: 600; font-size: 0.95rem; text-decoration: none; border: 1px solid rgba(255,255,255,0.15); transition: background 0.2s, color 0.2s; }
+    .btn-back-secondary:hover { background: rgba(255,255,255,0.07); color: #fff; }
+    .divider-or { display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,0.2); font-size: 0.85rem; margin: 2px 0; }
+    .divider-or::before, .divider-or::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
+</style>
+{% endblock %}
+
+{% block background_video %}
+{% if club.background_video %}
+<video id="bg-video" autoplay muted loop playsinline><source src="{{ club.background_video.url }}" type="video/mp4"></video>
+{% endif %}
+{% endblock background_video %}
+
+{% block watermark %}
+    {% if club.watermark_image %}<img src="{{ club.watermark_image.url }}" alt="Watermark" class="club-watermark">
+    {% elif site_config.watermark_image %}<img src="{{ site_config.watermark_image.url }}" alt="Watermark" class="watermark">{% endif %}
+{% endblock %}
+
+{% block content %}
+<div style="margin-top: 10px; margin-bottom: 25px; margin-left: 20px;">
+    {% if user.is_authenticated %}
+    <a href="{% url 'clubs:my_clubs' %}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600;">
+        <i class="fas fa-arrow-left"></i> Voltar para os Clubes
+    </a>
+    {% else %}
+    <a href="{% url 'clubs:list' %}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600;">
+        <i class="fas fa-arrow-left"></i> Voltar para os Clubes
+    </a>
+    {% endif %}
+</div>
+<div class="access-denied-wrapper" style="padding-top: 0px;">
+    <div class="access-denied-card">
+        {% if club.logo %}
+        <div class="club-logo-circle">
+            <img src="{{ club.logo.url }}" alt="{{ club.name }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;transform:scale(calc({{ club.logo_size|default:100 }} / 100));transform-origin:center;">
+        </div>
+        {% else %}
+        <div class="lock-icon-wrapper"><i class="fas fa-lock"></i></div>
+        {% endif %}
+        <h1><span class="club-name-highlight">{{ club.name }}</span><br>é exclusivo para membros</h1>
+        <p>A visualização deste clube é restrita a atletas com cadastro vinculado.</p>
+        <p class="hint">Já possui cadastro? Faça login para acessar.<br>Ainda não é membro? Entre em contato com a administração do clube.</p>
+        <div class="action-buttons">
+            <a href="{% url "account_login" %}?next={{ request.path }}" class="btn-login-primary">
+                <i class="fas fa-sign-in-alt"></i> Fazer Login
+            </a>
+            <div class="divider-or">ou</div>
+            <a href="{% url "clubs:list" %}" class="btn-back-secondary">
+                <i class="fas fa-arrow-left"></i> Ver outros clubes
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
