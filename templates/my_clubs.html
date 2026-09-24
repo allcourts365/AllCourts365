@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}Meus Clubes — AllCourts365{% endblock %}
@@ -55,10 +55,10 @@
     <h2 style="font-size:1.5rem;margin-bottom:12px;">Nenhum clube vinculado</h2>
     <p style="color:var(--subtitle-color,#94a3b8);line-height:1.6;margin-bottom:30px;">
         Você ainda não possui vínculo com nenhum clube.<br>
-        Entre em contato com a administração do seu clube para ser cadastrado.
+        Acesse o Painel do Atleta para solicitar o vínculo com um clube.
     </p>
-    <a href="{% url "clubs:list" %}" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:30px;background:var(--highlight-color,#3b82f6);color:#fff;text-decoration:none;font-weight:700;">
-        <i class="fas fa-search"></i> Ver todos os clubes
+    <a href="{% url 'athlete_dashboard' %}" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:30px;background:var(--highlight-color,#3b82f6);color:#fff;text-decoration:none;font-weight:700;">
+        <i class="fas fa-table-tennis"></i> Acessar Painel do Atleta
     </a>
 </div>
 {% endif %}

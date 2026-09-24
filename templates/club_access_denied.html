@@ -64,16 +64,29 @@
         {% endif %}
         <h1><span class="club-name-highlight">{{ club.name }}</span><br>é exclusivo para membros</h1>
         <p>A visualização deste clube é restrita a atletas com cadastro vinculado.</p>
-        <p class="hint">Já possui cadastro? Faça login para acessar.<br>Ainda não é membro? Entre em contato com a administração do clube.</p>
+        {% if user.is_authenticated %}
+        <p class="hint">Você está logado como <strong>{{ user.first_name|default:user.username }}</strong>, mas não possui vínculo com este clube.<br>Acesse o Painel do Atleta para solicitar acesso ou entre em contato com a administração.</p>
         <div class="action-buttons">
-            <a href="{% url "account_login" %}?next={{ request.path }}" class="btn-login-primary">
-                <i class="fas fa-sign-in-alt"></i> Fazer Login
+            <a href="{% url 'athlete_dashboard' %}" class="btn-login-primary">
+                <i class="fas fa-table-tennis"></i> Painel do Atleta
             </a>
             <div class="divider-or">ou</div>
-            <a href="{% url "clubs:list" %}" class="btn-back-secondary">
+            <a href="{% url 'clubs:list' %}" class="btn-back-secondary">
                 <i class="fas fa-arrow-left"></i> Ver outros clubes
             </a>
         </div>
+        {% else %}
+        <p class="hint">Já possui cadastro? Faça login para acessar.<br>Ainda não é membro? Entre em contato com a administração do clube.</p>
+        <div class="action-buttons">
+            <a href="{% url 'account_login' %}?next={{ request.path }}" class="btn-login-primary">
+                <i class="fas fa-sign-in-alt"></i> Fazer Login
+            </a>
+            <div class="divider-or">ou</div>
+            <a href="{% url 'clubs:list' %}" class="btn-back-secondary">
+                <i class="fas fa-arrow-left"></i> Ver outros clubes
+            </a>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
