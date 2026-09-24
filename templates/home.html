@@ -15,10 +15,14 @@
         margin-left: calc(50% - 50vw);
         margin-right: calc(50% - 50vw);
         margin-bottom: 0;
+        height: calc(100vh - 85px); /* Ajustado para preencher a tela inteira abaixo do menu */
+        overflow: hidden;
     }
     .home-video-banner video {
         width: 100%;
-        height: auto;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
         display: block;
     }
     /* Overlay sutil sobre o vídeo */
