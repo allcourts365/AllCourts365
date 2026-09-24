@@ -68,6 +68,23 @@
     html {
         scroll-behavior: smooth;
     }
+
+    /* Reverte para o comportamento anterior no mobile (altura natural do vídeo) */
+    @media (max-width: 768px) {
+        .home-video-banner {
+            height: auto;
+        }
+        .home-video-banner video {
+            height: auto;
+        }
+        .scroll-down-btn {
+            display: none;
+        }
+        #home-content {
+            margin-top: 20px !important;
+            padding-top: 0 !important;
+        }
+    }
 </style>
 {% endblock %}
 
