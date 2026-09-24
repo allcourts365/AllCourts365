@@ -377,6 +377,12 @@
                             <a href="{% url 'clubs:my_clubs' %}">
                                 <i class="fas fa-home"></i> Meus Clubes
                             </a>
+                            <a href="#" onclick="if(confirm('Atenção: Ao excluir sua conta todos os seus dados serão apagados definitivamente, incluindo os vínculos com os clubes onde você é membro. Deseja continuar?')) { document.getElementById('deleteAccountFormHeader').submit(); } return false;" style="color: #ef4444 !important;">
+                                <i class="fas fa-trash-alt" style="color: #ef4444;"></i> Excluir Conta
+                            </a>
+                            <form id="deleteAccountFormHeader" action="{% url 'delete_account' %}" method="post" style="display: none;">
+                                {% csrf_token %}
+                            </form>
                             <div class="dropdown-divider"></div>
                             <a href="{% url 'account_logout' %}">
                                 <i class="fas fa-sign-out-alt"></i> Sair
@@ -424,6 +430,11 @@
                     {% endif %}
                 {% endif %}
             </div>
+            
+            <div style="display: flex; gap: 15px; margin-top: 15px;">
+                <a href="{% url 'terms_of_use' %}" style="color: var(--subtitle-color); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;" onmouseover="this.style.color='var(--highlight-color)'" onmouseout="this.style.color='var(--subtitle-color)'">Termos de Uso</a>
+                <span style="color: var(--subtitle-color); font-size: 0.85rem;">|</span>
+                <a href="{% url 'privacy_policy' %}" style="color: var(--subtitle-color); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;" onmouseover="this.style.color='var(--highlight-color)'" onmouseout="this.style.color='var(--subtitle-color)'">Política de Privacidade</a>
             </div>
         </div>
         

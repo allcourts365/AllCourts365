@@ -938,13 +938,21 @@
                     </div>
                     
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px;">
-                        <a href="{% url 'account_reset_password' %}" style="color: var(--subtitle-color); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 1.1rem; padding: 10px; border-radius: 8px; transition: background 0.2s;">
-                            <i class="fas fa-key"></i> Redefinir Minha Senha
-                        </a>
+                        <div style="display: flex; gap: 20px;">
+                            <a href="{% url 'account_reset_password' %}" style="color: var(--subtitle-color); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 1.1rem; padding: 10px; border-radius: 8px; transition: background 0.2s;">
+                                <i class="fas fa-key"></i> Redefinir Minha Senha
+                            </a>
+                            <a href="#" onclick="if(confirm('Atenção: Ao excluir sua conta todos os seus dados serão apagados definitivamente, incluindo os vínculos com os clubes onde você é membro. Deseja continuar?')) { document.getElementById('deleteAccountFormDesktop').submit(); } return false;" style="color: #ef4444; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 1.1rem; padding: 10px; border-radius: 8px; transition: background 0.2s;">
+                                <i class="fas fa-trash-alt"></i> Excluir Minha Conta
+                            </a>
+                        </div>
                         <button type="submit" name="update_profile" class="btn-save">
                             <i class="fas fa-save"></i> Salvar Alterações
                         </button>
                     </div>
+                </form>
+                <form id="deleteAccountFormDesktop" action="{% url 'delete_account' %}" method="post" style="display: none;">
+                    {% csrf_token %}
                 </form>
             </div>
         </div>
@@ -1092,7 +1100,13 @@
                         <a href="{% url 'account_reset_password' %}" style="text-align: center; color: var(--subtitle-color); text-decoration: none; font-weight: 600; font-size: 1rem; padding: 10px;">
                             <i class="fas fa-key"></i> Redefinir Minha Senha
                         </a>
+                        <a href="#" onclick="if(confirm('Atenção: Ao excluir sua conta todos os seus dados serão apagados definitivamente, incluindo os vínculos com os clubes onde você é membro. Deseja continuar?')) { document.getElementById('deleteAccountFormMobile').submit(); } return false;" style="text-align: center; color: #ef4444; text-decoration: none; font-weight: 600; font-size: 1rem; padding: 10px;">
+                            <i class="fas fa-trash-alt"></i> Excluir Minha Conta
+                        </a>
                     </div>
+                </form>
+                <form id="deleteAccountFormMobile" action="{% url 'delete_account' %}" method="post" style="display: none;">
+                    {% csrf_token %}
                 </form>
             </div>
         </div>

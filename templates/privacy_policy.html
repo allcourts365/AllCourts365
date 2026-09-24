@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Política de Privacidade - AllCourts365{% endblock %}
+
+{% block content %}
+<div style="margin-top: 10px; margin-bottom: 25px; margin-left: 20px;">
+    <a href="{% url 'account_signup' %}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--highlight-color, #00BFFF); text-decoration: none; font-size: 0.95rem; font-weight: 600;">
+        <i class="fas fa-arrow-left"></i> Voltar ao Cadastramento
+    </a>
+</div>
+<div class="container" style="padding: 0 20px; max-width: 900px; padding-bottom: 40px;">
+    <div class="glass-card" style="padding: 40px; border-radius: 16px;">
+        
+        <h1 style="color: #fff; font-size: 2.5rem; margin-bottom: 30px; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px;">Política de Privacidade</h1>
+        
+        <div style="color: var(--subtitle-color); font-size: 1.1rem; line-height: 1.8;">
+            <p>Sua privacidade é importante para nós. Esta política de privacidade explica como o AllCourts365 coleta, usa, compartilha e protege as informações pessoais dos usuários da nossa plataforma.</p>
+            
+            <h3 style="color: #fff; margin-top: 30px; margin-bottom: 15px;">1. Coleta de Informações</h3>
+            <p>Coletamos as informações que você nos fornece diretamente ao se cadastrar no sistema (nome, e-mail, telefone, dados de perfil, preferências de quadra) e informações geradas pela sua utilização da plataforma (resultados de jogos, histórico de atividades e clubes vinculados).</p>
+            
+            <h3 style="color: #fff; margin-top: 30px; margin-bottom: 15px;">2. Uso das Informações</h3>
+            <p>Utilizamos suas informações para fornecer, manter e melhorar nossos serviços, além de exibir suas informações em torneios, chaves e rankings. Também utilizamos esses dados para nos comunicarmos com você e administrar sua conta.</p>
+            
+            <h3 style="color: #fff; margin-top: 30px; margin-bottom: 15px;">3. Compartilhamento de Informações</h3>
+            <p>Suas informações de perfil público, como nome e foto, podem ser visíveis por outros membros dos clubes nos quais você está vinculado ou em chaves de torneios abertas. Não vendemos ou compartilhamos suas informações pessoais com terceiros para fins de marketing sem o seu consentimento explícito.</p>
+            
+            <h3 style="color: #fff; margin-top: 30px; margin-bottom: 15px;">4. Segurança dos Dados</h3>
+            <p>Implementamos medidas técnicas e organizacionais adequadas para proteger as informações pessoais contra perda, roubo, uso não autorizado, divulgação e alteração. No entanto, nenhum sistema de segurança é infalível, e recomendamos que você use senhas fortes.</p>
+            
+            <h3 style="color: #fff; margin-top: 30px; margin-bottom: 15px;">5. Exclusão de Conta</h3>
+            <p>Você tem o direito de excluir sua conta e solicitar a remoção permanente de todos os seus dados pessoais do nosso banco de dados. Esta ação pode ser realizada diretamente na seção "Meu Perfil" do seu painel.</p>
+
+            <p style="margin-top: 40px; font-style: italic; text-align: center;">Última atualização: {% now "d/m/Y" %}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -138,7 +138,14 @@
             </div>
             {% endfor %}
             
-            <button class="btn-login" type="submit">Cadastrar</button>
+            <div class="form-group" style="display: flex; align-items: flex-start; gap: 10px; margin-top: 15px;">
+                <input type="checkbox" id="terms_checkbox" style="margin-top: 4px; cursor: pointer; width: auto; height: auto;">
+                <label for="terms_checkbox" style="font-size: 0.9rem; color: var(--subtitle-color); display: inline; font-weight: normal; margin-bottom: 0;">
+                    Li e concordo com os <a href="{% url 'terms_of_use' %}" target="_blank" style="color: var(--highlight-color, #00BFFF); text-decoration: underline;">Termos de uso</a> e a <a href="{% url 'privacy_policy' %}" target="_blank" style="color: var(--highlight-color, #00BFFF); text-decoration: underline;">Política de Privacidade</a>
+                </label>
+            </div>
+            
+            <button class="btn-login" type="submit" id="btn_cadastrar" disabled style="opacity: 0.5; cursor: not-allowed;">Cadastrar</button>
         </form>
 
         <script>
@@ -148,6 +155,24 @@
                     input.classList.add('input-field');
                 }
             });
+
+            // Lógica para habilitar o botão de cadastro apenas se o checkbox estiver marcado
+            const termsCheckbox = document.getElementById('terms_checkbox');
+            const btnCadastrar = document.getElementById('btn_cadastrar');
+            
+            if(termsCheckbox && btnCadastrar) {
+                termsCheckbox.addEventListener('change', function() {
+                    if(this.checked) {
+                        btnCadastrar.disabled = false;
+                        btnCadastrar.style.opacity = '1';
+                        btnCadastrar.style.cursor = 'pointer';
+                    } else {
+                        btnCadastrar.disabled = true;
+                        btnCadastrar.style.opacity = '0.5';
+                        btnCadastrar.style.cursor = 'not-allowed';
+                    }
+                });
+            }
         </script>
 
         <div class="auth-links" style="margin-top: 25px; font-size: 0.9rem; color: var(--subtitle-color);">

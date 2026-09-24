@@ -21,6 +21,23 @@ def logout_and_redirect(request):
     logout(request)
     return redirect(next_url)
 
+def terms_of_use(request):
+    return render(request, 'terms_of_use.html')
+
+def privacy_policy(request):
+    return render(request, 'privacy_policy.html')
+
+
+@login_required
+def delete_account(request):
+    if request.method == 'POST':
+        user = request.user
+        logout(request)
+        user.delete()
+        messages.success(request, 'Sua conta e todos os dados vinculados foram apagados com sucesso.')
+        return redirect('home')
+    return redirect('athlete_dashboard')
+
 @login_required
 def login_redirect(request):
     user = request.user
