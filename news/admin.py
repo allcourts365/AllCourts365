@@ -96,6 +96,7 @@ class NewsAdmin(admin.ModelAdmin):
             from clubs.models import Department
             form.base_fields["department"].queryset = Department.objects.all().order_by("name")
         else:
+            from django.db.models import Q
             # Admin do clube ou departamento
             managed = Club.objects.filter(
                 Q(administrators=request.user) | Q(departments__administrators=request.user)
