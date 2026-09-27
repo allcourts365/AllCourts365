@@ -101,6 +101,17 @@
         margin-top: 4px;
         display: block;
     }
+    /* Estilos para o ReCaptcha */
+    .g-recaptcha {
+        margin: 0 auto;
+        display: table;
+    }
+    .form-group:has(.g-recaptcha) {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        margin-top: 10px;
+    }
 </style>
 {% endblock %}
 
@@ -131,6 +142,8 @@
                 {{ form.non_field_errors }}
             </div>
             {% endif %}
+
+            {{ form.media }}
 
             {% for field in form %}
             <div class="form-group">

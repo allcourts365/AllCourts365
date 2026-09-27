@@ -129,6 +129,7 @@ class GlobalLoginAdmin(UserAdmin):
         return ", ".join(sorted(list(clubs))) if clubs else "-"
         
     dynamic_get_clubs.short_description = "Clube"
+    dynamic_get_clubs.admin_order_field = "first_club_name"
 
     def get_list_display(self, request):
         return ('username', 'email', 'first_name', 'last_name', 'is_staff', 'dynamic_get_clubs')
@@ -162,11 +163,13 @@ class GlobalLoginAdmin(UserAdmin):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         
+        from django.db.models import Max, Q
+        qs = qs.annotate(first_club_name=Max('player_profiles__club__name'))
+        
         if request.user.is_superuser:
             # Superuser vê todos, sem annotation problemática (dynamic_get_clubs busca os clubes via queryset próprio)
             return qs
             
-        from django.db.models import Q
         user_clubs = request.user.managed_clubs.all()
         user_depts = request.user.managed_departments.all()
         

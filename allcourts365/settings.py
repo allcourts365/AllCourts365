@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'ckeditor',
     'ckeditor_uploader',
+    'django_recaptcha',
 ]
 
 MIDDLEWARE = [
@@ -248,3 +249,10 @@ CKEDITOR_CONFIGS = {
         'resize_enabled': False,
     }
 }
+
+# ReCaptcha Settings
+RECAPTCHA_PUBLIC_KEY = os.environ.get('RECAPTCHA_PUBLIC_KEY', '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI')
+RECAPTCHA_PRIVATE_KEY = os.environ.get('RECAPTCHA_PRIVATE_KEY', '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe')
+ACCOUNT_FORMS = {'signup': 'core.forms.CustomSignupForm'}
+
+SILENCED_SYSTEM_CHECKS = ['django_recaptcha.recaptcha_test_key_error']
