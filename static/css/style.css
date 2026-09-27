@@ -34,6 +34,12 @@ body {
     padding: 0 20px;
 }
 
+@media (max-width: 768px) {
+    .container {
+        padding: 0 2px !important;
+    }
+}
+
 /* Glassmorphism Navigation */
 .glass-nav {
     background: rgba(15, 23, 42, 0.6);
@@ -223,7 +229,7 @@ input, select, textarea, button {
 
 /* Paddings dos cards */
 .glass-card {
-    padding: 20px;
+    padding: 15px; /* Reduzido no mobile para o conteúdo chegar mais perto da borda */
 }
 @media (min-width: 768px) {
     .glass-card {
@@ -293,5 +299,122 @@ input, select, textarea, button {
         background: rgba(255,255,255,0.05);
         color: var(--subtitle-color);
         margin: 0;
+    }
+    }
+}
+
+/* Novos menus: Offcanvas Left Menu */
+.offcanvas-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s;
+}
+.offcanvas-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+.offcanvas-left {
+    position: fixed;
+    top: 0; left: -100%;
+    width: calc(100vw - 15mm); /* Pára a 1.5cm da borda */
+    max-width: 320px;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 1001;
+    transition: left 0.3s ease;
+    border-right: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    flex-direction: column;
+}
+.offcanvas-left.open {
+    left: 0;
+}
+.offcanvas-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+}
+.close-offcanvas {
+    background: none;
+    border: none;
+    color: var(--highlight-color);
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.offcanvas-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    overflow-y: auto;
+}
+.offcanvas-body a {
+    color: #e2e8f0;
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+.offcanvas-body a:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+.offcanvas-body a i {
+    width: 24px;
+    text-align: center;
+    color: var(--highlight-color);
+}
+
+/* Novo Header e Hamburgers */
+.top-header {
+    padding: 10px 0; /* Header mais fino */
+}
+.header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.hamburger-btn {
+    background: none;
+    border: none;
+    color: var(--title-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.brand-sub {
+    font-size: 0.35em; color: #a0aec0; letter-spacing: 1px; vertical-align: baseline; margin-left: 5px; font-weight: 500;
+}
+
+/* Empurrar o conteúdo pra direita ao abrir o menu esquerdo */
+.page-wrapper {
+    transition: transform 0.3s ease;
+    width: 100%;
+}
+body.menu-open .page-wrapper {
+    transform: translateX(calc(100vw - 15mm));
+}
+@media (min-width: 320px) {
+    body.menu-open .page-wrapper {
+        transform: translateX(min(calc(100vw - 15mm), 320px));
     }
 }
