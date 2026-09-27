@@ -10,7 +10,7 @@ django-js-asset==4.1.0
 django-multiselectfield==1.0.1
 et_xmlfile==2.0.0
 idna==3.19
-numpy==2.5.2
+numpy
 openpyxl==3.1.5
 pillow==10.4.0
 PyJWT==2.13.0
