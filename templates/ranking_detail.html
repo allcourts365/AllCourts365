@@ -429,7 +429,15 @@
                     {% for m in matches %}
                     <div class="match-card {% if round_num == ranking.current_round and request.user.is_authenticated and m.player_a.user == request.user or round_num == ranking.current_round and request.user.is_authenticated and m.player_b.user == request.user %}my-match{% endif %}" style="flex-direction: column; align-items: stretch; padding: 20px;" {% if round_num == ranking.current_round and request.user.is_authenticated and m.player_a.user == request.user or round_num == ranking.current_round and request.user.is_authenticated and m.player_b.user == request.user %}onclick="window.location.href='{% url 'athlete_calendar' %}?open_match_id={{ m.id }}'"{% endif %}>
                         {% if round_num == ranking.current_round and request.user.is_authenticated and m.player_a.user == request.user or round_num == ranking.current_round and request.user.is_authenticated and m.player_b.user == request.user %}
-                            <div class="my-match-badge">Meu Jogo - Agendar</div>
+                            <div class="my-match-badge">
+                                {% if m.schedule_status == 'aguardando_adversario' %}
+                                    Meu Jogo - Aguardando Adversário - Clique para Reagendar
+                                {% elif m.schedule_status == 'agendado' %}
+                                    Seu jogo - Marcado - Clique para Reagendar
+                                {% else %}
+                                    Meu Jogo - Agendar
+                                {% endif %}
+                            </div>
                         {% endif %}
                         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                             <div class="match-player {% if m.winner == m.player_a %}winner{% endif %}" style="text-align: right;">
