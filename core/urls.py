@@ -10,6 +10,7 @@ urlpatterns = [
     path('logout-redirect/', views.logout_and_redirect, name='logout_redirect'),
     path('termos-de-uso/', views.terms_of_use, name='terms_of_use'),
     path('privacidade/', views.privacy_policy, name='privacy_policy'),
+    path('aceitar-termos/', views.require_terms_acceptance, name='require_terms_acceptance'),
     path('delete-account/', views.delete_account, name='delete_account'),
     path('redirecionar/', views.login_redirect, name='login_redirect'),
     path('painel-atleta/', views.athlete_dashboard, name='athlete_dashboard'),

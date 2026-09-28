@@ -546,11 +546,20 @@ def registration_step3(request, club_id, tournament_id):
         # Finaliza a inscrição
         if not existing_cp:
             status = 'waitlist' if is_waitlist_mode_post else 'pending'
+            
+            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            ip = x_forwarded_for.split(',')[0] if x_forwarded_for else request.META.get('REMOTE_ADDR')
+            from django.utils import timezone
+
             CategoryPlayer.objects.create(
                 category=category,
                 player=player_profile,
                 fee=fee,
-                payment_status=status
+                payment_status=status,
+                terms_accepted=True,
+                terms_version="v1.0_2024",
+                consent_ip=ip,
+                consent_date=timezone.now()
             )
         elif existing_cp.payment_status == 'pending_waitlist':
             existing_cp.payment_status = 'pending'

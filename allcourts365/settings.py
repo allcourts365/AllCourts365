@@ -70,6 +70,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'core.middleware.AutoLogoutMiddleware',
+    'core.middleware.TermsAcceptanceMiddleware',
 ]
 
 ROOT_URLCONF = 'allcourts365.urls'

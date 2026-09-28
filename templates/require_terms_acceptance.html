@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Atualização dos Termos de Uso{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 60px auto; background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); padding: 40px; text-align: center;">
+    
+    <div style="margin-bottom: 25px;">
+        <i class="fas fa-shield-alt" style="font-size: 3rem; color: var(--highlight-color, #ea580c); margin-bottom: 15px;"></i>
+        <h2 style="color: #fff; font-size: 1.8rem;">Aviso Importante</h2>
+    </div>
+
+    <div style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.6; margin-bottom: 30px; text-align: left;">
+        <p style="margin-bottom: 15px;">
+            Atualizamos nossos <strong>Termos de Uso</strong> e <strong>Política de Privacidade</strong> para garantir maior segurança no uso de imagem e na participação de menores em nossa plataforma.
+        </p>
+        <p>
+            Para continuar usando o AllCourts365, você precisa ler e aceitar as novas regras de consentimento.
+        </p>
+    </div>
+
+    <form method="POST" action="{% url 'require_terms_acceptance' %}?next={{ request.GET.next|default:'login_redirect' }}">
+        {% csrf_token %}
+        
+        <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 8px; margin-bottom: 30px; text-align: left; border: 1px solid rgba(255,255,255,0.05);">
+            <label style="display: flex; gap: 12px; align-items: flex-start; cursor: pointer; color: #e2e8f0; font-size: 0.95rem;">
+                <input type="checkbox" name="terms_agreement" required style="margin-top: 4px; transform: scale(1.3); accent-color: var(--highlight-color, #ea580c);">
+                <span>
+                    Li e aceito os Termos de Uso e a Política de Privacidade atualizados. <strong>Declaro possuir autorização de uso de imagem para todos os inscritos (e de seus responsáveis, se menores) e cedo o direito de uso das mídias geradas no evento.</strong>
+                </span>
+            </label>
+        </div>
+
+        <button type="submit" style="width: 100%; padding: 14px; border-radius: 8px; border: none; background: var(--highlight-color, #ea580c); color: #fff; font-weight: 600; font-size: 1.1rem; cursor: pointer; transition: opacity 0.2s;">
+            Aceitar e Continuar
+        </button>
+    </form>
+    
+    <div style="margin-top: 20px; font-size: 0.9rem;">
+        <a href="{% url 'logout' %}" style="color: #94a3b8; text-decoration: underline;">Sair (Cancelar)</a>
+    </div>
+</div>
+{% endblock %}

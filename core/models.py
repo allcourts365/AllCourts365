@@ -198,6 +198,12 @@ class UserProfile(models.Model):
     # Avatar
     avatar = models.CharField(max_length=100, blank=True, verbose_name="Avatar", default="")
 
+    # Aceite de Termos e Privacidade (Auditoria)
+    terms_accepted = models.BooleanField(default=False, verbose_name="Termos Aceitos")
+    terms_version = models.CharField(max_length=50, blank=True, verbose_name="Versão dos Termos")
+    consent_ip = models.GenericIPAddressField(null=True, blank=True, verbose_name="IP do Aceite")
+    consent_date = models.DateTimeField(null=True, blank=True, verbose_name="Data/Hora do Aceite")
+
     def __str__(self):
         return f"Perfil de {self.user.username}"
 

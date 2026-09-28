@@ -384,6 +384,12 @@ class CategoryPlayer(models.Model):
     is_seed = models.BooleanField(default=False, verbose_name="Cabeça de Chave")
     seed_number = models.IntegerField(null=True, blank=True, verbose_name="Nº Cabeça de Chave")
 
+    # Auditoria de Consentimento (LGPD e Uso de Imagem)
+    terms_accepted = models.BooleanField(default=False, verbose_name="Termos Aceitos na Inscrição")
+    terms_version = models.CharField(max_length=50, blank=True, verbose_name="Versão dos Termos")
+    consent_ip = models.GenericIPAddressField(null=True, blank=True, verbose_name="IP do Aceite")
+    consent_date = models.DateTimeField(null=True, blank=True, verbose_name="Data/Hora do Aceite")
+
     def __str__(self):
         return f"{self.player.name} - {self.category.name}"
 

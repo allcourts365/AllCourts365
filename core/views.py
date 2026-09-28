@@ -27,6 +27,31 @@ def terms_of_use(request):
 def privacy_policy(request):
     return render(request, 'privacy_policy.html')
 
+@login_required
+def require_terms_acceptance(request):
+    if request.method == 'POST':
+        terms_agreement = request.POST.get('terms_agreement') == 'on'
+        if terms_agreement:
+            # Obter IP
+            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            ip = x_forwarded_for.split(',')[0] if x_forwarded_for else request.META.get('REMOTE_ADDR')
+            
+            from django.utils import timezone
+            profile = request.user.profile
+            profile.terms_accepted = True
+            profile.terms_version = "v1.0_2024"
+            profile.consent_ip = ip
+            profile.consent_date = timezone.now()
+            profile.save()
+            
+            messages.success(request, 'Termos aceitos com sucesso! Obrigado.')
+            next_url = request.GET.get('next', 'login_redirect')
+            return redirect(next_url)
+        else:
+            messages.error(request, 'Você precisa aceitar os termos para continuar.')
+            
+    return render(request, 'require_terms_acceptance.html')
+
 
 @login_required
 def delete_account(request):

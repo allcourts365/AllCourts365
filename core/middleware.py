@@ -42,3 +42,28 @@ class AutoLogoutMiddleware(MiddlewareMixin):
                     if club_id not in managed_ids:
                         logout(request)
                 # Se não for a rota de um clube, não faz nada com o admin
+
+class TermsAcceptanceMiddleware(MiddlewareMixin):
+    def process_request(self, request):
+        if request.user.is_authenticated and not request.user.is_superuser:
+            # URLs that skip the check
+            path = request.path
+            exempt_paths = [
+                '/aceitar-termos/',
+                '/logout/',
+                '/logout-redirect/',
+                '/termos-de-uso/',
+                '/privacidade/',
+                '/admin/',
+            ]
+            
+            if any(path.startswith(p) for p in exempt_paths):
+                return
+                
+            if path.startswith('/static/') or path.startswith('/media/'):
+                return
+                
+            # Check if terms are accepted
+            if hasattr(request.user, 'profile') and not request.user.profile.terms_accepted:
+                return redirect('require_terms_acceptance')
+
