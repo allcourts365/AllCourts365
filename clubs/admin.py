@@ -333,7 +333,7 @@ class RankingTournamentAdmin(TournamentAdmin):
         }),
         ('Detalhes (Aba Informações)', {
             'fields': ('information', 'location_name', 'location_address', 'location_url',
-                       'contact_whatsapp', 'whatsapp_group_link', 'fee_observation')
+                       'contact_whatsapp', 'whatsapp_group_link', 'message_for_athletes', 'fee_observation')
         }),
         ('Upload de Atletas (Gera as rodadas Automaticamente)', {
             'fields': ('excel_file', 'history_file'),
@@ -730,7 +730,7 @@ class KnockoutTournamentAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
         }),
         ('Detalhes (Aba Informações)', {
             'fields': ('information', 'location_name', 'location_address', 'location_url',
-                       'contact_whatsapp', 'whatsapp_group_link', 'fee_observation')
+                       'contact_whatsapp', 'whatsapp_group_link', 'message_for_athletes', 'fee_observation')
         }),
         ('Upload de Atletas (Gera as Chaves Automaticamente)', {
             'fields': ('excel_file',),

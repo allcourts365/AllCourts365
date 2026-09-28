@@ -198,6 +198,15 @@
         max-width: none !important;
         box-sizing: border-box !important;
     }
+    
+    .athlete-message-box a {
+        color: var(--highlight-color, #00d2ff);
+        text-decoration: underline;
+        font-weight: bold;
+    }
+    .athlete-message-box a:hover {
+        opacity: 0.8;
+    }
 </style>
 {% endblock %}
 
@@ -218,12 +227,11 @@
         <p style="color: var(--subtitle-color); font-size: 1rem; margin-bottom: 25px; font-weight: 500;">
             De: {{ ranking.start_date|date:"d/m/Y"|default:"-" }} &nbsp;<span style="color: rgba(255,255,255,0.2);">|</span>&nbsp; Até: {{ ranking.end_date|date:"d/m/Y"|default:"-" }}
         </p>
-        
-        <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; border: 1px solid var(--highlight-color); display: inline-block; width: 100%; max-width: 900px;">
-            <p style="margin: 0; color: #fff; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
-                🎾 <span>Não esqueçam de colocar nos grupos as datas e horários dos jogos, assim como os resultados</span> 🎾
-            </p>
+        {% if ranking.message_for_athletes %}
+        <div class="athlete-message-box" style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; border: 1px solid var(--highlight-color); display: inline-block; width: 100%; max-width: 900px; text-align: center; color: #fff; font-size: 0.95rem; line-height: 1.5;">
+            {{ ranking.message_for_athletes|safe }}
         </div>
+        {% endif %}
     </div>
 
     <!-- Categorias -->

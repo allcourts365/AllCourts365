@@ -144,6 +144,13 @@ class Tournament(models.Model):
     location_url = models.URLField(verbose_name="Link de Como Chegar (Google Maps, etc)", blank=True, null=True)
     contact_whatsapp = models.CharField(max_length=50, verbose_name="WhatsApp da Organização", blank=True, null=True)
     whatsapp_group_link = models.URLField(verbose_name="Link do Grupo do Torneio", blank=True, null=True)
+    message_for_athletes = RichTextField(
+        verbose_name="Mensagem de Aviso aos Atletas", 
+        help_text="Aviso exibido no topo do torneio. Deixe em branco para não exibir.", 
+        blank=True, 
+        null=True, 
+        default="🎾 NÃO ESQUEÇAM DE COLOCAR NOS GRUPOS AS DATAS E HORÁRIOS DOS JOGOS, ASSIM COMO OS RESULTADOS 🎾"
+    )
     fee_observation = models.TextField(verbose_name="Observação sobre as Taxas (Rodapé)", blank=True, null=True, help_text="Ex: O código PIX para pagamento aparece na etapa de pagamento...")
     
     allow_player_scheduling = models.BooleanField(default=True, verbose_name="Atleta pode gerenciar agendamento?")

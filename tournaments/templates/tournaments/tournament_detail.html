@@ -36,9 +36,11 @@
     <p style="font-size: 1.1rem; margin-bottom: 1.5rem; color: var(--text-muted);">
         <strong>De:</strong> {{ tournament.start_date|date:"d/m/Y" }} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Até:</strong> {{ tournament.end_date|date:"d/m/Y" }}
     </p>
+    {% if tournament.message_for_athletes %}
     <div style="background-color: rgba(0, 210, 255, 0.05); padding: 1rem; border-radius: 8px; font-weight: 600; font-size: 1.1rem; border: 1px solid rgba(0, 210, 255, 0.2); color: var(--text-main); width: 100%;">
-        🎾 NÃO ESQUEÇAM DE COLOCAR NOS GRUPOS AS DATAS E HORÁRIOS DOS JOGOS, ASSIM COMO OS RESULTADOS 🎾
+        {{ tournament.message_for_athletes|safe }}
     </div>
+    {% endif %}
 </div>
 {% endif %}
 

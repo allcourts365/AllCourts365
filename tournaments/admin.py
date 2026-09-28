@@ -78,7 +78,7 @@ class RankingTournamentAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Informações Gerais', {
-            'fields': ('name', 'competition_type', 'set_format', 'current_round', 'start_date', 'end_date', 'is_active', 'is_finished')
+            'fields': ('name', 'competition_type', 'set_format', 'current_round', 'start_date', 'end_date', 'is_active', 'is_finished', 'message_for_athletes')
         }),
         ('Pontuação do Ranking', {
             'fields': ('points_winner_2x0', 'points_winner_2x1', 'points_loser_2x1', 'points_loser_2x0'),

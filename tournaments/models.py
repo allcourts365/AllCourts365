@@ -69,6 +69,14 @@ class Tournament(models.Model):
     location_url = models.URLField(verbose_name="Link de Como Chegar", blank=True, null=True)
     contact_whatsapp = models.CharField(max_length=50, verbose_name="WhatsApp da Organização", blank=True, null=True)
     whatsapp_group_link = models.URLField(verbose_name="Link do Grupo do Torneio", blank=True, null=True)
+    message_for_athletes = models.CharField(
+        max_length=255, 
+        verbose_name="Mensagem de Aviso aos Atletas", 
+        help_text="Aviso exibido no topo do torneio. Deixe em branco para não exibir.", 
+        blank=True, 
+        null=True, 
+        default="🎾 NÃO ESQUEÇAM DE COLOCAR NOS GRUPOS AS DATAS E HORÁRIOS DOS JOGOS, ASSIM COMO OS RESULTADOS 🎾"
+    )
     
     # Configurações de Pontuação para Ranking
     points_winner_2x0 = models.IntegerField(default=3, verbose_name="Pontos (Vitória 2x0)", help_text="Pontos recebidos pelo vencedor de um jogo 2x0.")
