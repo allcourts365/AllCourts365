@@ -2668,6 +2668,11 @@
                         evDiv.click();
                     }
                 }, 200);
+            } else {
+                let d = new Date();
+                let todayStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                // Assume a default time for unscheduled matches to open the modal
+                openScheduleModal(todayStr, '18:00', openMatchId);
             }
         }
     });
