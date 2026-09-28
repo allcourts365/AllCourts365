@@ -196,6 +196,14 @@
     .athlete-message-box a:hover {
         opacity: 0.8;
     }
+    .athlete-message-box ul, .athlete-message-box ol {
+        padding-left: 20px;
+        margin-bottom: 10px;
+        margin-top: 10px;
+    }
+    .athlete-message-box p {
+        margin-bottom: 10px;
+    }
     
     .match-card.my-match {
         border: 2px solid var(--highlight-color, #38bdf8);
@@ -243,7 +251,7 @@
             De: {{ ranking.start_date|date:"d/m/Y"|default:"-" }} &nbsp;<span style="color: rgba(255,255,255,0.2);">|</span>&nbsp; Até: {{ ranking.end_date|date:"d/m/Y"|default:"-" }}
         </p>
         {% if ranking.message_for_athletes %}
-        <div class="athlete-message-box" style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; border: 1px solid var(--highlight-color); display: inline-block; width: 100%; max-width: 900px; text-align: center; color: #fff; font-size: 0.95rem; line-height: 1.5;">
+        <div class="athlete-message-box" style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 8px; border: 1px solid var(--highlight-color); display: inline-block; width: 100%; max-width: 900px; text-align: left; color: #fff; font-size: 0.95rem; line-height: 1.5;">
             {{ ranking.message_for_athletes|safe }}
         </div>
         {% endif %}
