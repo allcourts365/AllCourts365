@@ -366,11 +366,16 @@
 {% endblock %}
 
 {% block content %}
+
+
 {% if linked_club %}
-<div style="margin-top: 10px; margin-bottom: 25px;">
+<div style="text-align: left; margin-bottom: 20px; margin-top: 0; padding-top: 20px;">
     <a href="{% url 'clubs:detail' linked_club.id %}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600;">
         <i class="fas fa-arrow-left"></i> Voltar para {{ linked_club.name }}
     </a>
+</div>
+<div style="text-align: center; margin-top: 20px; margin-bottom: 30px;">
+    <h2 style="font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; color: #fff;">Bem vindo ao Painel Administrativo de Atleta</h2>
 </div>
 <div class="glass-card club-header-card" style="padding: 0; overflow: hidden; margin-bottom: 40px; border-radius: 20px;">
     <!-- Capa / Header Image -->
@@ -413,7 +418,7 @@
             <i class="fas fa-map-marker-alt"></i> {{ linked_club.address|default:"Endereço não informado" }}
         </p>
         
-        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+        <div class="hide-on-mobile" style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
             {% if linked_club.rules_pdf %}
             <a href="{{ linked_club.rules_pdf.url }}" target="_blank" class="btn-highlight" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 200px; box-sizing: border-box; background: rgba(255,255,255,0.05); color: #fff; padding: 12px 20px; border-radius: 30px; text-decoration: none; font-weight: 600; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.2); transition: all 0.2s; white-space: nowrap;" onmouseover="this.style.background='var(--highlight-color)'; this.style.borderColor='var(--highlight-color)';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.2)';">
                 <i class="fas fa-file-pdf"></i> Regulamento
@@ -436,7 +441,7 @@
 
 <div class="tournaments-section">
     <div style="display: flex; flex-direction: column; align-items: center; gap: 15px; margin-bottom: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
-        <h2 style="font-size: 2rem; margin: 0; text-align: center;">Bem vindo ao Painel Administrativo de Atleta</h2>
+        
         
         {% if my_profiles or all_pending_requests %}
         <div style="display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 8px 15px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);">
@@ -468,7 +473,7 @@
     </div>
     
     <!-- Menu Horizontal de Abas -->
-    <div class="tabs-container">
+    <div class="tabs-container hide-on-mobile">
         <button class="tab-btn {% if not linked_club %}active{% endif %}" onclick="openTab('meu-clube', this)"><i class="fas fa-link"></i> Meu(s) Clube(s) / Liga(s)</button>
         <button class="tab-btn {% if linked_club %}active{% endif %}" onclick="openTab('meu-perfil', this)"><i class="fas fa-user-edit"></i> Meu Perfil</button>
         <button class="tab-btn" onclick="window.location.href='{% url 'athlete_calendar' %}'"><i class="fas fa-calendar-alt"></i> Calendário</button>
@@ -638,7 +643,18 @@
         </div>
 
         <!-- === MOBILE VERSION (Edge-to-Edge with Rich Cards) === -->
+
+        <style>
+            .vinculos-mobile .profile-form .custom-form-group {
+                margin-bottom: 10px !important;
+            }
+            .vinculos-mobile .profile-form input,
+            .vinculos-mobile .profile-form select {
+                padding: 12px 10px !important;
+            }
+        </style>
         <div class="vinculos-mobile">
+
             <div style="padding: 10px 0; min-height: 450px;">
                 <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 30px; font-weight: 900; text-align: center;">
                     Meus Vínculos
@@ -958,8 +974,19 @@
         </div>
 
         <!-- === MOBILE VERSION === -->
+
+        <style>
+            .vinculos-mobile .profile-form .custom-form-group {
+                margin-bottom: 10px !important;
+            }
+            .vinculos-mobile .profile-form input,
+            .vinculos-mobile .profile-form select {
+                padding: 12px 10px !important;
+            }
+        </style>
         <div class="vinculos-mobile">
-            <div style="padding: 10px 0;">
+
+            <div class="glass-card" style="padding: 25px 8px; border-radius: 16px;">
                 <h2 style="font-size: 2.2rem; color: #fff; margin-bottom: 30px; font-weight: 900; text-align: center;">
                     Meu Perfil
                 </h2>
@@ -973,7 +1000,7 @@
                         <h4 style="color: #fff; font-size: 1.2rem; font-weight: 800; margin: 0;">Dados Pessoais</h4>
                     </div>
                     
-                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div style="display: flex; flex-direction: column; gap: 0;">
                         <!-- Avatar Selection Mobile -->
                         <div class="custom-form-group" style="display: flex; justify-content: center; margin-bottom: 10px;">
                             <div style="position: relative; display: inline-block; cursor: pointer;" onclick="openAvatarModal()">
@@ -1050,7 +1077,7 @@
                         <h4 style="color: #fff; font-size: 1.2rem; font-weight: 800; margin: 0;">Preferências em Quadra</h4>
                     </div>
 
-                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div style="display: flex; flex-direction: column; gap: 0;">
                         <div class="custom-form-group">
                             <label for="{{ profile_form.full_name.id_for_label }}_mobile">Nome Completo (Rankings e Chaves)</label>
                             {{ profile_form.full_name }}
@@ -2207,4 +2234,17 @@
             });
         });
     });
+{% endblock %}
+
+
+{% block default_mobile_menu %}
+<a href="#" onclick="if(typeof openTab === 'function') { openTab('meu-clube', document.querySelector('.tab-btn')); document.getElementById('rightMenuMobile').classList.remove('open'); } return false;"><i class="fas fa-link"></i> Meu(s) Clube(s) / Liga(s)</a>
+<a href="#" onclick="if(typeof openTab === 'function') { openTab('meu-perfil', document.querySelector('.tab-btn:nth-child(2)')); document.getElementById('rightMenuMobile').classList.remove('open'); } return false;"><i class="fas fa-user-edit"></i> Meu Perfil</a>
+<a href="{% url 'athlete_calendar' %}"><i class="fas fa-calendar-alt"></i> Calendário</a>
+<a href="{% url 'athlete_stats' %}"><i class="fas fa-chart-line"></i> Estatísticas</a>
+<a href="#" onclick="if(typeof openTab === 'function') { openTab('mensagens', document.querySelector('.tab-btn:nth-child(5)')); document.getElementById('rightMenuMobile').classList.remove('open'); } return false;"><i class="fas fa-envelope"></i> Mensagens {% if unread_messages_count %}<span style="background: red; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.8rem; margin-left: 5px;">{{ unread_messages_count }}</span>{% endif %}</a>
+{% if linked_club and linked_club.rules_pdf %}
+<a href="{{ linked_club.rules_pdf.url }}" target="_blank"><i class="fas fa-file-pdf"></i> Regulamento</a>
+{% endif %}
+<a href="{% url 'account_logout' %}"><i class="fas fa-sign-out-alt"></i> Sair da Conta</a>
 {% endblock %}

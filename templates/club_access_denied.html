@@ -23,8 +23,8 @@
     .divider-or { display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,0.2); font-size: 0.85rem; margin: 2px 0; }
     .divider-or::before, .divider-or::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
     @media (max-width: 768px) {
-        .access-denied-wrapper { padding: 20px 15px; }
-        .access-denied-card { padding: 30px 20px; }
+        .access-denied-wrapper { padding: 20px 0; }
+        .access-denied-card { padding: 30px 15px; width: 100%; max-width: 100%; border-radius: 15px; }
         .access-denied-card h1 { font-size: 1.4rem; }
     }
 </style>
@@ -42,7 +42,7 @@
 {% endblock %}
 
 {% block content %}
-<div style="margin-top: 10px; margin-bottom: 25px; margin-left: 20px;">
+<div style="text-align: left; margin-bottom: 20px; margin-top: 0; padding-top: 20px;">
     {% if user.is_authenticated %}
     <a href="{% url 'clubs:my_clubs' %}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600;">
         <i class="fas fa-arrow-left"></i> Voltar para os Clubes

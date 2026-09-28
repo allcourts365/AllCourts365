@@ -40,6 +40,10 @@
     <div style="margin-bottom: 40px;">
         {% if club %}
         <a href="{% url 'clubs:detail' club.id %}" style="color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600; display: inline-block; margin-bottom: 20px;">← Voltar para {{ club.name }}</a>
+        {% else %}
+        <a href="{% url 'home' %}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--highlight-color, #00BFFF); text-decoration: none; font-size: 0.95rem; font-weight: 600; margin-bottom: 20px;">
+            <i class="fas fa-arrow-left"></i> Voltar à Home
+        </a>
         {% endif %}
         <h1 style="font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 800; color: var(--title-color); margin: 0;">
             {% if club %}<i class="fas fa-newspaper" style="color: var(--highlight-color); margin-right: 12px;"></i>{% endif %}

@@ -4,7 +4,12 @@
 {% block title %}Clubes - AllCourts365{% endblock %}
 
 {% block content %}
-<div class="header-section" style="text-align: center; margin-bottom: 40px;">
+<div style="text-align: left; margin-bottom: 20px; margin-top: 0; padding-top: 20px;">
+    <a href="{% url 'home' %}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--highlight-color, #00BFFF); text-decoration: none; font-size: 0.95rem; font-weight: 600;">
+        <i class="fas fa-arrow-left"></i> Voltar à Home
+    </a>
+</div>
+<div class="header-section" style="text-align: center; margin-bottom: 40px; position: relative;">
     <h1 style="font-size: 3rem; margin-bottom: 10px;">Clubes e Ligas associadas</h1>
     <p style="font-size: 1.2rem;">Encontre o seu clube e acesse rankings e torneios.</p>
 </div>

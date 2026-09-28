@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Departamentos - {{ club.name }}{% endblock %}
+
+{% block desktop_club_links %}
+    {% if user_is_member or user.is_staff or request.user.is_superuser or request.user in club.administrators.all %}
+        <a href="{% url 'athlete_dashboard' %}?club={{ club.id }}" style="background: var(--global-highlight-color); color: #fff; padding: 6px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; text-decoration: none;"><i class="fas fa-table-tennis"></i> Painel do Atleta</a>
+    {% endif %}
+{% endblock %}
+
+{% block right_menu_content %}
+    <a href="{% url 'athlete_dashboard' %}?club={{ club.id }}" class="offcanvas-link"><i class="fas fa-table-tennis"></i> Painel do Atleta</a>
+    <a href="{% url 'clubs:news_list' club.id %}" class="offcanvas-link"><i class="fas fa-newspaper"></i> Notícias do {{ club.name }}</a>
+    <div style="margin-bottom: 40px;"><a href="{% url 'clubs:detail' club.id %}" style="display: inline-block; color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600;"><i class="fas fa-arrow-left"></i> Voltar ao Clube</a></div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root {
+        {% if club.background_color %}--bg-color: {{ club.background_color }};{% endif %}
+        {% if club.overlay_color %}--overlay-color: {{ club.overlay_color }};{% endif %}
+        {% if club.overlay_opacity is not None %}--overlay-opacity: {{ club.overlay_opacity|stringformat:"s" }};{% endif %}
+        {% if club.highlight_color %}--highlight-color: {{ club.highlight_color }};{% endif %}
+        {% if club.title_color %}--title-color: {{ club.title_color }};{% endif %}
+        {% if club.subtitle_color %}--subtitle-color: {{ club.subtitle_color }};{% endif %}
+    }
+    
+    {% if club.background_image and not club.background_video %}
+    body {
+        background-image: url('{{ club.background_image.url }}') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-attachment: fixed !important;
+    }
+    {% endif %}
+    
+    {% if club.watermark_image %}
+    .club-watermark {
+        position: fixed;
+        z-index: 1000;
+        opacity: {{ club.watermark_opacity|default:"0.8"|stringformat:"s" }};
+        width: {{ club.watermark_size_percent|default:"15"|stringformat:"s" }}%;
+        pointer-events: none;
+        {% if club.watermark_position == 'bottom-right' %} bottom: 20px; right: 20px; {% else %} bottom: 20px; left: 20px; {% endif %}
+    }
+    {% endif %}
+</style>
+{% endblock %}
+
+{% block background_video %}
+{% if club.background_video %}
+<video id="bg-video" autoplay muted loop playsinline>
+    <source src="{{ club.background_video.url }}" type="video/mp4">
+</video>
+{% endif %}
+{% endblock background_video %}
+
+{% block watermark %}
+    {% if club.watermark_image %}
+        <img src="{{ club.watermark_image.url }}" alt="Watermark" class="club-watermark">
+    {% elif site_config.watermark_image %}
+        <img src="{{ site_config.watermark_image.url }}" alt="Watermark" class="watermark">
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div style="padding: 45px 0 40px 0;">
+<div style="margin-bottom: 40px;">
+    <a href="{% url 'clubs:detail' club.id %}" style="color: var(--highlight-color); text-decoration: none; font-size: 0.95rem; font-weight: 600; display: inline-block; margin-bottom: 20px;">
+        <i class="fas fa-arrow-left"></i> Voltar ao Clube
+    </a>
+</div>
+
+<div class="glass-card club-header-card" style="padding: 0; overflow: hidden; margin-bottom: 40px; border-radius: 20px;">
+    <!-- Capa / Header Image -->
+    <div style="width: 100%; aspect-ratio: 4 / 1; position: relative; background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <div style="width: 100%; height: 100%; overflow: hidden; position: absolute; top: 0; left: 0;">
+            {% if club.card_image %}
+                <img src="{{ club.card_image.url }}" style="width: 100%; height: 100%; object-fit: contain; opacity: 0.5; transform: scale(calc({{ club.card_image_size|default:100 }} / 100)); transform-origin: center;">
+            {% elif club.background_image %}
+                <img src="{{ club.background_image.url }}" style="width: 100%; height: 100%; object-fit: contain; opacity: 0.5; transform: scale(calc({{ club.card_image_size|default:100 }} / 100)); transform-origin: center;">
+            {% endif %}
+        </div>
+        
+        <!-- Logo overlapping -->
+        <div style="position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%); width: 120px; height: 120px; border-radius: 50%; background: #1a1a2e; border: 4px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(10px);">
+            {% if club.logo %}
+                <img src="{{ club.logo.url }}" alt="{{ club.name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; transform: scale(calc({{ club.logo_size|default:100 }} / 100)); transform-origin: center;">
+            {% else %}
+                <img src="{% static 'bolinha.png' %}" style="width: 60px; height: 60px; opacity: 0.8; transform: scale(calc({{ club.logo_size|default:100 }} / 100)); transform-origin: center;">
+            {% endif %}
+        </div>
+    </div>
+    
+    <div style="padding: 80px 20px 30px 20px; text-align: center;">
+        <h1 style="font-size: clamp(2rem, 5vw, 2.5rem); margin-bottom: 5px; font-weight: 900; line-height: 1.2;">
+            <span style="color: var(--title-color);">Departamentos do {{ club.name }}</span>
+        </h1>
+    </div>
+</div>
+
+<div class="tournaments-section">
+    <div class="desktop-3-cols" style="display: grid; gap: 20px;">
+        {% for dept in departments %}
+        <div class="glass-card" onclick="window.location.href='{% url 'clubs:department_detail' club.id dept.id %}'" style="padding: 0; overflow: hidden; height: 100%; display: flex; flex-direction: column; border-radius: 20px; transition: transform 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+            <!-- Capa -->
+            <div style="width: 100%; aspect-ratio: 4 / 1; position: relative; background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(0,0,0,0.5)); border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;">
+                <div style="width: 100%; height: 100%; overflow: hidden; position: absolute; top: 0; left: 0;">
+                    {% if dept.image %}
+                        <img src="{{ dept.image.url }}" style="width: 100%; height: 100%; object-fit: contain; opacity: 0.5; transform: scale(calc({{ dept.image_size|default:100 }} / 100)); transform-origin: center;">
+                    {% elif club.card_image %}
+                        <img src="{{ club.card_image.url }}" style="width: 100%; height: 100%; object-fit: contain; opacity: 0.5; transform: scale(calc({{ club.card_image_size|default:100 }} / 100)); transform-origin: center;">
+                    {% endif %}
+                </div>
+                
+                <!-- Logo overlapping -->
+                <div style="position: absolute; bottom: -45px; left: 50%; transform: translateX(-50%); width: 90px; height: 90px; border-radius: 50%; background: #1a1a2e; border: 3px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                    {% if club.logo %}
+                        <img src="{{ club.logo.url }}" alt="{{ club.name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; transform: scale(calc({{ club.logo_size|default:100 }} / 100)); transform-origin: center;">
+                    {% else %}
+                        <img src="{% static 'bolinha.png' %}" style="width: 45px; height: 45px; opacity: 0.8; transform: scale(calc({{ club.logo_size|default:100 }} / 100)); transform-origin: center;">
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Info -->
+            <div style="padding: 60px 20px 30px 20px; text-align: center; display: flex; flex-direction: column; flex-grow: 1;">
+                <h3 style="margin-bottom: 15px; font-size: 1.5rem; font-weight: 800; color: #fff; text-transform: uppercase;">{{ dept.name }}</h3>
+                <div style="margin-top: auto; padding-top: 10px; text-align: left;">
+                    <a href="{% url 'clubs:department_detail' club.id dept.id %}" style="text-decoration: none; display: inline-flex; align-items: center; gap: 5px; color: var(--highlight-color); font-size: 1.05rem; font-weight: 700;">Ver Departamento &rarr;</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p style="text-align: center; grid-column: 1 / -1;">Nenhum departamento ativo no momento.</p>
+        {% endfor %}
+    </div>
+</div>
+</div>
+{% endblock %}

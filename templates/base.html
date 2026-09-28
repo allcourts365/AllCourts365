@@ -294,6 +294,11 @@
         }
     </style>
     {% block extra_head %}{% endblock %}
+<style>
+@media (max-width: 768px) {
+    .hide-on-mobile { display: none !important; }
+}
+</style>
 </head>
 <body>
     <!-- Overlay da Imagem de Fundo (Só ativa se houver imagem ou vídeo) -->
@@ -343,6 +348,278 @@
     </div>
     {% endif %}
 
+    <!-- Estilos Mobile Header -->
+    <style>
+        .mobile-header {
+            display: none;
+            height: 45px;
+            padding: 0 15px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .mobile-header .brand-text {
+            color: #fff;
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin: 0;
+            text-align: center;
+            flex-grow: 1;
+        }
+        .mobile-header .menu-btn {
+            color: #fff;
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .mobile-header .menu-btn .fa-caret-right {
+            font-size: 0.7rem;
+        }
+        @media (max-width: 768px) {
+            .glass-nav {
+                display: none !important;
+            }
+            .mobile-header {
+                display: flex;
+            }
+        }
+    </style>
+
+    <!-- Estilos do Menu Lateral (Global) -->
+    <style>
+        :root {
+            --sidebar-width: calc(100vw - 40px); /* Para no ~1cm da borda direita */
+        }
+        body {
+            overflow-x: hidden;
+            transition: transform 0.3s ease-in-out;
+        }
+        body.sidebar-open {
+            transform: translateX(var(--sidebar-width));
+            overflow: hidden;
+        }
+        body.sidebar-open #openSidebarBtn {
+            opacity: 0;
+            pointer-events: none;
+        }
+        /* Sidebar container */
+        .sidebar-menu {
+            position: fixed;
+            top: 0;
+            left: calc(-1 * var(--sidebar-width));
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar-header {
+            height: 45px;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar-close-btn {
+            color: #fff;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+        }
+        .sidebar-close-btn i.fa-bars {
+            font-size: 1.1rem;
+        }
+        .sidebar-close-btn i.fa-caret-left {
+            font-size: 0.7rem;
+        }
+        .sidebar-nav {
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .sidebar-nav a {
+            color: #fff;
+            text-decoration: none;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+        }
+        .sidebar-nav a:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .sidebar-nav a i {
+            width: 20px;
+            text-align: center;
+            color: var(--global-highlight-color);
+            font-size: 1rem;
+        }
+    </style>
+
+    <!-- Menu Lateral (Global) -->
+    <div class="sidebar-menu" id="globalSidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-close-btn" id="closeSidebarBtn">
+                <i class="fas fa-bars"></i>
+                <i class="fas fa-caret-left"></i>
+                <span style="margin-left: 4px;">Fechar Menu</span>
+            </div>
+        </div>
+        <div class="sidebar-nav">
+            <a href="/"><i class="fas fa-home"></i> Home</a>
+            <a href="{% url 'clubs:list' %}"><i class="fas fa-shield-alt"></i> Clubes/Ligas Associadas</a>
+            <a href="{% url 'news:global_list' %}"><i class="fas fa-newspaper"></i> Notícias do AllCourts365</a>
+            {% if site_config.show_clubs_cta and not user.is_authenticated %}
+            <a href="{% url 'club_landing_page' %}"><i class="fas fa-rocket"></i> Para Clubes</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <style>
+        .right-menu-mobile {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            transform-origin: top;
+            transform: scaleY(0);
+            opacity: 0;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            z-index: 990;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .right-menu-mobile.open {
+            transform: scaleY(1);
+            opacity: 1;
+        }
+    </style>
+
+    <!-- Header Mobile Fino -->
+    <div class="mobile-header">
+        <div class="menu-btn" id="openSidebarBtn">
+            <i class="fas fa-bars"></i>
+            <i class="fas fa-caret-right"></i>
+        </div>
+        <div class="brand-text">
+            <a href="/" style="color: inherit; text-decoration: none;">AllCourts<span style="background: linear-gradient(to bottom, #ffb347, #c43a00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">365</span>&reg; <span style="font-size: 0.35em; color: #a0aec0; letter-spacing: 1px; vertical-align: baseline; margin-left: 5px; font-weight: 500; font-style: normal;">by EVO<span style="background: linear-gradient(to bottom, #ffb347, #c43a00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">2</span>WIN</span></a>
+        </div>
+        <div class="menu-btn" id="openRightMenuBtn">
+            <i class="fas fa-bars"></i>
+        </div>
+        
+        <!-- Right Contextual Menu Mobile -->
+        <div class="right-menu-mobile" id="rightMenuMobile">
+            <div class="sidebar-nav" style="padding: 15px 0;">
+                {% if not user.is_authenticated %}
+                    {% if club_context %}
+                    <a href="{% url 'account_login' %}"><i class="fas fa-sign-in-alt"></i> Entre AQUI.</a>
+                    {% else %}
+                    <a href="{% url 'account_login' %}?club=all"><i class="fas fa-sign-in-alt"></i> Entre AQUI.</a>
+                    {% endif %}
+                {% else %}
+                    <div class="user-name-label" style="padding-left: 20px; font-size: 0.75rem; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-bottom: 5px;">{{ user.first_name|default:user.username }}</div>
+                    {% block mobile_menu_extra %}{% endblock %}
+
+                    {% block default_mobile_menu %}
+                    {% if department %}
+                    <a href="{% url 'athlete_dashboard' %}?club={{ club_context.id }}"><i class="fas fa-table-tennis"></i> Painel do Atleta</a>
+                    <a href="#" onclick="if(typeof openTab === 'function') { openTab('rankings'); document.getElementById('rightMenuMobile').classList.remove('open'); } return false;"><i class="fas fa-calendar-alt"></i> Torneios Sazonais</a>
+                    <a href="#" onclick="if(typeof openTab === 'function') { openTab('knockouts'); document.getElementById('rightMenuMobile').classList.remove('open'); } return false;"><i class="fas fa-project-diagram"></i> Torneios Eliminatórios</a>
+                    {% if department.rules_pdf %}
+                    <a href="{{ department.rules_pdf.url }}" target="_blank"><i class="fas fa-file-pdf"></i> Regulamento</a>
+                    {% endif %}
+                    <a href="{% url 'clubs:news_list' club_context.id %}"><i class="fas fa-newspaper"></i> Notícias {{ club_context.name }}</a>
+                    <a href="{% url 'clubs:detail' club_context.id %}"><i class="fas fa-arrow-left"></i> Voltar ao Clube</a>
+                    {% elif club_context %}
+                    <a href="{% url 'athlete_dashboard' %}?club={{ club_context.id }}"><i class="fas fa-table-tennis"></i> Painel do Atleta</a>
+                    
+                    {% if club_context.rules_pdf %}
+                    <a href="{{ club_context.rules_pdf.url }}" target="_blank"><i class="fas fa-file-pdf"></i> Regras Gerais do Clube</a>
+                    {% endif %}
+                    
+                    {% if club_context.has_departments %}
+                    <a href="#" onclick="var el=this.nextElementSibling; el.style.display = el.style.display === 'none' ? 'block' : 'none'; return false;"><i class="fas fa-sitemap"></i> Departamentos <i class="fas fa-caret-down" style="float: right; margin-top: 4px; margin-right: 15px;"></i></a>
+                    <div style="display: none; background: rgba(0,0,0,0.2);">
+                        {% for dept in club_context.departments.all %}
+                            {% if dept.is_active %}
+                            <a href="{% url 'clubs:department_detail' club_context.id dept.id %}" style="padding-left: 45px; font-size: 0.9rem;">- {{ dept.name }}</a>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <a href="{% url 'clubs:news_list' club_context.id %}"><i class="fas fa-newspaper"></i> Notícias {{ club_context.name }}</a>
+                    
+                    <a href="{% url 'clubs:my_clubs' %}"><i class="fas fa-home"></i> Meus Clubes</a>
+                    <a href="{% url 'account_logout' %}"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                    {% else %}
+                    <a href="{% url 'clubs:my_clubs' %}"><i class="fas fa-home"></i> Meus Clubes</a>
+                    <a href="{% url 'home' %}"><i class="fas fa-arrow-left"></i> Voltar à Home</a>
+                    <a href="{% url 'account_logout' %}"><i class="fas fa-sign-out-alt"></i> Sair</a>
+                    <a href="#" onclick="if(confirm('Atenção: Ao excluir sua conta todos os seus dados serão apagados definitivamente. Deseja continuar?')) { document.getElementById('deleteAccountFormMobile').submit(); } return false;" style="color: #ef4444;"><i class="fas fa-trash-alt" style="color: #ef4444;"></i> Excluir Conta</a>
+                    <form id="deleteAccountFormMobile" action="{% url 'delete_account' %}" method="post" style="display: none;">
+                        {% csrf_token %}
+                    </form>
+                    {% endif %}
+                    {% endblock %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const openBtn = document.getElementById('openSidebarBtn');
+            const closeBtn = document.getElementById('closeSidebarBtn');
+            const body = document.body;
+            
+            const rightMenuBtn = document.getElementById('openRightMenuBtn');
+            const rightMenuMobile = document.getElementById('rightMenuMobile');
+
+            if(openBtn && closeBtn) {
+                openBtn.addEventListener('click', function() {
+                    body.classList.add('sidebar-open');
+                    if (rightMenuMobile) rightMenuMobile.classList.remove('open');
+                });
+                closeBtn.addEventListener('click', function() {
+                    body.classList.remove('sidebar-open');
+                });
+            }
+            
+            if(rightMenuBtn && rightMenuMobile) {
+                rightMenuBtn.addEventListener('click', function() {
+                    rightMenuMobile.classList.toggle('open');
+                    body.classList.remove('sidebar-open');
+                });
+            }
+
+        });
+    </script>
+
     <!-- Navegação -->
     <nav class="glass-nav">
         <div class="container nav-content">
@@ -353,9 +630,28 @@
                 <a href="{% url 'clubs:list' %}">Clubes / Ligas</a>
                 {% if club_context %}
                     <a href="{% url 'clubs:news_list' club_context.id %}">Noticias {{ club_context.name }}</a>
+                    
+                    {% if club_context.has_departments %}
+                    <div class="user-avatar-wrapper" style="display: inline-flex; align-items: center;">
+                        <a style="cursor: pointer; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff;">
+                            Departamentos <i class="fas fa-caret-down" style="margin-left: 5px;"></i>
+                        </a>
+                        <div class="user-dropdown">
+                            {% for dept in club_context.departments.all %}
+                                {% if dept.is_active %}
+                                <a href="{% url 'clubs:department_detail' club_context.id dept.id %}">{{ dept.name }}</a>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- Caso o clube não tenha departamentos, exibe links diretos (Opcional, mas previne que torneios fiquem inacessíveis) -->
+                    {% endif %}
+
                     {% if user.is_authenticated %}
                     <a href="{% url 'athlete_dashboard' %}?club={{ club_context.id }}" style="background: var(--global-highlight-color); color: #fff; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: 600;"><i class="fas fa-table-tennis"></i> Painel do Atleta</a>
                     {% endif %}
+                    
                     {% if site_config.show_clubs_cta and not user.is_authenticated %}
                     <a href="{% url 'club_landing_page' %}" style="border: 1px solid var(--global-highlight-color); color: var(--global-highlight-color); padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: 600;"><i class="fas fa-rocket"></i> Para Clubes</a>
                     {% endif %}
@@ -401,7 +697,7 @@
     </nav>
 
     <!-- Conteúdo Principal -->
-    <main class="container" style="width: 100%; padding-bottom: 60px;">
+    <main class="container" style="width: 100%; padding-bottom: 30px;">
         {% block content %}
         {% endblock %}
     </main>

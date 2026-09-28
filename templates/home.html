@@ -84,6 +84,9 @@
             margin-top: 20px !important;
             padding-top: 0 !important;
         }
+        .desktop-only-buttons {
+            display: none !important;
+        }
     }
 </style>
 {% endblock %}
@@ -108,7 +111,7 @@
         A central definitiva para gestão de Clubes, Rankings e Torneios.
     </p>
     
-    <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+    <div class="desktop-only-buttons" style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
         <a href="{% url 'clubs:list' %}" class="btn-highlight" style="font-size: 1.1rem; padding: 12px 30px; text-decoration: none; display: inline-block;">Clubes / Ligas Associadas</a>
         <a href="{% url 'news:global_list' %}" style="font-size: 1.1rem; padding: 12px 30px; text-decoration: none; display: inline-block; border: 2px solid var(--highlight-color); color: var(--highlight-color); border-radius: 8px; font-weight: 700; transition: background 0.2s;"
            onmouseover="this.style.background='rgba(var(--highlight-color-rgb,59,130,246),0.15)'"
