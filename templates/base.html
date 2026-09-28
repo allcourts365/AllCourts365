@@ -528,7 +528,15 @@
             <a href="/" style="color: inherit; text-decoration: none;">AllCourts<span style="background: linear-gradient(to bottom, #ffb347, #c43a00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">365</span>&reg; <span style="font-size: 0.35em; color: #a0aec0; letter-spacing: 1px; vertical-align: baseline; margin-left: 5px; font-weight: 500; font-style: normal;">by EVO<span style="background: linear-gradient(to bottom, #ffb347, #c43a00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">2</span>WIN</span></a>
         </div>
         <div class="menu-btn" id="openRightMenuBtn">
-            <i class="fas fa-bars"></i>
+            {% if user.is_authenticated %}
+                {% with first_letter=user.first_name|default:user.username|make_list|first|upper %}
+                <div style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.7); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 500; color: #fff;">
+                    {{ first_letter }}
+                </div>
+                {% endwith %}
+            {% else %}
+                <i class="fas fa-sign-in-alt" style="font-size: 1.1rem; opacity: 0.9;"></i>
+            {% endif %}
         </div>
         
         <!-- Right Contextual Menu Mobile -->
