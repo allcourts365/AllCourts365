@@ -273,7 +273,7 @@
                             <img src="{% static 'bolinha.png' %}" class="ball-spinning" style="width:12px;height:12px;" alt="Em andamento"> EM ANDAMENTO
                         </div>
                     {% endif %}
-                    <button type="button" onclick="event.preventDefault(); event.stopPropagation(); document.getElementById('modal-inscritos-{{ cat.id }}').style.display='flex';" style="display: inline-flex; align-items: center; justify-content: center; height: 24px; box-sizing: border-box; gap: 6px; padding: 0 12px; border-radius: 20px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.2); letter-spacing: 0.5px; cursor: pointer; transition: background 0.2s; font-family: inherit; margin: 0;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'"><i class="fas fa-users" style="font-size: 10px;"></i> INSCRITOS</button>
+
                 </div>
                 <h4 style="font-size: 1.4rem; color: #fff; margin: 0 0 20px 0; font-weight: 700; text-transform: uppercase; display: flex; align-items: center; gap: 10px;">
                     {{ cat.name }}

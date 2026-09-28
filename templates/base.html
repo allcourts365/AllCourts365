@@ -556,7 +556,11 @@
                     {% if department %}
                     <a href="{% url 'athlete_dashboard' %}?club={{ club_context.id }}"><i class="fas fa-table-tennis"></i> Painel do Atleta</a>
                     <a href="#" onclick="if(typeof openTab === 'function') { openTab('rankings'); document.getElementById('rightMenuMobile').classList.remove('open'); } return false;"><i class="fas fa-calendar-alt"></i> Torneios Sazonais</a>
-                    <a href="#" onclick="if(typeof openTab === 'function') { openTab('knockouts'); document.getElementById('rightMenuMobile').classList.remove('open'); } return false;"><i class="fas fa-project-diagram"></i> Torneios Eliminatórios</a>
+                    <a href="#" onclick="var el=this.nextElementSibling; el.style.display = el.style.display === 'none' ? 'block' : 'none'; return false;"><i class="fas fa-project-diagram"></i> Torneios Eliminatórios <i class="fas fa-caret-down" style="float: right; margin-top: 4px; margin-right: 15px;"></i></a>
+                    <div style="display: none; background: rgba(0,0,0,0.2);">
+                        <a href="#" onclick="if(typeof openTab === 'function') { openTab('knockouts'); document.getElementById('rightMenuMobile').classList.remove('open'); } return false;" style="padding-left: 45px; font-size: 0.9rem;">- Ver Torneios</a>
+                        <a href="{% url 'clubs:knockout_general_ranking' club_context.id %}" style="padding-left: 45px; font-size: 0.9rem;">- Ranking Geral</a>
+                    </div>
                     {% if department.rules_pdf %}
                     <a href="{{ department.rules_pdf.url }}" target="_blank"><i class="fas fa-file-pdf"></i> Regulamento</a>
                     {% endif %}
