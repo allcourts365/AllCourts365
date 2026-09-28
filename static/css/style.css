@@ -60,7 +60,7 @@ body {
 }
 
 .brand {
-    font-size: 24px;
+    font-size: 32px;
     font-weight: 800;
     color: var(--title-color);
     text-decoration: none;
