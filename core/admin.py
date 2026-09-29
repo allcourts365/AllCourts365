@@ -131,10 +131,24 @@ class GlobalLoginAdmin(UserAdmin):
     dynamic_get_clubs.short_description = "Clube"
     dynamic_get_clubs.admin_order_field = "first_club_name"
 
+    def get_consent_date(self, obj):
+        if hasattr(obj, 'profile') and obj.profile.consent_date:
+            from django.utils.timezone import localtime
+            return localtime(obj.profile.consent_date).strftime('%d/%m/%Y %H:%M:%S')
+        return '-'
+    get_consent_date.short_description = "Aceite de Termos"
+
     def get_list_display(self, request):
+        if request.user.is_superuser:
+            return ('username', 'email', 'first_name', 'last_name', 'is_staff', 'dynamic_get_clubs', 'get_consent_date')
         return ('username', 'email', 'first_name', 'last_name', 'is_staff', 'dynamic_get_clubs')
 
     def get_readonly_fields(self, request, obj=None):
+        if request.user.is_superuser:
+            ro_fields = super().get_readonly_fields(request, obj)
+            if ro_fields:
+                return tuple(ro_fields) + ('get_consent_date',)
+            return ('get_consent_date',)
         if not request.user.is_superuser and obj:
             # ADM de departamento: pode editar usuarios mas NAO pode setar is_superuser nem is_staff
             if request.user.managed_departments.exists():
@@ -293,6 +307,7 @@ class GlobalLoginAdmin(UserAdmin):
         fieldsets = list(super(UserAdmin, self).get_fieldsets(request, obj))
         if request.user.is_superuser:
             fieldsets.append(('Gestão de Clube/Liga', {'fields': ('managed_club',)}))
+            fieldsets.append(('Auditoria (Termos)', {'fields': ('get_consent_date',)}))
             return fieldsets
         else:
             new_fieldsets = []
