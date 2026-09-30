@@ -725,7 +725,15 @@
             <div style="display: flex; gap: 20px; align-items: center; justify-content: center; flex-wrap: wrap;">
                 {% for link in site_config.footer_links.all %}
                 <a href="{{ link.href }}" target="_blank" style="text-decoration: none; color: #fff; font-size: 1.5rem; transition: color 0.2s; display: inline-flex; align-items: center; gap: 6px;" onmouseover="this.style.color='var(--highlight-color)'" onmouseout="this.style.color='#fff'">
-                    <i class="{{ link.icon_class }}" style="text-decoration: none; {% if 'fa-globe' in link.icon_class %}-webkit-text-stroke: 0.3px currentColor;{% endif %}"></i>
+                    {% if 'fa-globe' in link.icon_class %}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -0.125em;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M2.5 9h19M2.5 15h19"></path>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                    {% else %}
+                    <i class="{{ link.icon_class }}" style="text-decoration: none;"></i>
+                    {% endif %}
                     {% if link.label %}<span style="font-size: 0.85rem; text-decoration: underline; color: #7ec8e3;">{{ link.label }}</span>{% endif %}
                 </a>
                 {% endfor %}
