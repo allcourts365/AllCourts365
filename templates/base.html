@@ -725,7 +725,7 @@
             <div style="display: flex; gap: 20px; align-items: center; justify-content: center; flex-wrap: wrap;">
                 {% for link in site_config.footer_links.all %}
                 <a href="{{ link.href }}" target="_blank" style="text-decoration: none; color: #fff; font-size: 1.5rem; transition: color 0.2s; display: inline-flex; align-items: center; gap: 6px;" onmouseover="this.style.color='var(--highlight-color)'" onmouseout="this.style.color='#fff'">
-                    <i class="{{ link.icon_class }}" style="text-decoration: none;"></i>
+                    <i class="{{ link.icon_class }}" style="text-decoration: none; {% if 'fa-globe' in link.icon_class %}-webkit-text-stroke: 1px currentColor;{% endif %}"></i>
                     {% if link.label %}<span style="font-size: 0.85rem; text-decoration: underline; color: #7ec8e3;">{{ link.label }}</span>{% endif %}
                 </a>
                 {% endfor %}
