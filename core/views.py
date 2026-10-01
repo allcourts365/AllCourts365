@@ -207,8 +207,13 @@ def athlete_dashboard(request):
                 scheduled_dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M")
                 scheduled_dt = timezone.make_aware(scheduled_dt)
                 
+                is_past_adjustment = False
+                if match.schedule_status == 'agendado' and match.status == 'pending':
+                    if scheduled_dt < timezone.now():
+                        is_past_adjustment = True
+
                 # Validação de Horário no Passado
-                if scheduled_dt < timezone.now():
+                if scheduled_dt < timezone.now() and not is_past_adjustment:
                     messages.error(request, 'Não é possível agendar um jogo em um horário no passado.')
                     return redirect('athlete_dashboard')
                 
@@ -243,6 +248,24 @@ def athlete_dashboard(request):
                 
                 if conflicts.exists():
                     messages.error(request, 'A quadra selecionada já possui um jogo marcado próximo a este horário (conflito de 1h30m).')
+                elif is_past_adjustment:
+                    match.scheduled_datetime = scheduled_dt
+                    match.court = court
+                    match.save()
+                    
+                    # Notify opponent about the adjustment
+                    opponent = match.player_b if match.player_a == active_profile else match.player_a
+                    if opponent and opponent.user:
+                        from core.models import Message
+                        Message.objects.create(
+                            sender=user,
+                            recipient=opponent.user,
+                            subject="Ajuste de Horário",
+                            body=f"{active_profile.name} ajustou o horário do jogo {match.tournament.name if match.tournament else 'Amistoso'} para a data/hora real em que ocorreu: {scheduled_dt.strftime('%d/%m/%Y às %H:%M')}.",
+                            related_match=match
+                        )
+                        
+                    messages.success(request, 'Horário do jogo ajustado com sucesso.')
                 else:
                     # Se já havia um agendamento/proposta anterior, registra que é um reagendamento
                     is_reschedule = match.schedule_status in ['agendado', 'aguardando_adversario']
@@ -852,8 +875,13 @@ def athlete_calendar(request):
                 scheduled_dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M")
                 scheduled_dt = timezone.make_aware(scheduled_dt)
 
+                is_past_adjustment = False
+                if match.schedule_status == 'agendado' and match.status == 'pending':
+                    if scheduled_dt < timezone.now():
+                        is_past_adjustment = True
+
                 # Validação de Horário no Passado
-                if scheduled_dt < timezone.now():
+                if scheduled_dt < timezone.now() and not is_past_adjustment:
                     messages.error(request, 'Não é possível agendar um jogo em um horário no passado.')
                     return redirect('athlete_calendar')
 
@@ -914,6 +942,33 @@ def athlete_calendar(request):
                     if has_conflict:
                         messages.error(request, 'A quadra selecionada já possui um agendamento ou proposta neste horário.')
                         return redirect('athlete_calendar')
+
+                # Nova regra: Ajuste de data no passado para jogo já aceito e pendente
+                is_past_adjustment = False
+                if match.schedule_status == 'agendado' and match.status == 'pending':
+                    if scheduled_dt < timezone.now():
+                        is_past_adjustment = True
+                        
+                if is_past_adjustment:
+                    match.scheduled_datetime = scheduled_dt
+                    if court_id:
+                        match.court_id = court_id
+                    match.save()
+                    
+                    # Notify opponent about the adjustment
+                    opponent = match.player_b if match.player_a == active_profile else match.player_a
+                    if opponent and opponent.user:
+                        from core.models import Message
+                        Message.objects.create(
+                            sender=user,
+                            recipient=opponent.user,
+                            subject="Ajuste de Horário",
+                            body=f"{active_profile.name} ajustou o horário do jogo {match.tournament.name if match.tournament else 'Amistoso'} para a data/hora real em que ocorreu: {scheduled_dt.strftime('%d/%m/%Y às %H:%M')}.",
+                            related_match=match
+                        )
+
+                    messages.success(request, 'Horário do jogo ajustado com sucesso.')
+                    return redirect('athlete_calendar')
 
                 is_reschedule = match.schedule_status in ['agendado', 'aguardando_adversario']
 

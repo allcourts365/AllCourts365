@@ -1001,7 +1001,7 @@
                     <div style="display: flex; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; gap: 10px;">
                         <i class="far fa-clock" style="width: 20px; text-align: center; color: #888;"></i>
                         <input type="date" name="date" id="modal-date" oninput="syncFromInputs()" required style="background: transparent; border: none; color: white; outline: none; font-family: inherit;">
-                        <input type="time" name="time" id="modal-time" oninput="onStartTimeChanged()" onchange="checkHoursAndAlert()" required style="background: transparent; border: none; color: white; outline: none; font-family: inherit;">
+                        <input type="time" name="time" id="modal-time" oninput="onStartTimeChanged()" required style="background: transparent; border: none; color: white; outline: none; font-family: inherit;">
                         <span style="color: #888;">—</span>
                         <input type="time" name="end_time" id="modal-time-end" oninput="syncFromInputs()" required style="background: transparent; border: none; color: white; outline: none; font-family: inherit;">
                     </div>
@@ -1125,7 +1125,17 @@
         // Validação de horário no passado
         const selectedDate = new Date(`${dateStr}T${timeStr}:00`);
         const now = new Date();
-        if (selectedDate < now) {
+        
+        let isEditingAcceptedPendingMatch = false;
+        if (matchSel && matchSel.value) {
+            const matchId = matchSel.value;
+            const match = allMatchesJson.find(m => m.id == matchId) || matchesJson.find(m => m.id == matchId);
+            if (match && match.status === 'agendado' && match.match_status === 'pending') {
+                isEditingAcceptedPendingMatch = true;
+            }
+        }
+        
+        if (selectedDate < now && !isEditingAcceptedPendingMatch) {
             alert(`Não é possível agendar um jogo em um horário no passado.`);
             return false;
         }
@@ -1611,8 +1621,15 @@
         if (dateStr && timeStr) {
             const selectedDate = new Date(`${dateStr}T${timeStr}:00`);
             const now = new Date();
-            if (selectedDate < now) {
-                alert('Não é possível modificar um agendamento que está no passado.');
+            
+            let canEditPast = false;
+            const match = allMatchesJson.find(m => m.id == matchId) || matchesJson.find(m => m.id == matchId);
+            if (match && match.match_status !== 'completed') {
+                canEditPast = true;
+            }
+            
+            if (selectedDate < now && !canEditPast) {
+                alert('Não é possível modificar um agendamento que está no passado e já finalizado.');
                 return;
             }
         }
