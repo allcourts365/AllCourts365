@@ -204,6 +204,9 @@ class UserProfile(models.Model):
     consent_ip = models.GenericIPAddressField(null=True, blank=True, verbose_name="IP do Aceite")
     consent_date = models.DateTimeField(null=True, blank=True, verbose_name="Data/Hora do Aceite")
 
+    # Preferência de Painel do Clube (Moderno vs Rústico)
+    use_modern_admin = models.BooleanField(default=True, verbose_name="Usar Painel Moderno")
+
     def __str__(self):
         return f"Perfil de {self.user.username}"
 
@@ -308,3 +311,49 @@ class GlobalLogin(User):
         proxy = True
         verbose_name = "Usuário"
         verbose_name_plural = "Usuários"
+
+class AdminThemeSetting(models.Model):
+    THEME_CHOICES = [
+        ('default', 'Default (Claro)'),
+        ('cerulean', 'Cerulean (Azul Clássico)'),
+        ('cosmo', 'Cosmo (Moderno e Limpo)'),
+        ('flatly', 'Flatly (Plano e Elegante)'),
+        ('journal', 'Journal (Estilo Caderno)'),
+        ('litera', 'Litera (Tipografia Leve)'),
+        ('lumen', 'Lumen (Claro com Sombras)'),
+        ('lux', 'Lux (Chique e Minimalista)'),
+        ('materia', 'Materia (Material Design Claro)'),
+        ('minty', 'Minty (Verde Claro)'),
+        ('pulse', 'Pulse (Roxo Suave)'),
+        ('sandstone', 'Sandstone (Areia)'),
+        ('simplex', 'Simplex (Minimalista Vermelho)'),
+        ('spacelab', 'Spacelab (Cores Sólidas)'),
+        ('united', 'United (Laranja)'),
+        ('yeti', 'Yeti (Azul Gelo)'),
+        ('zephyr', 'Zephyr (Brisa Leve)'),
+        ('darkly', 'Darkly (Escuro Padrão)'),
+        ('cyborg', 'Cyborg (Preto Puro e Azul)'),
+        ('slate', 'Slate (Cinza Escuro e Neutro)'),
+        ('solar', 'Solar (Esverdeado Escuro)'),
+        ('superhero', 'Superhero (Azul Escuro Intenso)'),
+        ('vapor', 'Vapor (Neon Retrô)'),
+    ]
+
+    theme = models.CharField("Tema do Painel", max_length=50, choices=THEME_CHOICES, default='darkly')
+    is_dark = models.BooleanField("É um tema escuro?", default=True, help_text="Marque isso se o tema for escuro para ajustar os menus laterais.")
+    
+    class Meta:
+        verbose_name = "Configuração do Tema do Painel"
+        verbose_name_plural = "Configurações do Tema do Painel"
+
+    def __str__(self):
+        return f"Tema Atual: {self.get_theme_display()}"
+    
+    def save(self, *args, **kwargs):
+        # Garante que só exista uma configuração (Singleton)
+        if not self.pk and AdminThemeSetting.objects.exists():
+            return
+        super().save(*args, **kwargs)
+        # Limpa o cache para o middleware pegar imediatamente
+        from django.core.cache import cache
+        cache.delete('admin_theme_setting')

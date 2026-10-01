@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Painel do Clube | AllCourts365{% endblock %}
+
+{% block content %}
+<style>
+    .admin-dashboard-container {
+        padding: 40px 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+        color: #fff;
+    }
+    .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+    }
+    .admin-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        background: linear-gradient(to right, #ffffff, #a0aec0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .toggle-btn {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .toggle-btn:hover {
+        background: rgba(255,255,255,0.2);
+        color: #fff;
+    }
+    .clubs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    .club-card {
+        background: rgba(30,30,40,0.6);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 15px;
+        padding: 20px;
+        transition: transform 0.3s ease;
+    }
+    .club-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--global-highlight-color);
+    }
+    .club-card h3 {
+        margin-top: 0;
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+    }
+    .club-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .action-btn {
+        background: var(--global-highlight-color);
+        color: #fff;
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .action-btn:hover {
+        opacity: 0.9;
+        color: #fff;
+    }
+</style>
+
+<div class="admin-dashboard-container">
+    <div class="admin-header">
+        <h1>Painel do Clube</h1>
+        <a href="{% url 'toggle_modern_admin' %}" class="toggle-btn">
+            <i class="fas fa-cogs"></i> Usar Versão Clássica
+        </a>
+    </div>
+
+    <p style="margin-bottom: 30px; font-size: 1.1rem; color: #a0aec0;">
+        Bem-vindo ao novo painel de administração! Selecione um dos seus clubes abaixo para gerenciar.
+    </p>
+
+    <div class="clubs-grid">
+        {% for club in managed_clubs %}
+        <div class="club-card">
+            <h3><i class="fas fa-shield-alt" style="color: var(--global-highlight-color);"></i> {{ club.name }}</h3>
+            <div class="club-actions">
+                <a href="#" class="action-btn"><i class="fas fa-users"></i> Gerenciar Atletas</a>
+                <a href="#" class="action-btn" style="background: rgba(255,255,255,0.1);"><i class="fas fa-trophy"></i> Torneios e Circuitos</a>
+                <a href="#" class="action-btn" style="background: rgba(255,255,255,0.1);"><i class="fas fa-calendar-alt"></i> Quadras e Agendamentos</a>
+            </div>
+        </div>
+        {% empty %}
+        <p>Você não gerencia nenhum clube no momento.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

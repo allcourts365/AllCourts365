@@ -455,3 +455,18 @@ class ClubLeadAdmin(admin.ModelAdmin):
                 'letter-spacing:0.5px;">NOVO</span>'
             )
         return ''
+
+from .models import AdminThemeSetting
+
+@admin.register(AdminThemeSetting)
+class AdminThemeSettingAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'theme', 'is_dark')
+    
+    def has_add_permission(self, request):
+        # Evita criar mais de uma configuração
+        if AdminThemeSetting.objects.exists():
+            return False
+        return super().has_add_permission(request)
+
+    def has_delete_permission(self, request, obj=None):
+        return False

@@ -67,11 +67,12 @@ def delete_account(request):
 def login_redirect(request):
     user = request.user
     
-    # 1. Se for membro da equipe ou superuser, vai para o painel admin do django
+
+    # 2. Se for membro da equipe ou superuser (e não foi pro painel moderno), vai para o painel admin do django
     if user.is_staff or user.is_superuser:
         return redirect('/admin/')
     
-    # 2. Se for administrador de algum clube, vai pro Admin do clube
+    # 3. Se for administrador de algum clube, mas sem ser staff (caso exista), ou algo legado
     if user.managed_clubs.exists():
         return render(request, 'admin_redirect.html')
         
@@ -1460,3 +1461,32 @@ def athlete_stats(request):
         'recurring_comparison': recurring_comparison,
     }
     return render(request, 'athlete_stats.html', context)
+
+@login_required
+def club_admin_dashboard(request):
+    user = request.user
+    is_club_admin = user.is_staff and user.groups.filter(name__in=['Administradores de Clubes', 'Administradores de Departamento']).exists() and (user.managed_clubs.exists() or user.managed_departments.exists())
+    
+    if not is_club_admin:
+        return redirect('home')
+    
+    clubs = list(user.managed_clubs.all())
+    for dept in user.managed_departments.all():
+        if dept.club not in clubs:
+            clubs.append(dept.club)
+    context = {
+        'managed_clubs': clubs,
+    }
+    return render(request, 'club_admin_dashboard.html', context)
+
+@login_required
+def toggle_modern_admin(request):
+    user = request.user
+    if hasattr(user, 'profile'):
+        user.profile.use_modern_admin = not user.profile.use_modern_admin
+        user.profile.save()
+        if user.profile.use_modern_admin:
+            return redirect('club_admin_dashboard')
+        else:
+            return redirect('/admin/')
+    return redirect('home')

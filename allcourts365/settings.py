@@ -37,6 +37,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -71,6 +72,7 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware',
     'core.middleware.AutoLogoutMiddleware',
     'core.middleware.TermsAcceptanceMiddleware',
+    'core.middleware.JazzminThemeMiddleware',
 ]
 
 ROOT_URLCONF = 'allcourts365.urls'
@@ -257,3 +259,39 @@ RECAPTCHA_PRIVATE_KEY = os.environ.get('RECAPTCHA_PRIVATE_KEY', '6LeIxAcTAAAAAGG
 ACCOUNT_FORMS = {'signup': 'core.forms.CustomSignupForm'}
 
 SILENCED_SYSTEM_CHECKS = ['django_recaptcha.recaptcha_test_key_error']
+
+JAZZMIN_SETTINGS = {
+    "site_title": "AllCourts365 Admin",
+    "site_header": "AllCourts365",
+    "site_brand": "AllCourts365",
+    "welcome_sign": "Bem-vindo ao Painel AllCourts365",
+    "copyright": "AllCourts365",
+    "show_ui_builder": True,
+    "topmenu_links": [
+        {"name": "Ver o Site",  "url": "home", "permissions": ["auth.view_user"]},
+    ],
+    "custom_js": "admin/js/auto_filter.js",
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar": "navbar-dark",
+    "theme": "darkly",
+    "dark_mode_theme": "darkly",
+    "theme_mode": "dark",
+    "sidebar": "sidebar-dark-primary",
+    "sidebar_nav_child_indent": True,
+    "sidebar_nav_compact_style": True,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "brand_small": False,
+    "brand_colour": "navbar-dark",
+    "accent": "accent-primary",
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success"
+    }
+}

@@ -20,4 +20,6 @@ urlpatterns = [
     path('para-clubes/', views.club_landing_page, name='club_landing_page'),
     path('painel-atleta/calendario/', views.athlete_calendar, name='athlete_calendar'),
     path('api/admin/leads-count/', views.api_uncontacted_leads_count, name='api_uncontacted_leads_count'),
+    path('clube-admin/', views.club_admin_dashboard, name='club_admin_dashboard'),
+    path('clube-admin/toggle/', views.toggle_modern_admin, name='toggle_modern_admin'),
 ]
