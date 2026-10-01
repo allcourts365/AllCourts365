@@ -67,35 +67,3 @@ class TermsAcceptanceMiddleware(MiddlewareMixin):
             if hasattr(request.user, 'profile') and not request.user.profile.terms_accepted:
                 return redirect('require_terms_acceptance')
 
-class JazzminThemeMiddleware(MiddlewareMixin):
-    def process_request(self, request):
-        if request.path.startswith('/admin/'):
-            from django.conf import settings
-            from django.core.cache import cache
-            from core.models import AdminThemeSetting
-            
-            theme_config = cache.get('admin_theme_setting')
-            
-            if theme_config is None:
-                # Tenta criar caso não exista
-                try:
-                    setting = AdminThemeSetting.objects.first()
-                    if not setting:
-                        setting = AdminThemeSetting.objects.create(theme='darkly', is_dark=True)
-                    theme_config = {
-                        'theme': setting.theme,
-                        'is_dark': setting.is_dark
-                    }
-                    cache.set('admin_theme_setting', theme_config, 3600)
-                except Exception:
-                    # Em caso de erro (ex: banco ainda não migrado), fallback
-                    theme_config = {'theme': 'darkly', 'is_dark': True}
-            
-            if hasattr(settings, 'JAZZMIN_UI_TWEAKS'):
-                settings.JAZZMIN_UI_TWEAKS['theme'] = theme_config['theme']
-                if theme_config['is_dark']:
-                    settings.JAZZMIN_UI_TWEAKS['dark_mode_theme'] = theme_config['theme']
-                    settings.JAZZMIN_UI_TWEAKS['theme_mode'] = 'dark'
-                else:
-                    settings.JAZZMIN_UI_TWEAKS['theme_mode'] = 'light'
-                    settings.JAZZMIN_UI_TWEAKS.pop('dark_mode_theme', None)
