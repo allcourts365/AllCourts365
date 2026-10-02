@@ -5,6 +5,7 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from .models import News
 from clubs.models import Club
+from clubs.views import _check_club_access
 
 @require_POST
 def like_news(request, news_id):
@@ -57,6 +58,10 @@ def news_global_list(request):
 def news_club_list(request, club_id):
     """Lista as noticias de um clube especifico."""
     club = get_object_or_404(Club, id=club_id)
+    denied = _check_club_access(request, club)
+    if denied:
+        return denied
+        
     news_qs = News.objects.filter(is_published=True, club=club).order_by("-published_at")
     paginator = Paginator(news_qs, 12)
     page_number = request.GET.get("page")
@@ -72,6 +77,10 @@ def news_detail(request, slug, club_id=None):
     """Detalhe de uma noticia."""
     news = get_object_or_404(News, slug=slug, is_published=True)
     club = news.club
+    denied = _check_club_access(request, club)
+    if denied:
+        return denied
+        
     return render(request, "news_detail.html", {
         "news": news,
         "club": club,
