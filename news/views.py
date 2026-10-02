@@ -77,9 +77,10 @@ def news_detail(request, slug, club_id=None):
     """Detalhe de uma noticia."""
     news = get_object_or_404(News, slug=slug, is_published=True)
     club = news.club
-    denied = _check_club_access(request, club)
-    if denied:
-        return denied
+    if club:
+        denied = _check_club_access(request, club)
+        if denied:
+            return denied
         
     return render(request, "news_detail.html", {
         "news": news,
