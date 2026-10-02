@@ -1,0 +1,168 @@
+<!-- Modal Submit Result -->
+<div id="submitResultModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; overflow-y: auto;">
+    <div class="glass-card" style="width: 100%; max-width: 600px; padding: 30px; border-radius: 16px; position: relative; max-height: 90vh; overflow-y: auto;">
+        <button type="button" onclick="closeSubmitResultModal()" style="position: absolute; top: 15px; right: 20px; background: transparent; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        <h3 style="color: #fff; font-size: 1.5rem; margin-bottom: 5px; font-weight: 800;">Lançar Resultado</h3>
+        <p id="modalSubmitMatchName" style="color: var(--highlight-color); margin-bottom: 25px; font-weight: bold;"></p>
+        
+        <form id="submitResultForm" method="post" action="">
+            {% csrf_token %}
+            <input type="hidden" name="match_id" id="modalSubmitMatchId">
+            <input type="hidden" name="submit_result" value="1">
+            <input type="hidden" name="is_future_adjustment" id="modalSubmitIsFutureAdjustment" value="false">
+            
+            <!-- Ajuste de Data/Hora (Aparece se o jogo estiver no futuro) -->
+            <div id="futureMatchAdjustmentSection" style="display: none; background: rgba(239,68,68,0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(239,68,68,0.3);">
+                <p style="color: #fca5a5; font-size: 0.85rem; margin-bottom: 15px;">
+                    <i class="fas fa-exclamation-triangle"></i> Este jogo estava agendado para o futuro. Para lançar o resultado, ajuste abaixo para a data e hora em que ele realmente ocorreu no passado.
+                </p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 120px;">
+                        <label style="color: #fff; font-size: 0.8rem; margin-bottom: 5px; display: block;">Data Real</label>
+                        <input type="date" name="adjustment_date" id="modalSubmitAdjustmentDate" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; padding: 8px;" onchange="validatePastAdjustment()">
+                    </div>
+                    <div style="flex: 1; min-width: 100px;">
+                        <label style="color: #fff; font-size: 0.8rem; margin-bottom: 5px; display: block;">Hora de Início</label>
+                        <input type="time" name="adjustment_time" id="modalSubmitAdjustmentTime" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; padding: 8px;" onchange="validatePastAdjustment()">
+                    </div>
+                    <div style="flex: 1; min-width: 140px;">
+                        <label style="color: #fff; font-size: 0.8rem; margin-bottom: 5px; display: block;">Quadra (Opcional)</label>
+                        <select name="adjustment_court" id="modalSubmitAdjustmentCourt" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; padding: 8px;">
+                            <option value="">Nenhuma / Manter a mesma</option>
+                            {% for c in courts %}
+                                <option value="{{ c.id }}">{{ c.name }} ({{ c.club.name }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div id="futureMatchAdjustmentError" style="color: #f87171; font-size: 0.8rem; margin-top: 10px; display: none;">A data informada ainda está no futuro. É necessário informar uma data e hora no passado.</div>
+            </div>
+
+            <p style="color: #fff; font-size: 0.9rem; margin-bottom: 15px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
+                Dica: Se você lançar os resultados por <strong>games</strong>, o placar de sets será preenchido automaticamente! O lançamento por games é opcional.
+            </p>
+
+            <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                <div class="custom-form-group" style="flex: 1;">
+                    <label id="label_sets_a">Sets Jogador 1</label>
+                    <input type="number" name="sets_a" id="sets_a" min="0" max="3" class="sets-input" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; padding: 10px;">
+                </div>
+                <div class="custom-form-group" style="flex: 1;">
+                    <label id="label_sets_b">Sets Jogador 2</label>
+                    <input type="number" name="sets_b" id="sets_b" min="0" max="3" class="sets-input" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; padding: 10px;">
+                </div>
+            </div>
+            
+            <h4 style="color: #fff; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Games (Opcional)</h4>
+            
+            {% for i in '12345'|make_list %}
+            <div style="display: flex; gap: 15px; margin-bottom: 10px; align-items: center;">
+                <span style="color: var(--subtitle-color); width: 50px;">Set {{ i }}</span>
+                <input type="number" name="set{{ i }}_a" id="set{{ i }}_a" min="0" max="7" class="games-input-a" placeholder="G1" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; padding: 10px;">
+                <span style="color: #fff; font-weight: bold;">X</span>
+                <input type="number" name="set{{ i }}_b" id="set{{ i }}_b" min="0" max="7" class="games-input-b" placeholder="G2" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; padding: 10px;">
+            </div>
+            {% endfor %}
+
+            <button type="button" onclick="validateAndSubmitResult()" style="width: 100%; margin-top: 20px; padding: 12px; background: var(--highlight-color); color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; text-transform: uppercase; transition: background 0.3s;">
+                <i class="fas fa-paper-plane"></i> Enviar para Adversário
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openSubmitResultModal(matchId, matchName, schedDate, schedTime, courtId) {
+        document.getElementById('modalSubmitMatchId').value = matchId;
+        document.getElementById('modalSubmitMatchName').innerText = matchName;
+        
+        let matchTitle = matchName.split(" // ")[0];
+        let names = matchTitle.split(" vs ");
+        if(names.length === 2) {
+            document.getElementById('label_sets_a').innerText = "Sets " + names[0].trim();
+            document.getElementById('label_sets_b').innerText = "Sets " + names[1].trim();
+        } else {
+            document.getElementById('label_sets_a').innerText = "Sets Jogador 1";
+            document.getElementById('label_sets_b').innerText = "Sets Jogador 2";
+        }
+        
+        // Clear previous inputs
+        document.querySelectorAll('.sets-input, .games-input-a, .games-input-b').forEach(input => input.value = '');
+        
+        // Check if the game is in the future
+        let isFuture = false;
+        if (schedDate && schedTime) {
+            let dt = new Date(`${schedDate}T${schedTime}:00`);
+            if (dt > new Date()) {
+                isFuture = true;
+            }
+        }
+        
+        let adjSection = document.getElementById('futureMatchAdjustmentSection');
+        let isFutureInput = document.getElementById('modalSubmitIsFutureAdjustment');
+        if (isFuture) {
+            adjSection.style.display = 'block';
+            isFutureInput.value = 'true';
+            document.getElementById('modalSubmitAdjustmentDate').value = schedDate;
+            document.getElementById('modalSubmitAdjustmentTime').value = schedTime;
+            if(courtId) {
+                document.getElementById('modalSubmitAdjustmentCourt').value = courtId;
+            }
+            validatePastAdjustment();
+        } else {
+            adjSection.style.display = 'none';
+            isFutureInput.value = 'false';
+            document.getElementById('modalSubmitAdjustmentDate').removeAttribute('required');
+            document.getElementById('modalSubmitAdjustmentTime').removeAttribute('required');
+        }
+        
+        document.getElementById('submitResultModal').style.display = 'flex';
+    }
+
+    function closeSubmitResultModal() {
+        document.getElementById('submitResultModal').style.display = 'none';
+    }
+
+    function validatePastAdjustment() {
+        let isFutureInput = document.getElementById('modalSubmitIsFutureAdjustment').value;
+        if (isFutureInput === 'true') {
+            let d = document.getElementById('modalSubmitAdjustmentDate').value;
+            let t = document.getElementById('modalSubmitAdjustmentTime').value;
+            let err = document.getElementById('futureMatchAdjustmentError');
+            if (d && t) {
+                let dt = new Date(`${d}T${t}:00`);
+                if (dt >= new Date()) {
+                    err.style.display = 'block';
+                    return false;
+                }
+            }
+            err.style.display = 'none';
+        }
+        return true;
+    }
+
+    function validateAndSubmitResult() {
+        if (!validatePastAdjustment()) {
+            return;
+        }
+        
+        let isFutureInput = document.getElementById('modalSubmitIsFutureAdjustment').value;
+        if (isFutureInput === 'true') {
+            let d = document.getElementById('modalSubmitAdjustmentDate').value;
+            let t = document.getElementById('modalSubmitAdjustmentTime').value;
+            if (!d || !t) {
+                alert("Por favor, preencha a data e hora de quando o jogo ocorreu.");
+                return;
+            }
+        }
+
+        let sA = document.getElementById('sets_a').value;
+        let sB = document.getElementById('sets_b').value;
+        if (sA === '' || sB === '') {
+            alert("Preencha a quantidade de sets de ambos os jogadores.");
+            return;
+        }
+
+        document.getElementById('submitResultForm').submit();
+    }
+</script>

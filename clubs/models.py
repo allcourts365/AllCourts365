@@ -99,6 +99,13 @@ class Player(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.club.name})"
+        
+    @property
+    def short_name(self):
+        parts = self.name.strip().split()
+        if len(parts) > 1:
+            return f"{parts[0]} {parts[-1][0]}."
+        return self.name
     
     class Meta:
         unique_together = ('club', 'name')

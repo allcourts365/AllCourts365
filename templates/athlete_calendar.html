@@ -937,6 +937,20 @@
                 <button id="modal-delete-btn" type="button" onclick="submitDeleteSchedule()" style="background: #d13438; border: none; color: white; padding: 6px 15px; border-radius: 4px; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 6px;">
                     <i class="far fa-trash-alt"></i> Excluir
                 </button>
+                <button id="modal-result-btn" type="button" style="background: #eab308; border: none; color: white; padding: 6px 15px; border-radius: 4px; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 6px;">
+                    <i class="fas fa-trophy"></i> Lançar Resultado
+                </button>
+                <form method="post" style="display: none;" id="acceptResultForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="match_id" id="accept-result-match-id">
+                    <input type="hidden" name="accept_result" value="1">
+                </form>
+                <button id="modal-accept-result-btn" type="button" onclick="document.getElementById('acceptResultForm').submit()" style="background: #10b981; border: none; color: white; padding: 6px 15px; border-radius: 4px; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 6px;">
+                    <i class="fas fa-check"></i> Aceitar Resultado
+                </button>
+                <button id="modal-decline-result-btn" type="button" style="background: #d13438; border: none; color: white; padding: 6px 15px; border-radius: 4px; font-weight: 600; cursor: pointer; display: none; align-items: center; gap: 6px;">
+                    <i class="fas fa-times"></i> Recusar Resultado
+                </button>
                 <button type="button" onclick="document.getElementById('scheduleModal').style.display='none'" style="background: none; border: none; color: #ccc; cursor: pointer;">Descartar</button>
                 <div style="flex: 1;"></div>
                 <i class="fas fa-times" style="cursor: pointer; color: #ccc;" onclick="document.getElementById('scheduleModal').style.display='none'"></i>
@@ -1032,6 +1046,15 @@
                         </button>
                         <button id="mobile-bottom-delete-btn" type="button" onclick="submitDeleteSchedule()" style="background: #d13438; border: none; color: white; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; display: none; align-items: center; justify-content: center; gap: 8px;">
                             <i class="far fa-trash-alt"></i> Excluir Evento
+                        </button>
+                        <button id="mobile-bottom-result-btn" type="button" style="background: #eab308; border: none; color: white; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; display: none; align-items: center; justify-content: center; gap: 8px;">
+                            <i class="fas fa-trophy"></i> Lançar Resultado
+                        </button>
+                        <button id="mobile-bottom-accept-result-btn" type="button" onclick="document.getElementById('acceptResultForm').submit()" style="background: #10b981; border: none; color: white; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; display: none; align-items: center; justify-content: center; gap: 8px;">
+                            <i class="fas fa-check"></i> Aceitar Resultado
+                        </button>
+                        <button id="mobile-bottom-decline-result-btn" type="button" style="background: #d13438; border: none; color: white; padding: 12px; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; display: none; align-items: center; justify-content: center; gap: 8px;">
+                            <i class="fas fa-times"></i> Recusar Resultado
                         </button>
                     </div>
                 </form>
@@ -1456,6 +1479,9 @@
         document.getElementById('modal-accept-helper').style.display = 'none';
         document.getElementById('modal-edit-helper').style.display = 'none';
         document.getElementById('modal-delete-btn').style.display = 'none';
+        if (document.getElementById('modal-result-btn')) document.getElementById('modal-result-btn').style.display = 'none';
+        if (document.getElementById('modal-accept-result-btn')) document.getElementById('modal-accept-result-btn').style.display = 'none';
+        if (document.getElementById('modal-decline-result-btn')) document.getElementById('modal-decline-result-btn').style.display = 'none';
         document.getElementById('modal-save-btn-text').innerText = 'Salvar';
 
         document.getElementById('modal-date').value = dateStr;
@@ -1510,6 +1536,12 @@
         if (mobileDelBtn) mobileDelBtn.style.display = 'none';
         const mobileAccBtn = document.getElementById('mobile-bottom-accept-btn');
         if (mobileAccBtn) mobileAccBtn.style.display = 'none';
+        const mobileResBtn = document.getElementById('mobile-bottom-result-btn');
+        if (mobileResBtn) mobileResBtn.style.display = 'none';
+        const mobileAccResBtn = document.getElementById('mobile-bottom-accept-result-btn');
+        if (mobileAccResBtn) mobileAccResBtn.style.display = 'none';
+        const mobileDecResBtn = document.getElementById('mobile-bottom-decline-result-btn');
+        if (mobileDecResBtn) mobileDecResBtn.style.display = 'none';
         document.getElementById('modal-save-btn-text').innerText = 'Salvar';
         document.getElementById('mobile-modal-title').innerText = 'Novo Evento';
 
@@ -1678,6 +1710,57 @@
         document.getElementById('modal-delete-btn').style.display = 'flex';
         const mobileDelBtn = document.getElementById('mobile-bottom-delete-btn');
         if (mobileDelBtn) mobileDelBtn.style.display = 'flex';
+        
+        const resultBtn = document.getElementById('modal-result-btn');
+        const mobileResBtn = document.getElementById('mobile-bottom-result-btn');
+        const acceptResultBtn = document.getElementById('modal-accept-result-btn');
+        const declineResultBtn = document.getElementById('modal-decline-result-btn');
+        
+        const match = allMatchesJson.find(m => m.id == matchId) || matchesJson.find(m => m.id == matchId);
+        
+        const mobileAccResBtn = document.getElementById('mobile-bottom-accept-result-btn');
+        const mobileDecResBtn = document.getElementById('mobile-bottom-decline-result-btn');
+        
+        if (match && match.result_status === 'pending_approval' && !match.reported_by_me) {
+            if (acceptResultBtn) acceptResultBtn.style.display = 'flex';
+            if (mobileAccResBtn) mobileAccResBtn.style.display = 'flex';
+            
+            if (declineResultBtn) {
+                declineResultBtn.style.display = 'flex';
+                declineResultBtn.onclick = function() {
+                    openSubmitResultModal(match.id, match.title, dateStr, timeStr, courtId);
+                };
+            }
+            if (mobileDecResBtn) {
+                mobileDecResBtn.style.display = 'flex';
+                mobileDecResBtn.onclick = function() {
+                    openSubmitResultModal(match.id, match.title, dateStr, timeStr, courtId);
+                };
+            }
+            document.getElementById('accept-result-match-id').value = match.id;
+            
+            document.getElementById('modal-save-btn').style.display = 'none';
+            document.getElementById('modal-delete-btn').style.display = 'none';
+            if (mobileDelBtn) mobileDelBtn.style.display = 'none';
+            if (resultBtn) resultBtn.style.display = 'none';
+            if (mobileResBtn) mobileResBtn.style.display = 'none';
+        } else if (match && match.status === 'agendado' && match.allow_player_results !== false) {
+            if (resultBtn) {
+                resultBtn.style.display = 'flex';
+                resultBtn.onclick = function() {
+                    openSubmitResultModal(match.id, match.title, dateStr, timeStr, courtId);
+                };
+            }
+            if (mobileResBtn) {
+                mobileResBtn.style.display = 'flex';
+                mobileResBtn.onclick = function() {
+                    openSubmitResultModal(match.id, match.title, dateStr, timeStr, courtId);
+                };
+            }
+        } else {
+            if (resultBtn) resultBtn.style.display = 'none';
+            if (mobileResBtn) mobileResBtn.style.display = 'none';
+        }
         
         const mobileAccBtn = document.getElementById('mobile-bottom-accept-btn');
         if (canAccept) {
@@ -2726,5 +2809,7 @@
         }
     }
 </script>
+
+{% include "includes/submit_result_modal.html" %}
 
 {% endblock %}

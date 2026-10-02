@@ -185,7 +185,7 @@ def athlete_dashboard(request):
             
             try:
                 match = Match.objects.get(id=match_id)
-                active_profile = match.player_a if match.player_a and match.player_a.user == user else (match.player_b if match.player_b and match.player_b.user == user else active_profile)
+                active_profile = match.player_a if match.player_a and match.player_a.user_id == user.id else (match.player_b if match.player_b and match.player_b.user_id == user.id else active_profile)
                 
                 # Marcar mensagens relacionadas como lidas
                 from core.models import Message
@@ -254,7 +254,7 @@ def athlete_dashboard(request):
                     match.save()
                     
                     # Notify opponent about the adjustment
-                    opponent = match.player_b if match.player_a == active_profile else match.player_a
+                    opponent = match.player_b if match.player_a and match.player_a.user_id == user.id else match.player_a
                     if opponent and opponent.user:
                         from core.models import Message
                         Message.objects.create(
@@ -287,7 +287,7 @@ def athlete_dashboard(request):
                     match.save()
                     
                     # Notify opponent
-                    opponent = match.player_b if match.player_a == active_profile else match.player_a
+                    opponent = match.player_b if match.player_a and match.player_a.user_id == user.id else match.player_a
                     if opponent and opponent.user:
                         from core.models import Message
                         if is_reschedule:
@@ -317,7 +317,7 @@ def athlete_dashboard(request):
             match_id = request.POST.get('match_id')
             try:
                 match = Match.objects.get(id=match_id)
-                active_profile = match.player_a if match.player_a and match.player_a.user == user else (match.player_b if match.player_b and match.player_b.user == user else active_profile)
+                active_profile = match.player_a if match.player_a and match.player_a.user_id == user.id else (match.player_b if match.player_b and match.player_b.user_id == user.id else active_profile)
                 
                 # Marcar mensagens relacionadas como lidas
                 from core.models import Message
@@ -368,7 +368,7 @@ def athlete_dashboard(request):
             match_id = request.POST.get('match_id')
             try:
                 match = Match.objects.get(id=match_id)
-                active_profile = match.player_a if match.player_a and match.player_a.user == user else (match.player_b if match.player_b and match.player_b.user == user else active_profile)
+                active_profile = match.player_a if match.player_a and match.player_a.user_id == user.id else (match.player_b if match.player_b and match.player_b.user_id == user.id else active_profile)
                 # Marcar mensagens relacionadas como lidas
                 from core.models import Message
                 Message.objects.filter(related_match=match, recipient=user, is_read=False).update(is_read=True)
@@ -405,7 +405,7 @@ def athlete_dashboard(request):
             match_id = request.POST.get('match_id')
             try:
                 match = Match.objects.get(id=match_id)
-                active_profile = match.player_a if match.player_a and match.player_a.user == user else (match.player_b if match.player_b and match.player_b.user == user else active_profile)
+                active_profile = match.player_a if match.player_a and match.player_a.user_id == user.id else (match.player_b if match.player_b and match.player_b.user_id == user.id else active_profile)
                 
                 # Marcar mensagens relacionadas como lidas
                 from core.models import Message
@@ -416,7 +416,7 @@ def athlete_dashboard(request):
                     return redirect('athlete_dashboard')
                 
                 # Avisar o outro jogador que o agendamento foi apagado
-                opponent = match.player_b if match.player_a == active_profile else match.player_a
+                opponent = match.player_b if match.player_a and match.player_a.user_id == user.id else match.player_a
                 if opponent and opponent.user and (match.schedule_status == 'agendado' or match.schedule_status == 'aguardando_adversario'):
                     from core.models import Message
                     Message.objects.create(
@@ -445,7 +445,7 @@ def athlete_dashboard(request):
             match_id = request.POST.get('match_id')
             try:
                 match = Match.objects.get(id=match_id)
-                active_profile = match.player_a if match.player_a and match.player_a.user == user else (match.player_b if match.player_b and match.player_b.user == user else active_profile)
+                active_profile = match.player_a if match.player_a and match.player_a.user_id == user.id else (match.player_b if match.player_b and match.player_b.user_id == user.id else active_profile)
                 
                 # Marcar mensagens relacionadas como lidas
                 from core.models import Message
@@ -470,13 +470,48 @@ def athlete_dashboard(request):
                 for k, v in proposed.items():
                     proposed[k] = int(v) if v else None
                     
+                # Validação de placar incompleto
+                sets_a = proposed.get('sets_a') or 0
+                sets_b = proposed.get('sets_b') or 0
+                
+                has_games = any(proposed.get(f'set{i}_{p}') is not None for i in range(1,6) for p in ['a','b'])
+                if has_games:
+                    sa = 0
+                    sb = 0
+                    for i in range(1, 6):
+                        ga = proposed.get(f'set{i}_a')
+                        gb = proposed.get(f'set{i}_b')
+                        if ga is not None and gb is not None:
+                            if ga > gb: sa += 1
+                            elif gb > ga: sb += 1
+                    sets_a = sa
+                    sets_b = sb
+
+                sets_to_win = 3 if match.tournament and match.tournament.set_format == '5_normal' else 2
+                
+                if sets_a < sets_to_win and sets_b < sets_to_win:
+                    messages.error(request, f'Placar inválido: o vencedor precisa de pelo menos {sets_to_win} sets para encerrar a partida (ex: W.O. deve ser lançado como {sets_to_win} a 0).')
+                    return redirect('athlete_dashboard')
+                    
+                is_future_adjustment = request.POST.get('is_future_adjustment') == 'true'
+                if is_future_adjustment:
+                    adj_date = request.POST.get('adjustment_date')
+                    adj_time = request.POST.get('adjustment_time')
+                    adj_court = request.POST.get('adjustment_court')
+                    if adj_date and adj_time:
+                        dt_str = f"{adj_date} {adj_time}"
+                        scheduled_dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M")
+                        match.scheduled_datetime = timezone.make_aware(scheduled_dt)
+                    if adj_court:
+                        match.court_id = adj_court
+                    
                 match.proposed_result_json = proposed
                 match.result_status = 'pending_approval'
                 match.reported_by = active_profile
                 match.save()
                 
                 # Envia mensagem para o adversário
-                opponent = match.player_b if match.player_a == active_profile else match.player_a
+                opponent = match.player_b if match.player_a and match.player_a.user_id == user.id else match.player_a
                 if opponent and opponent.user:
                     from core.models import Message
                     Message.objects.create(
@@ -496,7 +531,7 @@ def athlete_dashboard(request):
             match_id = request.POST.get('match_id')
             try:
                 match = Match.objects.get(id=match_id)
-                active_profile = match.player_a if match.player_a and match.player_a.user == user else (match.player_b if match.player_b and match.player_b.user == user else active_profile)
+                active_profile = match.player_a if match.player_a and match.player_a.user_id == user.id else (match.player_b if match.player_b and match.player_b.user_id == user.id else active_profile)
                 # Marcar mensagens relacionadas como lidas
                 from core.models import Message
                 Message.objects.filter(related_match=match, recipient=user, is_read=False).update(is_read=True)
@@ -956,7 +991,7 @@ def athlete_calendar(request):
                     match.save()
                     
                     # Notify opponent about the adjustment
-                    opponent = match.player_b if match.player_a == active_profile else match.player_a
+                    opponent = match.player_b if match.player_a and match.player_a.user_id == user.id else match.player_a
                     if opponent and opponent.user:
                         from core.models import Message
                         Message.objects.create(
@@ -992,7 +1027,7 @@ def athlete_calendar(request):
                 match.save()
 
                 # Notify opponent
-                opponent = match.player_b if match.player_a == active_profile else match.player_a
+                opponent = match.player_b if match.player_a and match.player_a.user_id == user.id else match.player_a
                 if opponent and opponent.user:
                     court_obj_name = ''
                     if court_id:
@@ -1046,7 +1081,7 @@ def athlete_calendar(request):
             match_id = request.POST.get('match_id')
             try:
                 match = Match.objects.get(id=match_id)
-                active_profile = match.player_a if match.player_a and match.player_a.user == user else (match.player_b if match.player_b and match.player_b.user == user else active_profile)
+                active_profile = match.player_a if match.player_a and match.player_a.user_id == user.id else (match.player_b if match.player_b and match.player_b.user_id == user.id else active_profile)
 
                 # Marcar mensagens relacionadas como lidas
                 from core.models import Message
@@ -1103,6 +1138,140 @@ def athlete_calendar(request):
             except Exception as e:
                 messages.error(request, f'Erro: {str(e)}')
 
+            return redirect('athlete_calendar')
+            
+        elif 'submit_result' in request.POST:
+            match_id = request.POST.get('match_id')
+            try:
+                match = Match.objects.get(id=match_id)
+                active_profile = match.player_a if match.player_a and match.player_a.user_id == user.id else (match.player_b if match.player_b and match.player_b.user_id == user.id else active_profile)
+                
+                # Marcar mensagens relacionadas como lidas
+                from core.models import Message
+                Message.objects.filter(related_match=match, recipient=user, is_read=False).update(is_read=True)
+                
+                # Verifica se o usuário é um dos jogadores e se o jogo está pendente
+                if active_profile not in [match.player_a, match.player_b] or match.status != 'pending':
+                    messages.error(request, 'Não é possível lançar resultado para este jogo.')
+                    return redirect('athlete_calendar')
+                
+                # Monta o JSON com as parciais propostas
+                proposed = {
+                    'sets_a': request.POST.get('sets_a'), 'sets_b': request.POST.get('sets_b'),
+                    'set1_a': request.POST.get('set1_a'), 'set1_b': request.POST.get('set1_b'),
+                    'set2_a': request.POST.get('set2_a'), 'set2_b': request.POST.get('set2_b'),
+                    'set3_a': request.POST.get('set3_a'), 'set3_b': request.POST.get('set3_b'),
+                    'set4_a': request.POST.get('set4_a'), 'set4_b': request.POST.get('set4_b'),
+                    'set5_a': request.POST.get('set5_a'), 'set5_b': request.POST.get('set5_b'),
+                }
+                
+                # Limpa valores vazios e converte pra int
+                for k, v in proposed.items():
+                    proposed[k] = int(v) if v else None
+                    
+                # Validação de placar incompleto
+                sets_a = proposed.get('sets_a') or 0
+                sets_b = proposed.get('sets_b') or 0
+                
+                has_games = any(proposed.get(f'set{i}_{p}') is not None for i in range(1,6) for p in ['a','b'])
+                if has_games:
+                    sa = 0
+                    sb = 0
+                    for i in range(1, 6):
+                        ga = proposed.get(f'set{i}_a')
+                        gb = proposed.get(f'set{i}_b')
+                        if ga is not None and gb is not None:
+                            if ga > gb: sa += 1
+                            elif gb > ga: sb += 1
+                    sets_a = sa
+                    sets_b = sb
+
+                sets_to_win = 3 if match.tournament and match.tournament.set_format == '5_normal' else 2
+                
+                if sets_a < sets_to_win and sets_b < sets_to_win:
+                    messages.error(request, f'Placar inválido: o vencedor precisa de pelo menos {sets_to_win} sets para encerrar a partida (ex: W.O. deve ser lançado como {sets_to_win} a 0).')
+                    return redirect('athlete_calendar')
+                    
+                is_future_adjustment = request.POST.get('is_future_adjustment') == 'true'
+                if is_future_adjustment:
+                    adj_date = request.POST.get('adjustment_date')
+                    adj_time = request.POST.get('adjustment_time')
+                    adj_court = request.POST.get('adjustment_court')
+                    if adj_date and adj_time:
+                        dt_str = f"{adj_date} {adj_time}"
+                        scheduled_dt = datetime.strptime(dt_str, "%Y-%m-%d %H:%M")
+                        match.scheduled_datetime = timezone.make_aware(scheduled_dt)
+                    if adj_court:
+                        match.court_id = adj_court
+                    
+                match.proposed_result_json = proposed
+                match.result_status = 'pending_approval'
+                match.reported_by = active_profile
+                match.save()
+                
+                # Envia mensagem para o adversário
+                opponent = match.player_b if match.player_a and match.player_a.user_id == user.id else match.player_a
+                if opponent and opponent.user:
+                    from core.models import Message
+                    Message.objects.create(
+                        sender=user,
+                        recipient=opponent.user,
+                        subject="Novo Resultado Lançado",
+                        body=f"{active_profile.name} propôs o resultado do jogo {match.tournament.name} do {match.tournament.club.name} (Rodada {match.round_number}). Por favor, avalie esta proposta abaixo (Aceitar ou Recusar e Propor Novo).",
+                        related_match=match
+                    )
+                
+                messages.success(request, 'Resultado lançado! Aguardando aprovação do adversário.')
+            except Exception as e:
+                messages.error(request, f'Erro ao lançar resultado: {str(e)}')
+            return redirect('athlete_calendar')
+            
+        elif 'accept_result' in request.POST:
+            match_id = request.POST.get('match_id')
+            try:
+                match = Match.objects.get(id=match_id)
+                active_profile = match.player_a if match.player_a and match.player_a.user_id == user.id else (match.player_b if match.player_b and match.player_b.user_id == user.id else active_profile)
+                # Marcar mensagens relacionadas como lidas
+                from core.models import Message
+                Message.objects.filter(related_match=match, recipient=user, is_read=False).update(is_read=True)
+                
+                if active_profile not in [match.player_a, match.player_b] or match.result_status != 'pending_approval' or match.reported_by == active_profile:
+                    messages.error(request, 'Você não pode aceitar este resultado.')
+                    return redirect('athlete_calendar')
+                
+                proposed = match.proposed_result_json or {}
+                
+                # Transfere os valores do JSON para os campos reais do modelo
+                match.sets_a = proposed.get('sets_a')
+                match.sets_b = proposed.get('sets_b')
+                match.set1_a = proposed.get('set1_a')
+                match.set1_b = proposed.get('set1_b')
+                match.set2_a = proposed.get('set2_a')
+                match.set2_b = proposed.get('set2_b')
+                match.set3_a = proposed.get('set3_a')
+                match.set3_b = proposed.get('set3_b')
+                match.set4_a = proposed.get('set4_a')
+                match.set4_b = proposed.get('set4_b')
+                match.set5_a = proposed.get('set5_a')
+                match.set5_b = proposed.get('set5_b')
+                
+                match.result_status = 'approved'
+                match.save() # Isso vai acionar o cálculo automático de sets e status no models.py
+                
+                # Mensagem de confirmação pro lançador original
+                if match.reported_by and match.reported_by.user:
+                    from core.models import Message
+                    Message.objects.create(
+                        sender=user,
+                        recipient=match.reported_by.user,
+                        subject="Resultado Aceito",
+                        body=f"{active_profile.name} aceitou o resultado do jogo {match.tournament.name} (Rodada {match.round_number}). O jogo foi finalizado e os pontos computados.",
+                        related_match=match
+                    )
+                    
+                messages.success(request, 'Resultado aceito e jogo finalizado!')
+            except Exception as e:
+                messages.error(request, f'Erro ao aceitar resultado: {str(e)}')
             return redirect('athlete_calendar')
 
 
@@ -1237,7 +1406,10 @@ def athlete_calendar(request):
             'adversary': m.player_b.name if m.player_a_id in my_profile_ids else m.player_a.name,
             'can_accept': m.schedule_status == 'aguardando_adversario' and m.proposed_by_id and m.proposed_by_id not in my_profile_ids,
             'allow_player_scheduling': m.tournament.allow_player_scheduling if m.tournament else True,
+            'allow_player_results': m.tournament.allow_player_results if m.tournament else True,
             'is_tournament_finished': m.tournament.is_finished if m.tournament else False,
+            'result_status': m.result_status,
+            'reported_by_me': m.reported_by_id in my_profile_ids,
         })
 
     # Build all_matches_json (all club matches for occupation display)
@@ -1304,6 +1476,9 @@ def athlete_calendar(request):
             'duration': duration,
             'can_accept': m.schedule_status == 'aguardando_adversario' and m.proposed_by_id and m.proposed_by_id not in my_profile_ids,
             'allow_player_scheduling': m.tournament.allow_player_scheduling if m.tournament else True,
+            'allow_player_results': m.tournament.allow_player_results if m.tournament else True,
+            'result_status': m.result_status,
+            'reported_by_me': m.reported_by_id in my_profile_ids,
         })
 
     # Club opening hours for frontend validation
