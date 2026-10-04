@@ -487,6 +487,19 @@ class Match(models.Model):
         return f"{pa} vs {pb}"
 
     def save(self, *args, **kwargs):
+        # WhatsApp Notification Logic
+        is_new = self.pk is None
+        old_schedule = None
+        old_court = None
+        
+        if not is_new:
+            try:
+                old_match = Match.objects.get(pk=self.pk)
+                old_schedule = old_match.scheduled_datetime
+                old_court = old_match.court
+            except Match.DoesNotExist:
+                pass
+
         # Auto-calcula sets_a e sets_b com base nos games, se preenchidos
         has_games = any(v is not None for v in [
             self.set1_a, self.set1_b, self.set2_a, self.set2_b,
@@ -528,8 +541,43 @@ class Match(models.Model):
                 
         if self.status == 'completed' and self.schedule_status == 'aguardando_adversario':
             self.schedule_status = 'agendado'
+            
+        # Consistência de Agendamento ADM
+        # Se o admin preencheu a data, mas o status não é agendado, força para agendado
+        if self.scheduled_datetime and self.schedule_status != 'agendado':
+            # Mas se ele explicitamente mudou pra 'unagendado' e ESQUECEU de apagar a data, apaga a data
+            if not is_new and old_schedule == self.scheduled_datetime and self.schedule_status == 'unagendado':
+                self.scheduled_datetime = None
+                self.court = None
+            else:
+                self.schedule_status = 'agendado'
+                
+        # Se o admin apagou a data, muda o status para unagendado
+        if not self.scheduled_datetime and self.schedule_status == 'agendado':
+            self.schedule_status = 'unagendado'
                     
         super().save(*args, **kwargs)
+        
+        # Dispara notificações via WhatsApp pós-save
+        from .whatsapp import notify_match_scheduled, notify_match_updated
+        
+        if self.scheduled_datetime and self.court:
+            # Caso 1: Foi agendado agora (antes não tinha horário)
+            if not is_new and old_schedule is None:
+                try:
+                    notify_match_scheduled(self)
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).error(f"Erro ao notificar agendamento via WhatsApp: {e}")
+            
+            # Caso 2: Já estava agendado, mas mudou horário ou quadra
+            elif not is_new and old_schedule is not None:
+                if old_schedule != self.scheduled_datetime or old_court != self.court:
+                    try:
+                        notify_match_updated(self)
+                    except Exception as e:
+                        import logging
+                        logging.getLogger(__name__).error(f"Erro ao notificar atualização via WhatsApp: {e}")
 
 from django.db.models.signals import post_delete
 

@@ -1099,7 +1099,19 @@ class MatchAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
         return format_html('<span style="white-space: nowrap;">{}</span>', str(obj))
     match_name.short_description = 'Match'
 
-    list_display = ('match_name', 'round_number', 'phase', 'tournament', 'category', 'status', 'winner', 'scheduled_datetime')
+    def agendamento_info(self, obj):
+        from django.utils.html import format_html
+        if obj.schedule_status == 'agendado' and obj.scheduled_datetime:
+            return format_html('<span style="white-space: nowrap;"><b>{}</b></span>', obj.scheduled_datetime.strftime('%d/%m/%Y %H:%M'))
+        elif obj.schedule_status == 'aguardando_adversario' and obj.proposed_datetime:
+            court_name = obj.proposed_court.name if obj.proposed_court else "Quadra indefinida"
+            dt_str = obj.proposed_datetime.strftime('%d/%m/%Y %H:%M')
+            status = obj.get_schedule_status_display()
+            return format_html('<span style="color: #f59e0b; white-space: nowrap;">Agendamento da "{}" solicitado para "{}" - {}</span>', court_name, dt_str, status)
+        return "-"
+    agendamento_info.short_description = 'Data e Hora Agendada'
+
+    list_display = ('match_name', 'round_number', 'phase', 'tournament', 'category', 'status', 'winner', 'agendamento_info')
     list_filter = (('tournament__club', admin.RelatedOnlyFieldListFilter), ('tournament', admin.RelatedOnlyFieldListFilter), ('category', admin.RelatedOnlyFieldListFilter), 'round_number', 'phase', 'status')
     search_fields = ('player_a__name', 'player_b__name')
 
@@ -1125,9 +1137,14 @@ class MatchAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
         ('Informações da Partida', {
             'fields': ('category', 'tournament', 'round_number', 'phase', 'status', 'position_in_bracket', 'is_bye', 'next_match')
         }),
-        ('Agendamento', {
-            'fields': ('scheduled_datetime', 'court'),
+        ('Agendamento Oficial', {
+            'fields': ('schedule_status', 'scheduled_datetime', 'court'),
             'description': 'Defina ou apague o agendamento da partida.',
+        }),
+        ('Proposta do Atleta (Aguardando Confirmação)', {
+            'fields': ('proposed_datetime', 'proposed_court', 'proposed_by'),
+            'description': 'Informações sugeridas por um atleta via aplicativo.',
+            'classes': ('collapse',),
         }),
         ('Jogadores e Resultado Final', {
             'fields': ('player_a', 'player_b', 'winner')

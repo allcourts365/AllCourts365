@@ -1,0 +1,11 @@
+version: '3'
+services:
+  waha:
+    image: devlikeapro/waha
+    container_name: whatsapp_api
+    ports:
+      - "3000:3000"
+    environment:
+      - WAHA_LOG_LEVEL=info
+      # Pode ser configurado outras opções, mas o padrão já funciona bem
+    restart: unless-stopped

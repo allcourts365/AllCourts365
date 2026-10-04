@@ -8,6 +8,7 @@ urlpatterns = [
     path('', views.club_list, name='list'),
     path('meus-clubes/', views.my_clubs, name='my_clubs'),
     path('<int:club_id>/', views.club_detail, name='detail'),
+    path('<int:club_id>/agenda/', views.public_schedule, name='public_schedule'),
     path('<int:club_id>/departamento/<int:department_id>/', views.department_detail, name='department_detail'),
     path('<int:club_id>/season/<int:ranking_id>/', views.ranking_detail, name='ranking_detail'),
     path('<int:club_id>/eliminatory/<int:tournament_id>/', views.knockout_detail, name='knockout_detail'),

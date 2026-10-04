@@ -564,6 +564,7 @@
                     {% if department.rules_pdf %}
                     <a href="{{ department.rules_pdf.url }}" target="_blank"><i class="fas fa-file-pdf"></i> Regulamento</a>
                     {% endif %}
+                    <a href="{% url 'clubs:public_schedule' club_context.id %}"><i class="far fa-calendar-alt"></i> Agendamentos</a>
                     <a href="{% url 'clubs:news_list' club_context.id %}"><i class="fas fa-newspaper"></i> Notícias {{ club_context.name }}</a>
                     <a href="{% url 'clubs:detail' club_context.id %}"><i class="fas fa-arrow-left"></i> Voltar ao Clube</a>
                     {% elif club_context %}

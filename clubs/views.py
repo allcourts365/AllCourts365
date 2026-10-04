@@ -3,6 +3,8 @@ from django.http import FileResponse, Http404
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.utils import timezone
+import datetime
 from .models import Club, Match
 import os
 
@@ -617,3 +619,69 @@ def registration_success(request, club_id, tournament_id):
         'tournament': tournament,
         'latest_cp': latest_cp,
     })
+
+# ==========================================
+# Agenda Pública de Quadras
+# ==========================================
+def public_schedule(request, club_id):
+    """Página onde os sócios e funcionários podem ver a ocupação das quadras."""
+    from django.db.models.functions import TruncDate
+    from django.db.models import Case, When, F, DateField, DateTimeField
+    
+    club = get_object_or_404(Club, id=club_id)
+    
+    date_str = request.GET.get('data')
+    try:
+        filter_date = datetime.datetime.strptime(date_str, '%Y-%m-%d').date() if date_str else timezone.localdate()
+    except ValueError:
+        filter_date = timezone.localdate()
+
+    # Jogos agendados e aguardando confirmação
+    matches = Match.objects.filter(
+        tournament__club=club,
+        schedule_status__in=['agendado', 'aguardando_adversario'],
+        status='pending'
+    ).annotate(
+        effective_date=Case(
+            When(schedule_status='agendado', then=TruncDate('scheduled_datetime')),
+            When(schedule_status='aguardando_adversario', then=TruncDate('proposed_datetime')),
+            output_field=DateField()
+        ),
+        effective_datetime=Case(
+            When(schedule_status='agendado', then=F('scheduled_datetime')),
+            When(schedule_status='aguardando_adversario', then=F('proposed_datetime')),
+            output_field=DateTimeField()
+        )
+    ).filter(
+        effective_date=filter_date
+    ).select_related('court', 'proposed_court', 'player_a', 'player_b', 'tournament').order_by('effective_datetime')
+    
+    from datetime import timedelta
+    today = timezone.localdate()
+    
+    first_date = today
+    last_date = today + timedelta(days=7)
+    
+    # Calculate prev and next dates within the 7-day window
+    prev_date = (filter_date - timedelta(days=1)) if filter_date > today else None
+    next_date = (filter_date + timedelta(days=1)) if filter_date < last_date else None
+    
+    # Determine the text for the current date display
+    if filter_date == today:
+        date_display = f"Hoje, {filter_date.strftime('%d/%m')}"
+    else:
+        weekdays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
+        wd = weekdays[filter_date.weekday()]
+        date_display = f"{wd}, {filter_date.strftime('%d/%m')}"
+    
+    return render(request, 'public_schedule.html', {
+        'club': club,
+        'matches': matches,
+        'filter_date': filter_date,
+        'first_date': first_date,
+        'last_date': last_date,
+        'prev_date': prev_date,
+        'next_date': next_date,
+        'date_display': date_display,
+    })
+

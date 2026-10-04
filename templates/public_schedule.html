@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Agendamentos - {{ club.name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root {
+        {% if club.background_color %}--bg-color: {{ club.background_color }};{% endif %}
+        {% if club.overlay_color %}--overlay-color: {{ club.overlay_color }};{% endif %}
+        {% if club.overlay_opacity is not None %}--overlay-opacity: {{ club.overlay_opacity|stringformat:"s" }};{% endif %}
+        {% if club.highlight_color %}--highlight-color: {{ club.highlight_color }};{% endif %}
+    }
+    
+    {% if club.background_image and not club.background_video %}
+    body {
+        background-image: url('{{ club.background_image.url }}') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-attachment: fixed !important;
+    }
+    {% endif %}
+
+    {% if not request.user.is_authenticated %}
+    /* Ocultar elementos desnecessarios do cabecalho original para visitantes sem quebrar o layout */
+    .glass-nav .nav-links > a:not([href="/"]):not([href="{% url 'clubs:list' %}"]):not(.btn-highlight) {
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+    #globalSidebar .sidebar-nav > a:not([href="/"]):not([href="{% url 'clubs:list' %}"]) {
+        display: none !important;
+    }
+    {% endif %}
+
+    .schedule-header {
+        text-align: center;
+        margin-bottom: 40px;
+        color: #fff;
+    }
+
+    .date-filter {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 10px;
+        margin-bottom: 30px;
+        justify-content: center;
+    }
+
+    .date-btn {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 20px;
+        text-decoration: none;
+        white-space: nowrap;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+
+    .date-btn:hover {
+        background: rgba(255,255,255,0.15);
+    }
+
+    .date-btn.active {
+        background: var(--highlight-color, #4f46e5);
+        border-color: var(--highlight-color, #4f46e5);
+    }
+
+    .match-card {
+        padding: 20px;
+        margin-bottom: 15px;
+        border-radius: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        border-left: 5px solid var(--highlight-color, #4f46e5);
+    }
+
+    .match-time {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--highlight-color, #4f46e5);
+    }
+
+    .match-court {
+        font-size: 0.9rem;
+        color: rgba(255,255,255,0.7);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .match-players {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #fff;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: rgba(255,255,255,0.5);
+    }
+    
+    @media (max-width: 768px) {
+        .match-card {
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            gap: 5px;
+            border-left-width: 4px;
+        }
+        .match-time {
+            font-size: 1rem;
+        }
+        .match-court {
+            font-size: 0.75rem;
+        }
+        .match-players {
+            font-size: 0.95rem;
+        }
+        .match-card small {
+            font-size: 0.7rem !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if not request.user.is_authenticated %}
+<div style="margin-top: 20px; margin-bottom: 20px;">
+    <a href="{% url 'home' %}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--highlight-color, #fff); text-decoration: none; font-weight: 600;">
+        <i class="fas fa-arrow-left"></i> Voltar para Home
+    </a>
+</div>
+{% else %}
+<div style="margin-top: 20px; margin-bottom: 20px;">
+    <a href="{% url 'clubs:detail' club.id %}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--highlight-color, #fff); text-decoration: none; font-weight: 600;">
+        <i class="fas fa-arrow-left"></i> Voltar para o Clube
+    </a>
+</div>
+{% endif %}
+
+<div class="schedule-header">
+    <h1 style="font-weight: 800; font-size: 2.5rem; margin-bottom: 10px;">Agendamentos</h1>
+    <p style="color: rgba(255,255,255,0.7);">Confira os horários ocupados para o dia {{ filter_date|date:"d/m/Y" }}</p>
+</div>
+
+<div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 30px;">
+    {% if filter_date > first_date %}
+        <a href="?data={{ first_date|date:'Y-m-d' }}" class="btn btn-primary" style="padding: 10px 15px; border-radius: 50px; text-decoration: none;" title="Hoje">
+            <i class="fas fa-angle-double-left"></i>
+        </a>
+    {% else %}
+        <span class="btn btn-primary" style="padding: 10px 15px; border-radius: 50px; opacity: 0.3; cursor: not-allowed;">
+            <i class="fas fa-angle-double-left"></i>
+        </span>
+    {% endif %}
+
+    {% if prev_date %}
+        <a href="?data={{ prev_date|date:'Y-m-d' }}" class="btn btn-primary" style="padding: 10px 15px; border-radius: 50px; text-decoration: none;" title="Dia anterior">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+    {% else %}
+        <span class="btn btn-primary" style="padding: 10px 15px; border-radius: 50px; opacity: 0.3; cursor: not-allowed;">
+            <i class="fas fa-chevron-left"></i>
+        </span>
+    {% endif %}
+    
+    <div style="background: rgba(255, 255, 255, 0.1); padding: 10px 25px; border-radius: 50px; font-weight: bold; font-size: 1.1rem; border: 1px solid rgba(255, 255, 255, 0.2);">
+        {{ date_display }}
+    </div>
+    
+    {% if next_date %}
+        <a href="?data={{ next_date|date:'Y-m-d' }}" class="btn btn-primary" style="padding: 10px 15px; border-radius: 50px; text-decoration: none;" title="Próximo dia">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+    {% else %}
+        <span class="btn btn-primary" style="padding: 10px 15px; border-radius: 50px; opacity: 0.3; cursor: not-allowed;">
+            <i class="fas fa-chevron-right"></i>
+        </span>
+    {% endif %}
+
+    {% if filter_date < last_date %}
+        <a href="?data={{ last_date|date:'Y-m-d' }}" class="btn btn-primary" style="padding: 10px 15px; border-radius: 50px; text-decoration: none;" title="Último dia disponível">
+            <i class="fas fa-angle-double-right"></i>
+        </a>
+    {% else %}
+        <span class="btn btn-primary" style="padding: 10px 15px; border-radius: 50px; opacity: 0.3; cursor: not-allowed;">
+            <i class="fas fa-angle-double-right"></i>
+        </span>
+    {% endif %}
+</div>
+
+<div style="max-width: 800px; margin: 0 auto; padding: 0 20px;">
+    {% if matches %}
+        {% for match in matches %}
+        <div class="glass-card match-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="match-time"><i class="far fa-clock"></i> {{ match.effective_datetime|date:"H:i" }}</span>
+                <span class="match-court"><i class="fas fa-map-marker-alt"></i> 
+                    {% if match.schedule_status == 'agendado' %}
+                        {% if match.court %}{{ match.court.name }}{% else %}Quadra não definida{% endif %}
+                    {% else %}
+                        {% if match.proposed_court %}{{ match.proposed_court.name }}{% else %}Quadra não definida{% endif %}
+                    {% endif %}
+                </span>
+            </div>
+            
+            <div class="match-players">
+                {% if match.player_a %}
+                    {{ match.player_a.short_name }}
+                {% else %}
+                    A definir
+                {% endif %}
+                <span style="color: rgba(255,255,255,0.3); margin: 0 10px;">VS</span>
+                {% if match.player_b %}
+                    {{ match.player_b.short_name }}
+                {% else %}
+                    A definir
+                {% endif %}
+            </div>
+            
+            {% if match.tournament %}
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+                <div style="font-size: 0.85rem; color: rgba(255,255,255,0.5);">
+                    <i class="fas fa-trophy"></i> {{ match.tournament.name }}
+                </div>
+                {% if match.schedule_status == 'aguardando_adversario' %}
+                <div style="font-size: 0.75rem; font-weight: 700; color: #f59e0b; background: rgba(245, 158, 11, 0.1); padding: 4px 8px; border-radius: 10px; border: 1px solid rgba(245, 158, 11, 0.3);">
+                    Aguardando Confirmação
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="glass-card empty-state">
+            <i class="fas fa-calendar-check" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.5;"></i>
+            <h3>Nenhum jogo agendado</h3>
+            <p>Nenhuma quadra está reservada para torneios nesta data.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
