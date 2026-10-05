@@ -1101,11 +1101,14 @@ class MatchAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
 
     def agendamento_info(self, obj):
         from django.utils.html import format_html
+        from django.utils import timezone
         if obj.schedule_status == 'agendado' and obj.scheduled_datetime:
-            return format_html('<span style="white-space: nowrap;"><b>{}</b></span>', obj.scheduled_datetime.strftime('%d/%m/%Y %H:%M'))
+            local_dt = timezone.localtime(obj.scheduled_datetime)
+            return format_html('<span style="white-space: nowrap;"><b>{}</b></span>', local_dt.strftime('%d/%m/%Y %H:%M'))
         elif obj.schedule_status == 'aguardando_adversario' and obj.proposed_datetime:
             court_name = obj.proposed_court.name if obj.proposed_court else "Quadra indefinida"
-            dt_str = obj.proposed_datetime.strftime('%d/%m/%Y %H:%M')
+            local_dt = timezone.localtime(obj.proposed_datetime)
+            dt_str = local_dt.strftime('%d/%m/%Y %H:%M')
             status = obj.get_schedule_status_display()
             return format_html('<span style="color: #f59e0b; white-space: nowrap;">Agendamento da "{}" solicitado para "{}" - {}</span>', court_name, dt_str, status)
         return "-"
