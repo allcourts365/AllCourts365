@@ -76,6 +76,16 @@ class CustomSignupForm(SignupForm):
         })
     )
 
+from allauth.account.forms import LoginForm
+
+class CustomLoginForm(LoginForm):
+    captcha = ReCaptchaField(
+        label='',
+        widget=ReCaptchaV2Checkbox(attrs={
+            'data-theme': 'dark'
+        })
+    )
+
     def save(self, request):
         user = super(CustomSignupForm, self).save(request)
         
