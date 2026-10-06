@@ -183,9 +183,9 @@
     
     
     <!-- Menu Horizontal de Abas -->
-    <div class="tabs-container hide-on-mobile" style="justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
-        <button class="tab-btn active" onclick="openTab('rankings', this)">Torneios Temporada</button>
-        <button class="tab-btn" onclick="openTab('knockouts', this)">Torneios Eliminatórios</button>
+    <div class="tabs-container hide-on-mobile">
+        <button class="tab-btn active" onclick="openTab('rankings', this)" style="flex: 1; padding: 10px 5px; font-size: clamp(0.75rem, 3vw, 1rem); line-height: 1.2; text-align: center;">Torneios Sazonais</button>
+        <button class="tab-btn" onclick="openTab('knockouts', this)" style="flex: 1; padding: 10px 5px; font-size: clamp(0.75rem, 3vw, 1rem); line-height: 1.2; text-align: center;">Torneios Eliminatórios</button>
         <a id="btn-ranking-geral" href="{% url 'clubs:knockout_general_ranking' club.id %}" style="display: none; align-items: center; gap: 7px; padding: 10px 22px; border-radius: 8px; border: 2px solid #06b6d4; background: #06b6d4; color: #fff; font-weight: 700; font-size: 0.95rem; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 15px rgba(6,182,212,0.4)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
             <i class="fas fa-trophy"></i> Ver Ranking Geral
         </a>
@@ -228,7 +228,7 @@
                 </div>
             </div>
             {% empty %}
-            <p style="text-align: center; grid-column: 1 / -1;">Nenhum Torneio Temporada ativo no momento.</p>
+            <p style="text-align: center; grid-column: 1 / -1;">Nenhum Torneio Sazonal ativo no momento.</p>
             {% endfor %}
         </div>
     </div>
