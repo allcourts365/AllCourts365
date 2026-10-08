@@ -456,7 +456,11 @@
                         {% if round_num == ranking.current_round and request.user.is_authenticated and m.player_a.user == request.user or round_num == ranking.current_round and request.user.is_authenticated and m.player_b.user == request.user %}
                             <div class="my-match-badge">
                                 {% if m.status == 'completed' %}
-                                    Seu jogo - Finalizado
+                                    {% if m.wo_a or m.wo_b %}
+                                        Seu jogo - Não realizado - Vitória por W.O. - Finalizado
+                                    {% else %}
+                                        Seu jogo - Finalizado
+                                    {% endif %}
                                 {% elif m.result_status == 'pending_approval' %}
                                     {% if m.reported_by and m.reported_by.user == request.user %}
                                         Seu jogo - Resultado Enviado - Aguardando Confirmação
@@ -517,10 +521,16 @@
                             </div>
                         </div>
                         
-                        {% if m.scheduled_datetime %}
+                        {% if m.scheduled_datetime or m.wo_a or m.wo_b %}
                         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); text-align: center; font-size: 0.95rem; color: var(--subtitle-color);">
-                            <i class="fas fa-calendar-check" style="color: var(--highlight-color);"></i>
-                            {% if m.status == 'pending' %}
+                            <i class="fas {% if m.scheduled_datetime %}fa-calendar-check{% else %}fa-exclamation-circle{% endif %}" style="color: var(--highlight-color);"></i>
+                            {% if m.wo_a or m.wo_b %}
+                                {% if m.scheduled_datetime %}
+                                    <strong>{{ m.scheduled_datetime|date:"d/m/Y" }}</strong> das <strong>{{ m.scheduled_datetime|time:"H:i" }}</strong> até <strong>{{ m.end_datetime|time:"H:i" }}</strong> na <strong>{{ m.court.name }}</strong> - NÃO REALIZADO - VITÓRIA POR W.O. - FINALIZADO
+                                {% else %}
+                                    NÃO REALIZADO - VITÓRIA POR W.O. - FINALIZADO
+                                {% endif %}
+                            {% elif m.status == 'pending' %}
                                 {% if m.is_past %}
                                     Marcado para <strong>{{ m.scheduled_datetime|date:"d/m/Y" }}</strong> das <strong>{{ m.scheduled_datetime|time:"H:i" }}</strong> até <strong>{{ m.end_datetime|time:"H:i" }}</strong> na <strong>{{ m.court.name }}</strong> - EM ATRASO
                                 {% else %}

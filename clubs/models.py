@@ -441,7 +441,9 @@ class Match(models.Model):
     proposed_result_json = models.JSONField(null=True, blank=True, verbose_name="Resultado Proposto")
     
     sets_a = models.IntegerField(null=True, blank=True, verbose_name="Sets Ganhos (A)")
+    wo_a = models.BooleanField(default=False, verbose_name="WO")
     sets_b = models.IntegerField(null=True, blank=True, verbose_name="Sets Ganhos (B)")
+    wo_b = models.BooleanField(default=False, verbose_name="WO")
     
     set1_a = models.IntegerField(null=True, blank=True, verbose_name="Set 1 (A)")
     set1_b = models.IntegerField(null=True, blank=True, verbose_name="Set 1 (B)")
@@ -510,7 +512,21 @@ class Match(models.Model):
         sa = self.sets_a or 0
         sb = self.sets_b or 0
         
-        if has_games:
+        sets_to_win = 2
+        if self.tournament and getattr(self.tournament, 'set_format', None) == '5_normal':
+            sets_to_win = 3
+            
+        if self.wo_a:
+            sa = 0
+            sb = sets_to_win
+            self.sets_a = 0
+            self.sets_b = sets_to_win
+        elif self.wo_b:
+            sa = sets_to_win
+            sb = 0
+            self.sets_a = sets_to_win
+            self.sets_b = 0
+        elif has_games:
             sa = 0
             sb = 0
             sets = [

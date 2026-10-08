@@ -1153,7 +1153,7 @@ class MatchAdmin(ClubScopedAdminMixin, admin.ModelAdmin):
             'fields': ('player_a', 'player_b', 'winner')
         }),
         ('Resultado por Sets (Preenchimento Rápido)', {
-            'fields': ('sets_a', 'sets_b'),
+            'fields': (('sets_a', 'wo_a'), ('sets_b', 'wo_b')),
             'description': 'Preencha apenas a quantidade de sets (ex: 2 a 0). Se os games abaixo forem preenchidos, este campo será calculado automaticamente.',
         }),
         ('Parciais por Games (Opcional)', {

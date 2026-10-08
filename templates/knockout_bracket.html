@@ -401,7 +401,7 @@
                         </div>
                         
                         <div class="match-status">
-                            {% if match.status == 'pending' %}Aguardando{% elif match.status == 'cancelled' %}Cancelado{% else %}Finalizado{% endif %}
+                            {% if match.status == 'pending' %}Aguardando{% elif match.status == 'cancelled' %}Cancelado{% elif match.wo_a or match.wo_b %}Não realizado - Vitória por W.O. - Finalizado{% else %}Finalizado{% endif %}
                             {% if match.scheduled_datetime %} // {{ match.scheduled_datetime|date:"d/m H:i" }}{% endif %}
                             {% if match.court %} // {{ match.court.name }}{% endif %}
                         </div>

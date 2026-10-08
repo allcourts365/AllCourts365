@@ -355,6 +355,8 @@
                     <div class="match-status">Aguardando</div>
                     {% elif match.status == 'cancelled' %}
                     <div class="match-status">Cancelado</div>
+                    {% elif match.wo_a or match.wo_b %}
+                    <div class="match-status" style="font-size: 0.8em;">Não realizado - Vitória por W.O. - Finalizado</div>
                     {% else %}
                     <div class="match-status">Finalizado</div>
                     {% endif %}
