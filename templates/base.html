@@ -561,12 +561,12 @@
                         <i class="fas fa-table-tennis"></i> Painel do Atleta <i class="fas fa-caret-down" style="float: right; margin-top: 4px; margin-right: 15px;"></i>
                     </a>
                     <div id="mobileAthleteSubmenu" style="display: {% if url_name in 'athlete_dashboard,athlete_calendar,athlete_stats' %}block{% else %}none{% endif %}; background: rgba(0,0,0,0.2);">
-                        <a href="{% url 'athlete_dashboard' %}?tab=meu-clube" style="padding-left: 45px; font-size: 0.9rem; {% if url_name == 'athlete_dashboard' and tab == 'meu-clube' %}color: var(--global-highlight-color);{% endif %}">- Meu(s) Clube(s)/Liga(s)</a>
-                        <a href="{% url 'athlete_dashboard' %}?tab=meu-perfil" style="padding-left: 45px; font-size: 0.9rem; {% if url_name == 'athlete_dashboard' and tab == 'meu-perfil' %}color: var(--global-highlight-color);{% endif %}">- Meu Perfil</a>
-                        <a href="{% url 'athlete_calendar' %}" style="padding-left: 45px; font-size: 0.9rem; {% if url_name == 'athlete_calendar' %}color: var(--global-highlight-color);{% endif %}">- Calendário</a>
-                        <a href="{% url 'athlete_stats' %}" style="padding-left: 45px; font-size: 0.9rem; {% if url_name == 'athlete_stats' %}color: var(--global-highlight-color);{% endif %}">- Estatística</a>
-                        <a href="{% url 'athlete_dashboard' %}?tab=mensagens" style="padding-left: 45px; font-size: 0.9rem; {% if url_name == 'athlete_dashboard' and tab == 'mensagens' %}color: var(--global-highlight-color);{% endif %}">- Mensagens</a>
-                        <a href="#" onclick="if(confirm('Atenção: Ao excluir sua conta todos os seus dados serão apagados definitivamente. Deseja continuar?')) { document.getElementById('deleteAccountFormMobile').submit(); } return false;" style="padding-left: 45px; font-size: 0.9rem; color: #ef4444;">- Excluir Conta</a>
+                        <a href="{% url 'athlete_dashboard' %}?tab=meu-clube" style="padding-left: 45px; font-size: 0.9rem; {% if url_name == 'athlete_dashboard' and tab == 'meu-clube' %}color: var(--global-highlight-color);{% endif %}"><i class="fas fa-users"></i> Meu(s) Clube(s)/Liga(s)</a>
+                        <a href="{% url 'athlete_dashboard' %}?tab=meu-perfil" style="padding-left: 45px; font-size: 0.9rem; {% if url_name == 'athlete_dashboard' and tab == 'meu-perfil' %}color: var(--global-highlight-color);{% endif %}"><i class="fas fa-user"></i> Meu Perfil</a>
+                        <a href="{% url 'athlete_calendar' %}" style="padding-left: 45px; font-size: 0.9rem; {% if url_name == 'athlete_calendar' %}color: var(--global-highlight-color);{% endif %}"><i class="fas fa-calendar-alt"></i> Calendário</a>
+                        <a href="{% url 'athlete_stats' %}" style="padding-left: 45px; font-size: 0.9rem; {% if url_name == 'athlete_stats' %}color: var(--global-highlight-color);{% endif %}"><i class="fas fa-chart-bar"></i> Estatística</a>
+                        <a href="{% url 'athlete_dashboard' %}?tab=mensagens" style="padding-left: 45px; font-size: 0.9rem; {% if url_name == 'athlete_dashboard' and tab == 'mensagens' %}color: var(--global-highlight-color);{% endif %}"><i class="fas fa-envelope"></i> Mensagens</a>
+                        <a href="#" onclick="if(confirm('Atenção: Ao excluir sua conta todos os seus dados serão apagados definitivamente. Deseja continuar?')) { document.getElementById('deleteAccountFormMobile').submit(); } return false;" style="padding-left: 45px; font-size: 0.9rem; color: #ef4444;"><i class="fas fa-trash-alt"></i> Excluir Conta</a>
                         <form id="deleteAccountFormMobile" action="{% url 'delete_account' %}" method="post" style="display: none;">
                             {% csrf_token %}
                         </form>
@@ -590,7 +590,7 @@
                             <div id="mobileDeptSubmenu_{{ c.id }}" style="display: {% if url_name == 'department_detail' and club_context.id == c.id %}block{% else %}none{% endif %}; background: rgba(0,0,0,0.2);">
                                 {% for dept in c.departments.all %}
                                     {% if dept.is_active %}
-                                    <a href="{% url 'clubs:department_detail' c.id dept.id %}" style="padding-left: 85px; font-size: 0.8rem; {% if url_name == 'department_detail' and club_context.id == c.id and department and department.id == dept.id %}color: var(--global-highlight-color);{% endif %}">- {{ dept.name }}</a>
+                                    <a href="{% url 'clubs:department_detail' c.id dept.id %}" style="padding-left: 85px; font-size: 0.8rem; {% if url_name == 'department_detail' and club_context.id == c.id and department and department.id == dept.id %}color: var(--global-highlight-color);{% endif %}"><i class="fas fa-angle-right"></i> {{ dept.name }}</a>
                                     {% endif %}
                                 {% endfor %}
                             </div>
@@ -703,7 +703,7 @@
                                     <div id="desktopDeptSubmenu_{{ c.id }}" style="display: {% if url_name == 'department_detail' and club_context.id == c.id %}block{% else %}none{% endif %}; background: rgba(0,0,0,0.2); border-radius: 6px; margin: 2px 4px;">
                                         {% for dept in c.departments.all %}
                                             {% if dept.is_active %}
-                                            <a href="{% url 'clubs:department_detail' c.id dept.id %}" style="padding-left: 55px; font-size: 0.75rem; {% if url_name == 'department_detail' and club_context.id == c.id and department and department.id == dept.id %}color: var(--global-highlight-color) !important;{% endif %}">- {{ dept.name }}</a>
+                                            <a href="{% url 'clubs:department_detail' c.id dept.id %}" style="padding-left: 55px; font-size: 0.75rem; {% if url_name == 'department_detail' and club_context.id == c.id and department and department.id == dept.id %}color: var(--global-highlight-color) !important;{% endif %}"><i class="fas fa-angle-right"></i> {{ dept.name }}</a>
                                             {% endif %}
                                         {% endfor %}
                                     </div>
