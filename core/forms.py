@@ -30,7 +30,7 @@ class UserProfileForm(forms.ModelForm):
             'tennis_idol', 'preferred_time', 'avatar'
         ]
         widgets = {
-            'birth_date': forms.DateInput(attrs={'type': 'date'}),
+            'birth_date': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
         }
 
 class PlayerLinkRequestForm(forms.ModelForm):

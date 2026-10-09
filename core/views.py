@@ -149,6 +149,9 @@ def athlete_dashboard(request):
                 profile_form.save()
                 messages.success(request, 'Perfil atualizado com sucesso!')
                 return redirect('athlete_dashboard')
+            else:
+                print("UserForm Errors:", user_form.errors)
+                print("ProfileForm Errors:", profile_form.errors)
                 
         elif 'link_request' in request.POST:
             link_form = PlayerLinkRequestForm(request.POST)
