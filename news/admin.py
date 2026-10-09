@@ -240,7 +240,13 @@ class BroadcastMessageAdmin(admin.ModelAdmin):
             if obj.is_global:
                 target_users = User.objects.filter(is_active=True).exclude(id=request.user.id)
             elif obj.department:
-                target_users = User.objects.filter(is_active=True, player_profiles__department=obj.department).exclude(id=request.user.id).distinct()
+                from django.db.models import Q
+                target_users = User.objects.filter(
+                    is_active=True
+                ).filter(
+                    Q(player_profiles__department=obj.department) | 
+                    Q(player_profiles__categoryplayer__category__tournament__department=obj.department)
+                ).exclude(id=request.user.id).distinct()
             elif obj.club:
                 # Todos os usuários que tem o jogador vinculado ao clube
                 target_users = User.objects.filter(is_active=True, player_profiles__club=obj.club).exclude(id=request.user.id).distinct()
