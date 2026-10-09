@@ -35,7 +35,15 @@ def site_config(request):
             pass
             
     # Se o club_override existir, podemos retornar ele também
-    return {
+    context = {
         'site_config': config,
-        'club_context': club_override
+        'club_context': club_override,
     }
+    
+    if hasattr(request, 'user') and request.user.is_authenticated:
+        context['user_clubs'] = Club.objects.filter(
+            players__user=request.user,
+            is_visible=True
+        ).distinct().order_by('name')
+        
+    return context
