@@ -145,7 +145,7 @@
             position: absolute;
             top: calc(100% + 12px);
             right: 0;
-            min-width: 190px;
+            min-width: 260px;
             background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -178,6 +178,7 @@
             font-size: 0.9rem;
             font-weight: 500;
             transition: background 0.15s;
+            white-space: nowrap;
         }
 
         .user-dropdown a:hover {
@@ -648,29 +649,6 @@
                 <a href="/">Home</a>
                 <a href="{% url 'clubs:list' %}">Clubes / Ligas</a>
                 {% if club_context %}
-                    <a href="{% url 'clubs:news_list' club_context.id %}">Noticias {{ club_context.name }}</a>
-                    
-                    {% if club_context.has_departments and request.user.is_authenticated %}
-                    <div class="user-avatar-wrapper" style="display: inline-flex; align-items: center;">
-                        <a style="cursor: pointer; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff;">
-                            Departamentos <i class="fas fa-caret-down" style="margin-left: 5px;"></i>
-                        </a>
-                        <div class="user-dropdown">
-                            {% for dept in club_context.departments.all %}
-                                {% if dept.is_active %}
-                                <a href="{% url 'clubs:department_detail' club_context.id dept.id %}">{{ dept.name }}</a>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% else %}
-                    <!-- Caso o clube não tenha departamentos, exibe links diretos (Opcional, mas previne que torneios fiquem inacessíveis) -->
-                    {% endif %}
-
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'athlete_dashboard' %}?club={{ club_context.id }}" style="background: var(--global-highlight-color); color: #fff; padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: 600;"><i class="fas fa-table-tennis"></i> Painel do Atleta</a>
-                    {% endif %}
-                    
                     {% if site_config.show_clubs_cta and not user.is_authenticated %}
                     <a href="{% url 'club_landing_page' %}" style="border: 1px solid var(--global-highlight-color); color: var(--global-highlight-color); padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: 600;"><i class="fas fa-rocket"></i> Para Clubes</a>
                     {% endif %}
@@ -689,19 +667,60 @@
                         </div>
                         <div class="user-dropdown" id="userDropdown">
                             <div class="user-name-label">{{ user.first_name|default:user.username }}</div>
-                            <a href="{% url 'clubs:my_clubs' %}">
-                                <i class="fas fa-home"></i> Meus Clubes
+                            
+                            {% with url_name=request.resolver_match.url_name tab=request.GET.tab %}
+                            <!-- 2- Painel do Atleta -->
+                            <a href="#" onclick="var el=document.getElementById('desktopAthleteSubmenu'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; return false;" style="{% if url_name in 'athlete_dashboard,athlete_calendar,athlete_stats' %}color: var(--global-highlight-color) !important;{% endif %}">
+                                <i class="fas fa-table-tennis"></i> Painel do Atleta <i class="fas fa-caret-down" style="margin-left: auto;"></i>
                             </a>
-                            <a href="#" onclick="if(confirm('Atenção: Ao excluir sua conta todos os seus dados serão apagados definitivamente, incluindo os vínculos com os clubes onde você é membro. Deseja continuar?')) { document.getElementById('deleteAccountFormHeader').submit(); } return false;" style="color: #ef4444 !important;">
-                                <i class="fas fa-trash-alt" style="color: #ef4444;"></i> Excluir Conta
+                            <div id="desktopAthleteSubmenu" style="display: {% if url_name in 'athlete_dashboard,athlete_calendar,athlete_stats' %}block{% else %}none{% endif %}; background: rgba(0,0,0,0.2); border-radius: 8px; margin: 4px 0;">
+                                <a href="{% url 'athlete_dashboard' %}?tab=meu-clube" style="padding-left: 35px; font-size: 0.85rem; {% if url_name == 'athlete_dashboard' and tab == 'meu-clube' %}color: var(--global-highlight-color) !important;{% endif %}">- Meu(s) Clube(s)/Liga(s)</a>
+                                <a href="{% url 'athlete_dashboard' %}?tab=meu-perfil" style="padding-left: 35px; font-size: 0.85rem; {% if url_name == 'athlete_dashboard' and tab == 'meu-perfil' %}color: var(--global-highlight-color) !important;{% endif %}">- Meu Perfil</a>
+                                <a href="{% url 'athlete_calendar' %}" style="padding-left: 35px; font-size: 0.85rem; {% if url_name == 'athlete_calendar' %}color: var(--global-highlight-color) !important;{% endif %}">- Calendário</a>
+                                <a href="{% url 'athlete_stats' %}" style="padding-left: 35px; font-size: 0.85rem; {% if url_name == 'athlete_stats' %}color: var(--global-highlight-color) !important;{% endif %}">- Estatística</a>
+                                <a href="{% url 'athlete_dashboard' %}?tab=mensagens" style="padding-left: 35px; font-size: 0.85rem; {% if url_name == 'athlete_dashboard' and tab == 'mensagens' %}color: var(--global-highlight-color) !important;{% endif %}">- Mensagens</a>
+                                <a href="#" onclick="if(confirm('Atenção: Ao excluir sua conta todos os seus dados serão apagados definitivamente. Deseja continuar?')) { document.getElementById('deleteAccountFormDesktop').submit(); } return false;" style="padding-left: 35px; font-size: 0.85rem; color: #ef4444 !important;">- Excluir Conta</a>
+                                <form id="deleteAccountFormDesktop" action="{% url 'delete_account' %}" method="post" style="display: none;">
+                                    {% csrf_token %}
+                                </form>
+                            </div>
+
+                            <!-- 3- Meus Clubes -->
+                            <a href="#" onclick="var el=document.getElementById('desktopClubsSubmenu'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; return false;" style="{% if url_name not in 'athlete_dashboard,athlete_calendar,athlete_stats' and club_context or url_name == 'my_clubs' %}color: var(--global-highlight-color) !important;{% endif %}">
+                                <i class="fas fa-home"></i> Meus Clubes <i class="fas fa-caret-down" style="margin-left: auto;"></i>
                             </a>
-                            <form id="deleteAccountFormHeader" action="{% url 'delete_account' %}" method="post" style="display: none;">
-                                {% csrf_token %}
-                            </form>
+                            <div id="desktopClubsSubmenu" style="display: {% if url_name not in 'athlete_dashboard,athlete_calendar,athlete_stats' and club_context %}block{% elif url_name == 'my_clubs' %}block{% else %}none{% endif %}; background: rgba(0,0,0,0.2); border-radius: 8px; margin: 4px 0;">
+                                {% for c in user_clubs %}
+                                <a href="#" onclick="var el=document.getElementById('desktopClubSubmenu_{{ c.id }}'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; return false;" style="padding-left: 35px; font-size: 0.85rem; {% if club_context and club_context.id == c.id %}color: var(--global-highlight-color) !important;{% endif %}">
+                                    {{ c.name }} <i class="fas fa-caret-down" style="margin-left: auto;"></i>
+                                </a>
+                                <div id="desktopClubSubmenu_{{ c.id }}" style="display: {% if url_name not in 'athlete_dashboard,athlete_calendar,athlete_stats' and club_context and club_context.id == c.id %}block{% else %}none{% endif %}; background: rgba(0,0,0,0.15); border-radius: 6px; margin: 2px 4px;">
+                                    <a href="{% url 'clubs:detail' c.id %}" style="padding-left: 45px; font-size: 0.8rem; {% if url_name == 'detail' and club_context.id == c.id %}color: var(--global-highlight-color) !important;{% endif %}"><i class="fas fa-home"></i> Clube</a>
+                                    {% if c.has_departments %}
+                                    <a href="#" onclick="var el=document.getElementById('desktopDeptSubmenu_{{ c.id }}'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; return false;" style="padding-left: 45px; font-size: 0.8rem; {% if url_name == 'department_detail' and club_context.id == c.id %}color: var(--global-highlight-color) !important;{% endif %}">
+                                        <i class="fas fa-sitemap"></i> Departamentos <i class="fas fa-caret-down" style="margin-left: auto;"></i>
+                                    </a>
+                                    <div id="desktopDeptSubmenu_{{ c.id }}" style="display: {% if url_name == 'department_detail' and club_context.id == c.id %}block{% else %}none{% endif %}; background: rgba(0,0,0,0.2); border-radius: 6px; margin: 2px 4px;">
+                                        {% for dept in c.departments.all %}
+                                            {% if dept.is_active %}
+                                            <a href="{% url 'clubs:department_detail' c.id dept.id %}" style="padding-left: 55px; font-size: 0.75rem; {% if url_name == 'department_detail' and club_context.id == c.id and department and department.id == dept.id %}color: var(--global-highlight-color) !important;{% endif %}">- {{ dept.name }}</a>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <a href="{% url 'clubs:news_list' c.id %}" style="padding-left: 45px; font-size: 0.8rem; {% if url_name == 'news_list' and club_context.id == c.id %}color: var(--global-highlight-color) !important;{% endif %}"><i class="fas fa-newspaper"></i> Notícias</a>
+                                </div>
+                                {% empty %}
+                                <div style="padding: 10px 35px; font-size: 0.85rem; color: #ccc;">Sem clubes vinculados</div>
+                                {% endfor %}
+                            </div>
+
                             <div class="dropdown-divider"></div>
+                            <!-- 4- Sair -->
                             <a href="{% url 'account_logout' %}">
                                 <i class="fas fa-sign-out-alt"></i> Sair
                             </a>
+                            {% endwith %}
                         </div>
                     </div>
                 {% else %}
