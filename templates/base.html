@@ -403,33 +403,6 @@
             }
         }
 
-        /* PWA Styling */
-        .pwa-header-install-btn {
-            background: linear-gradient(135deg, rgba(255, 179, 71, 0.22), rgba(196, 58, 0, 0.28));
-            border: 1px solid rgba(255, 179, 71, 0.6);
-            color: #ffb347;
-            border-radius: 20px;
-            padding: 3px 9px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            outline: none;
-            flex-shrink: 0;
-        }
-        .pwa-header-install-btn:hover, .pwa-header-install-btn:active {
-            background: linear-gradient(135deg, #ffb347, #c43a00);
-            color: #fff;
-            border-color: #ffb347;
-            box-shadow: 0 0 10px rgba(255, 179, 71, 0.5);
-        }
-        @media (max-width: 380px) {
-            .pwa-header-btn-text { display: none; }
-            .pwa-header-install-btn { padding: 4px 7px; }
-        }
 
         /* Floating Mobile Prompt */
         .pwa-floating-prompt {
@@ -634,9 +607,7 @@
 
         /* Hide when already standalone */
         body.is-pwa-standalone .pwa-install-trigger,
-        body.is-pwa-standalone #pwaFloatingPrompt,
-        body.is-pwa-standalone #pwaHeaderInstallBtn,
-        body.is-pwa-standalone #pwaDesktopInstallBtn {
+        body.is-pwa-standalone #pwaFloatingPrompt {
             display: none !important;
         }
     </style>
@@ -739,7 +710,6 @@
             {% if site_config.show_clubs_cta and not user.is_authenticated %}
             <a href="{% url 'club_landing_page' %}"><i class="fas fa-rocket"></i> Para Clubes</a>
             {% endif %}
-            <a href="#" class="pwa-install-trigger" style="color: #ffb347 !important; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 6px; padding-top: 14px;"><i class="fas fa-arrow-down-to-bracket" style="color: #ffb347 !important;"></i> Instalar Aplicativo</a>
         </div>
     </div>
 
@@ -775,28 +745,21 @@
         <div class="brand-text">
             <a href="/" style="color: inherit; text-decoration: none;">AllCourts<span style="background: linear-gradient(to bottom, #ffb347, #c43a00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">365</span>&reg; <span style="font-size: 0.35em; color: #a0aec0; letter-spacing: 1px; vertical-align: baseline; margin-left: 5px; font-weight: 500; font-style: normal;">by EVO<span style="background: linear-gradient(to bottom, #ffb347, #c43a00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">2</span>WIN</span></a>
         </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <button type="button" id="pwaHeaderInstallBtn" class="pwa-header-install-btn pwa-install-trigger" title="Instalar aplicativo no celular" aria-label="Instalar aplicativo">
-                <i class="fas fa-arrow-down-to-bracket"></i>
-                <span class="pwa-header-btn-text">Instalar</span>
-            </button>
-            <div class="menu-btn" id="openRightMenuBtn">
-                {% if user.is_authenticated %}
-                    {% with first_letter=user.first_name|default:user.username|make_list|first|upper %}
-                    <div style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.7); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 500; color: #fff;">
-                        {{ first_letter }}
-                    </div>
-                    {% endwith %}
-                {% else %}
-                    <i class="fas fa-sign-in-alt" style="font-size: 1.1rem; opacity: 0.9;"></i>
-                {% endif %}
-            </div>
+        <div class="menu-btn" id="openRightMenuBtn">
+            {% if user.is_authenticated %}
+                {% with first_letter=user.first_name|default:user.username|make_list|first|upper %}
+                <div style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.7); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 500; color: #fff;">
+                    {{ first_letter }}
+                </div>
+                {% endwith %}
+            {% else %}
+                <i class="fas fa-sign-in-alt" style="font-size: 1.1rem; opacity: 0.9;"></i>
+            {% endif %}
         </div>
         
         <!-- Right Contextual Menu Mobile -->
         <div class="right-menu-mobile" id="rightMenuMobile">
             <div class="sidebar-nav" style="padding: 15px 0;">
-                <a href="#" class="pwa-install-trigger" style="color: #ffb347 !important; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 6px; padding-bottom: 12px;"><i class="fas fa-arrow-down-to-bracket" style="color: #ffb347 !important;"></i> Instalar Aplicativo</a>
                 {% if not user.is_authenticated %}
                     {% if club_context %}
                     <a href="{% url 'clubs:detail' club_context.id %}#club-content" id="btn-visite-menu" onclick="if(typeof toggleClub === 'function' && window.location.pathname === '{% url 'clubs:detail' club_context.id %}') { toggleClub(); document.getElementById('rightMenuMobile').classList.remove('open'); return false; }"><span id="btn-visite-menu-icon" style="color: inherit;"><i class="fas fa-eye"></i></span> <span id="btn-visite-menu-text" style="color: inherit;">Visite AQUI.</span></a>
@@ -912,8 +875,6 @@
                     <a href="{% url 'club_landing_page' %}" style="border: 1px solid var(--global-highlight-color); color: var(--global-highlight-color); padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: 600;"><i class="fas fa-rocket"></i> Para Clubes</a>
                     {% endif %}
                 {% endif %}
-
-                <a href="#" id="pwaDesktopInstallBtn" class="pwa-install-trigger" style="display: none; border: 1px solid #ffb347; color: #ffb347 !important; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;"><i class="fas fa-arrow-down-to-bracket"></i> Instalar App</a>
 
                 {% if user.is_authenticated %}
                     <!-- Avatar com dropdown para usuário logado -->
@@ -1254,7 +1215,6 @@
 
             const floatingPrompt = document.getElementById('pwaFloatingPrompt');
             const guideModal = document.getElementById('pwaGuideModal');
-            const desktopInstallBtn = document.getElementById('pwaDesktopInstallBtn');
             const promptCloseBtn = document.getElementById('pwaPromptCloseBtn');
             const modalCloseBtn = document.getElementById('pwaModalCloseBtn');
             const modalGotItBtn = document.getElementById('pwaModalGotItBtn');
@@ -1306,11 +1266,6 @@
             window.addEventListener('beforeinstallprompt', function(e) {
                 e.preventDefault();
                 deferredPrompt = e;
-
-                // Mostrar botão no desktop se for desktop
-                if (!isMobile && desktopInstallBtn) {
-                    desktopInstallBtn.style.display = 'inline-flex';
-                }
 
                 // Mostrar floating prompt no mobile se não tiver sido fechado recentemente
                 const dismissedAt = localStorage.getItem('pwa_prompt_dismissed');
