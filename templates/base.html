@@ -710,6 +710,7 @@
             {% if site_config.show_clubs_cta and not user.is_authenticated %}
             <a href="{% url 'club_landing_page' %}"><i class="fas fa-rocket"></i> Para Clubes</a>
             {% endif %}
+            <a href="#" class="pwa-install-trigger" style="color: var(--global-highlight-color);"><i class="fas fa-download"></i> Instalar Aplicativo</a>
         </div>
     </div>
 
@@ -1113,14 +1114,14 @@
         {% endblock %}
     </script>
 
-    <!-- Floating PWA Install Banner (Mobile) -->
+    <!-- Floating PWA Install Banner (Mobile & Desktop) -->
     <div id="pwaFloatingPrompt" class="pwa-floating-prompt" style="display: none;">
         <div class="pwa-prompt-icon">
             <img src="{% static 'icons/icon-192x192.png' %}" alt="AllCourts365">
         </div>
         <div class="pwa-prompt-body">
             <div class="pwa-prompt-title">Instalar AllCourts365</div>
-            <div class="pwa-prompt-desc">Tenha o app direto na sua tela inicial</div>
+            <div class="pwa-prompt-desc">Tenha o app direto no seu computador ou celular</div>
         </div>
         <div class="pwa-prompt-actions">
             <button type="button" class="pwa-prompt-install-btn pwa-install-trigger">Instalar</button>
@@ -1134,18 +1135,38 @@
             <div class="pwa-modal-header">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <img src="{% static 'icons/icon-192x192.png' %}" alt="Logo" style="width: 32px; height: 32px; border-radius: 8px;">
-                    <h3 style="margin: 0; font-size: 1.1rem; color: #ffffff; font-weight: 700;">Instalar no seu celular</h3>
+                    <h3 style="margin: 0; font-size: 1.1rem; color: #ffffff; font-weight: 700;">Instalar o AllCourts365</h3>
                 </div>
                 <button type="button" class="pwa-modal-close" id="pwaModalCloseBtn">&times;</button>
             </div>
 
             <div class="pwa-modal-tabs">
-                <button type="button" class="pwa-tab-btn active" id="pwaTabAndroidBtn"><i class="fab fa-android"></i> Android (Chrome)</button>
-                <button type="button" class="pwa-tab-btn" id="pwaTabIosBtn"><i class="fab fa-apple"></i> iPhone / iPad (Safari)</button>
+                <button type="button" class="pwa-tab-btn" id="pwaTabDesktopBtn"><i class="fas fa-desktop"></i> Desktop</button>
+                <button type="button" class="pwa-tab-btn" id="pwaTabAndroidBtn"><i class="fab fa-android"></i> Android</button>
+                <button type="button" class="pwa-tab-btn" id="pwaTabIosBtn"><i class="fab fa-apple"></i> iPhone</button>
+            </div>
+
+            <!-- Conteúdo Desktop -->
+            <div class="pwa-tab-content" id="pwaContentDesktop" style="display: none;">
+                <p style="color: #94a3b8; font-size: 0.85rem; margin-top: 0; margin-bottom: 14px;">
+                    Instale como aplicativo no seu computador (Chrome, Edge ou Brave):
+                </p>
+                <div class="pwa-step-item">
+                    <div class="pwa-step-number">1</div>
+                    <div class="pwa-step-text">Na barra de endereços (ao lado do ícone de favoritos/URL), clique no ícone de <strong>Instalar</strong> (<i class="fas fa-arrow-down-to-bracket" style="color: #ffb347;"></i> ou ícone de monitor).</div>
+                </div>
+                <div class="pwa-step-item">
+                    <div class="pwa-step-number">2</div>
+                    <div class="pwa-step-text">Ou clique no menu de <strong>três pontos</strong> do navegador no canto superior direito e selecione <strong>"Instalar AllCourts365"</strong>.</div>
+                </div>
+                <div class="pwa-step-item">
+                    <div class="pwa-step-number">3</div>
+                    <div class="pwa-step-text">Confirme clicando em <strong>"Instalar"</strong>. Uma janela exclusiva do app será aberta e um atalho criado no seu computador!</div>
+                </div>
             </div>
 
             <!-- Conteúdo Android -->
-            <div class="pwa-tab-content" id="pwaContentAndroid">
+            <div class="pwa-tab-content" id="pwaContentAndroid" style="display: none;">
                 <p style="color: #94a3b8; font-size: 0.85rem; margin-top: 0; margin-bottom: 14px;">
                     Adicione o AllCourts365 como aplicativo no seu Android em 3 passos:
                 </p>
@@ -1218,33 +1239,48 @@
             const promptCloseBtn = document.getElementById('pwaPromptCloseBtn');
             const modalCloseBtn = document.getElementById('pwaModalCloseBtn');
             const modalGotItBtn = document.getElementById('pwaModalGotItBtn');
+            const tabDesktopBtn = document.getElementById('pwaTabDesktopBtn');
             const tabAndroidBtn = document.getElementById('pwaTabAndroidBtn');
             const tabIosBtn = document.getElementById('pwaTabIosBtn');
+            const contentDesktop = document.getElementById('pwaContentDesktop');
             const contentAndroid = document.getElementById('pwaContentAndroid');
             const contentIos = document.getElementById('pwaContentIos');
 
             const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-            // Alternância de abas Android / iOS
+            // Alternância de abas Desktop / Android / iOS
             function setTab(os) {
-                if (os === 'ios') {
+                [tabDesktopBtn, tabAndroidBtn, tabIosBtn].forEach(function(b) {
+                    if (b) b.classList.remove('active');
+                });
+                [contentDesktop, contentAndroid, contentIos].forEach(function(c) {
+                    if (c) c.style.display = 'none';
+                });
+
+                if (os === 'desktop') {
+                    if (tabDesktopBtn) tabDesktopBtn.classList.add('active');
+                    if (contentDesktop) contentDesktop.style.display = 'block';
+                } else if (os === 'ios') {
                     if (tabIosBtn) tabIosBtn.classList.add('active');
-                    if (tabAndroidBtn) tabAndroidBtn.classList.remove('active');
                     if (contentIos) contentIos.style.display = 'block';
-                    if (contentAndroid) contentAndroid.style.display = 'none';
                 } else {
                     if (tabAndroidBtn) tabAndroidBtn.classList.add('active');
-                    if (tabIosBtn) tabIosBtn.classList.remove('active');
                     if (contentAndroid) contentAndroid.style.display = 'block';
-                    if (contentIos) contentIos.style.display = 'none';
                 }
             }
 
-            if (tabAndroidBtn && tabIosBtn) {
-                tabAndroidBtn.addEventListener('click', function() { setTab('android'); });
-                tabIosBtn.addEventListener('click', function() { setTab('ios'); });
-                setTab(isIos ? 'ios' : 'android');
+            if (tabDesktopBtn) tabDesktopBtn.addEventListener('click', function() { setTab('desktop'); });
+            if (tabAndroidBtn) tabAndroidBtn.addEventListener('click', function() { setTab('android'); });
+            if (tabIosBtn) tabIosBtn.addEventListener('click', function() { setTab('ios'); });
+
+            // Inicializar aba correta conforme dispositivo
+            if (!isMobile) {
+                setTab('desktop');
+            } else if (isIos) {
+                setTab('ios');
+            } else {
+                setTab('android');
             }
 
             function openModal() {
@@ -1262,17 +1298,20 @@
                 });
             }
 
-            // Capturar evento de instalação nativa do Chrome/Edge
+            function showFloatingPrompt() {
+                if (!floatingPrompt || isStandalone) return;
+                const dismissedAt = localStorage.getItem('pwa_prompt_dismissed');
+                const now = Date.now();
+                if (!dismissedAt || now - parseInt(dismissedAt, 10) > 3 * 24 * 60 * 60 * 1000) {
+                    floatingPrompt.style.display = 'flex';
+                }
+            }
+
+            // Capturar evento de instalação nativa do Chrome/Edge (Desktop e Android)
             window.addEventListener('beforeinstallprompt', function(e) {
                 e.preventDefault();
                 deferredPrompt = e;
-
-                // Mostrar floating prompt no mobile se não tiver sido fechado recentemente
-                const dismissedAt = localStorage.getItem('pwa_prompt_dismissed');
-                const now = Date.now();
-                if (isMobile && (!dismissedAt || now - parseInt(dismissedAt, 10) > 3 * 24 * 60 * 60 * 1000)) {
-                    if (floatingPrompt) floatingPrompt.style.display = 'flex';
-                }
+                showFloatingPrompt();
             });
 
             // Quando o app é instalado com sucesso
@@ -1284,16 +1323,8 @@
                 });
             });
 
-            // Exibir banner flutuante em mobile após 2s
-            const dismissedAt = localStorage.getItem('pwa_prompt_dismissed');
-            const now = Date.now();
-            if (isMobile && (!dismissedAt || now - parseInt(dismissedAt, 10) > 3 * 24 * 60 * 60 * 1000)) {
-                setTimeout(function() {
-                    if (floatingPrompt && !isStandalone) {
-                        floatingPrompt.style.display = 'flex';
-                    }
-                }, 2000);
-            }
+            // Exibir banner flutuante após 2s (Desktop e Mobile)
+            setTimeout(showFloatingPrompt, 2000);
 
             if (promptCloseBtn && floatingPrompt) {
                 promptCloseBtn.addEventListener('click', function() {
