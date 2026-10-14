@@ -20,4 +20,6 @@ urlpatterns = [
     path('para-clubes/', views.club_landing_page, name='club_landing_page'),
     path('painel-atleta/calendario/', views.athlete_calendar, name='athlete_calendar'),
     path('api/admin/leads-count/', views.api_uncontacted_leads_count, name='api_uncontacted_leads_count'),
+    path('manifest.json', views.manifest_json, name='manifest_json'),
+    path('sw.js', views.service_worker_js, name='service_worker_js'),
 ]

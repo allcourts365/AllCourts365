@@ -2,6 +2,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import HttpResponse, JsonResponse
+from django.conf import settings
+import os
 from .forms import UserForm, UserProfileForm, PlayerLinkRequestForm
 from .models import PlayerLinkRequest
 import json
@@ -1693,3 +1696,49 @@ def athlete_stats(request):
         'recurring_comparison': recurring_comparison,
     }
     return render(request, 'athlete_stats.html', context)
+
+
+def manifest_json(request):
+    manifest_path = os.path.join(settings.BASE_DIR, 'static', 'manifest.json')
+    try:
+        with open(manifest_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except Exception:
+        content = json.dumps({
+            "name": "AllCourts365",
+            "short_name": "AllCourts365",
+            "start_url": "/",
+            "id": "/",
+            "scope": "/",
+            "display": "standalone",
+            "background_color": "#0f172a",
+            "theme_color": "#0f172a",
+            "orientation": "portrait-primary",
+            "icons": [
+                {
+                    "src": "/static/icons/icon-192x192.png",
+                    "sizes": "192x192",
+                    "type": "image/png",
+                    "purpose": "any"
+                },
+                {
+                    "src": "/static/icons/icon-512x512.png",
+                    "sizes": "512x512",
+                    "type": "image/png",
+                    "purpose": "any"
+                }
+            ]
+        })
+    return HttpResponse(content, content_type='application/manifest+json')
+
+
+def service_worker_js(request):
+    sw_path = os.path.join(settings.BASE_DIR, 'static', 'sw.js')
+    try:
+        with open(sw_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except Exception:
+        content = "self.addEventListener('fetch', () => {});"
+    response = HttpResponse(content, content_type='application/javascript')
+    response['Service-Worker-Allowed'] = '/'
+    return response

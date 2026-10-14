@@ -26,6 +26,15 @@
         <link rel="icon" type="image/png" href="{% static 'bolinha.png' %}">
     {% endif %}
     
+    <!-- PWA Manifest & Mobile Web App Meta -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AllCourts365">
+    <link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
+    
     <style>
         :root {
             /* Variáveis Dinâmicas Globais */
@@ -393,6 +402,243 @@
                 display: flex;
             }
         }
+
+        /* PWA Styling */
+        .pwa-header-install-btn {
+            background: linear-gradient(135deg, rgba(255, 179, 71, 0.22), rgba(196, 58, 0, 0.28));
+            border: 1px solid rgba(255, 179, 71, 0.6);
+            color: #ffb347;
+            border-radius: 20px;
+            padding: 3px 9px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            outline: none;
+            flex-shrink: 0;
+        }
+        .pwa-header-install-btn:hover, .pwa-header-install-btn:active {
+            background: linear-gradient(135deg, #ffb347, #c43a00);
+            color: #fff;
+            border-color: #ffb347;
+            box-shadow: 0 0 10px rgba(255, 179, 71, 0.5);
+        }
+        @media (max-width: 380px) {
+            .pwa-header-btn-text { display: none; }
+            .pwa-header-install-btn { padding: 4px 7px; }
+        }
+
+        /* Floating Mobile Prompt */
+        .pwa-floating-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 12px;
+            right: 12px;
+            max-width: 440px;
+            margin: 0 auto;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 179, 71, 0.35);
+            border-radius: 16px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65), 0 0 15px rgba(255, 179, 71, 0.15);
+            z-index: 9998;
+            animation: pwaSlideUp 0.35s ease-out;
+        }
+        @keyframes pwaSlideUp {
+            from { transform: translateY(80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .pwa-prompt-icon img {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: block;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .pwa-prompt-body {
+            flex-grow: 1;
+            min-width: 0;
+        }
+        .pwa-prompt-title {
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.88rem;
+            line-height: 1.2;
+        }
+        .pwa-prompt-desc {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            line-height: 1.2;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .pwa-prompt-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .pwa-prompt-install-btn {
+            background: linear-gradient(135deg, #ffb347, #c43a00);
+            color: #ffffff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(196, 58, 0, 0.4);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .pwa-prompt-install-btn:active {
+            transform: scale(0.96);
+        }
+        .pwa-prompt-close-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.3rem;
+            line-height: 1;
+            padding: 4px;
+            cursor: pointer;
+        }
+        .pwa-prompt-close-btn:hover {
+            color: #ffffff;
+        }
+
+        /* Modal Backdrop & Box */
+        .pwa-modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 100000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: pwaFadeIn 0.25s ease-out;
+        }
+        @keyframes pwaFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .pwa-modal-box {
+            background: #0f172a;
+            border: 1px solid rgba(255, 179, 71, 0.3);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 440px;
+            padding: 22px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 179, 71, 0.15);
+            animation: pwaZoomIn 0.25s ease-out;
+        }
+        @keyframes pwaZoomIn {
+            from { transform: scale(0.92); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .pwa-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .pwa-modal-close {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.6rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0;
+        }
+        .pwa-modal-close:hover {
+            color: #fff;
+        }
+        .pwa-modal-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 18px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 12px;
+        }
+        .pwa-tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-weight: 600;
+            font-size: 0.82rem;
+            padding: 8px 6px;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .pwa-tab-btn.active {
+            background: rgba(255, 179, 71, 0.2);
+            color: #ffb347;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        .pwa-step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 14px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .pwa-step-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffb347, #c43a00);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.78rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .pwa-step-text {
+            color: #e2e8f0;
+            font-size: 0.85rem;
+            line-height: 1.45;
+        }
+        .pwa-step-text strong {
+            color: #fff;
+        }
+
+        /* Hide when already standalone */
+        body.is-pwa-standalone .pwa-install-trigger,
+        body.is-pwa-standalone #pwaFloatingPrompt,
+        body.is-pwa-standalone #pwaHeaderInstallBtn,
+        body.is-pwa-standalone #pwaDesktopInstallBtn {
+            display: none !important;
+        }
     </style>
 
     <!-- Estilos do Menu Lateral (Global) -->
@@ -493,6 +739,7 @@
             {% if site_config.show_clubs_cta and not user.is_authenticated %}
             <a href="{% url 'club_landing_page' %}"><i class="fas fa-rocket"></i> Para Clubes</a>
             {% endif %}
+            <a href="#" class="pwa-install-trigger" style="color: #ffb347 !important; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 6px; padding-top: 14px;"><i class="fas fa-arrow-down-to-bracket" style="color: #ffb347 !important;"></i> Instalar Aplicativo</a>
         </div>
     </div>
 
@@ -528,21 +775,28 @@
         <div class="brand-text">
             <a href="/" style="color: inherit; text-decoration: none;">AllCourts<span style="background: linear-gradient(to bottom, #ffb347, #c43a00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">365</span>&reg; <span style="font-size: 0.35em; color: #a0aec0; letter-spacing: 1px; vertical-align: baseline; margin-left: 5px; font-weight: 500; font-style: normal;">by EVO<span style="background: linear-gradient(to bottom, #ffb347, #c43a00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">2</span>WIN</span></a>
         </div>
-        <div class="menu-btn" id="openRightMenuBtn">
-            {% if user.is_authenticated %}
-                {% with first_letter=user.first_name|default:user.username|make_list|first|upper %}
-                <div style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.7); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 500; color: #fff;">
-                    {{ first_letter }}
-                </div>
-                {% endwith %}
-            {% else %}
-                <i class="fas fa-sign-in-alt" style="font-size: 1.1rem; opacity: 0.9;"></i>
-            {% endif %}
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" id="pwaHeaderInstallBtn" class="pwa-header-install-btn pwa-install-trigger" title="Instalar aplicativo no celular" aria-label="Instalar aplicativo">
+                <i class="fas fa-arrow-down-to-bracket"></i>
+                <span class="pwa-header-btn-text">Instalar</span>
+            </button>
+            <div class="menu-btn" id="openRightMenuBtn">
+                {% if user.is_authenticated %}
+                    {% with first_letter=user.first_name|default:user.username|make_list|first|upper %}
+                    <div style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.7); display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 500; color: #fff;">
+                        {{ first_letter }}
+                    </div>
+                    {% endwith %}
+                {% else %}
+                    <i class="fas fa-sign-in-alt" style="font-size: 1.1rem; opacity: 0.9;"></i>
+                {% endif %}
+            </div>
         </div>
         
         <!-- Right Contextual Menu Mobile -->
         <div class="right-menu-mobile" id="rightMenuMobile">
             <div class="sidebar-nav" style="padding: 15px 0;">
+                <a href="#" class="pwa-install-trigger" style="color: #ffb347 !important; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 6px; padding-bottom: 12px;"><i class="fas fa-arrow-down-to-bracket" style="color: #ffb347 !important;"></i> Instalar Aplicativo</a>
                 {% if not user.is_authenticated %}
                     {% if club_context %}
                     <a href="{% url 'clubs:detail' club_context.id %}#club-content" id="btn-visite-menu" onclick="if(typeof toggleClub === 'function' && window.location.pathname === '{% url 'clubs:detail' club_context.id %}') { toggleClub(); document.getElementById('rightMenuMobile').classList.remove('open'); return false; }"><span id="btn-visite-menu-icon" style="color: inherit;"><i class="fas fa-eye"></i></span> <span id="btn-visite-menu-text" style="color: inherit;">Visite AQUI.</span></a>
@@ -658,6 +912,8 @@
                     <a href="{% url 'club_landing_page' %}" style="border: 1px solid var(--global-highlight-color); color: var(--global-highlight-color); padding: 8px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: 600;"><i class="fas fa-rocket"></i> Para Clubes</a>
                     {% endif %}
                 {% endif %}
+
+                <a href="#" id="pwaDesktopInstallBtn" class="pwa-install-trigger" style="display: none; border: 1px solid #ffb347; color: #ffb347 !important; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;"><i class="fas fa-arrow-down-to-bracket"></i> Instalar App</a>
 
                 {% if user.is_authenticated %}
                     <!-- Avatar com dropdown para usuário logado -->
@@ -894,6 +1150,221 @@
 
         {% block extra_scripts %}
         {% endblock %}
+    </script>
+
+    <!-- Floating PWA Install Banner (Mobile) -->
+    <div id="pwaFloatingPrompt" class="pwa-floating-prompt" style="display: none;">
+        <div class="pwa-prompt-icon">
+            <img src="{% static 'icons/icon-192x192.png' %}" alt="AllCourts365">
+        </div>
+        <div class="pwa-prompt-body">
+            <div class="pwa-prompt-title">Instalar AllCourts365</div>
+            <div class="pwa-prompt-desc">Tenha o app direto na sua tela inicial</div>
+        </div>
+        <div class="pwa-prompt-actions">
+            <button type="button" class="pwa-prompt-install-btn pwa-install-trigger">Instalar</button>
+            <button type="button" id="pwaPromptCloseBtn" class="pwa-prompt-close-btn" aria-label="Fechar">&times;</button>
+        </div>
+    </div>
+
+    <!-- Modal com Guia de Instalação (PWA) -->
+    <div id="pwaGuideModal" class="pwa-modal-backdrop" style="display: none;">
+        <div class="pwa-modal-box">
+            <div class="pwa-modal-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <img src="{% static 'icons/icon-192x192.png' %}" alt="Logo" style="width: 32px; height: 32px; border-radius: 8px;">
+                    <h3 style="margin: 0; font-size: 1.1rem; color: #ffffff; font-weight: 700;">Instalar no seu celular</h3>
+                </div>
+                <button type="button" class="pwa-modal-close" id="pwaModalCloseBtn">&times;</button>
+            </div>
+
+            <div class="pwa-modal-tabs">
+                <button type="button" class="pwa-tab-btn active" id="pwaTabAndroidBtn"><i class="fab fa-android"></i> Android (Chrome)</button>
+                <button type="button" class="pwa-tab-btn" id="pwaTabIosBtn"><i class="fab fa-apple"></i> iPhone / iPad (Safari)</button>
+            </div>
+
+            <!-- Conteúdo Android -->
+            <div class="pwa-tab-content" id="pwaContentAndroid">
+                <p style="color: #94a3b8; font-size: 0.85rem; margin-top: 0; margin-bottom: 14px;">
+                    Adicione o AllCourts365 como aplicativo no seu Android em 3 passos:
+                </p>
+                <div class="pwa-step-item">
+                    <div class="pwa-step-number">1</div>
+                    <div class="pwa-step-text">No Google Chrome, toque no menu de <strong>três pontos</strong> (<i class="fas fa-ellipsis-vertical" style="color: #38bdf8;"></i>) no canto superior direito.</div>
+                </div>
+                <div class="pwa-step-item">
+                    <div class="pwa-step-number">2</div>
+                    <div class="pwa-step-text">Procure e toque na opção <strong>"Instalar aplicativo"</strong> (<i class="fas fa-arrow-down-to-bracket" style="color: #ffb347;"></i>) ou <strong>"Adicionar à tela inicial"</strong>.</div>
+                </div>
+                <div class="pwa-step-item">
+                    <div class="pwa-step-number">3</div>
+                    <div class="pwa-step-text">Toque em <strong>"Instalar"</strong> para confirmar. O app será criado na sua tela inicial!</div>
+                </div>
+            </div>
+
+            <!-- Conteúdo iOS -->
+            <div class="pwa-tab-content" id="pwaContentIos" style="display: none;">
+                <p style="color: #94a3b8; font-size: 0.85rem; margin-top: 0; margin-bottom: 14px;">
+                    Instale no seu iPhone ou iPad usando o navegador <strong>Safari</strong>:
+                </p>
+                <div class="pwa-step-item">
+                    <div class="pwa-step-number">1</div>
+                    <div class="pwa-step-text">No Safari, toque no botão de <strong>Compartilhar</strong> (<i class="fas fa-arrow-up-from-bracket" style="color: #38bdf8;"></i>) na barra inferior.</div>
+                </div>
+                <div class="pwa-step-item">
+                    <div class="pwa-step-number">2</div>
+                    <div class="pwa-step-text">Role as opções para baixo e toque em <strong>"Adicionar à Tela de Início"</strong> (<i class="far fa-plus-square" style="color: #ffb347;"></i>).</div>
+                </div>
+                <div class="pwa-step-item">
+                    <div class="pwa-step-number">3</div>
+                    <div class="pwa-step-text">No canto superior direito da tela, confirme tocando em <strong>"Adicionar"</strong>.</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                <button type="button" class="btn-highlight" id="pwaModalGotItBtn" style="width: 100%; justify-content: center; background: linear-gradient(135deg, #ffb347, #c43a00); border: none; border-radius: 12px; padding: 12px; font-weight: 700; color: #fff; cursor: pointer;">
+                    Entendi!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de Ativação do PWA e Instalação -->
+    <script>
+        (function() {
+            let deferredPrompt = null;
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+            // Registrar Service Worker
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                        console.log('PWA ServiceWorker registrado com sucesso:', reg.scope);
+                    }).catch(function(err) {
+                        console.log('Falha ao registrar ServiceWorker:', err);
+                    });
+                });
+            }
+
+            if (isStandalone) {
+                // Já está rodando no modo standalone instalado
+                document.body.classList.add('is-pwa-standalone');
+                return;
+            }
+
+            const floatingPrompt = document.getElementById('pwaFloatingPrompt');
+            const guideModal = document.getElementById('pwaGuideModal');
+            const desktopInstallBtn = document.getElementById('pwaDesktopInstallBtn');
+            const promptCloseBtn = document.getElementById('pwaPromptCloseBtn');
+            const modalCloseBtn = document.getElementById('pwaModalCloseBtn');
+            const modalGotItBtn = document.getElementById('pwaModalGotItBtn');
+            const tabAndroidBtn = document.getElementById('pwaTabAndroidBtn');
+            const tabIosBtn = document.getElementById('pwaTabIosBtn');
+            const contentAndroid = document.getElementById('pwaContentAndroid');
+            const contentIos = document.getElementById('pwaContentIos');
+
+            const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            // Alternância de abas Android / iOS
+            function setTab(os) {
+                if (os === 'ios') {
+                    if (tabIosBtn) tabIosBtn.classList.add('active');
+                    if (tabAndroidBtn) tabAndroidBtn.classList.remove('active');
+                    if (contentIos) contentIos.style.display = 'block';
+                    if (contentAndroid) contentAndroid.style.display = 'none';
+                } else {
+                    if (tabAndroidBtn) tabAndroidBtn.classList.add('active');
+                    if (tabIosBtn) tabIosBtn.classList.remove('active');
+                    if (contentAndroid) contentAndroid.style.display = 'block';
+                    if (contentIos) contentIos.style.display = 'none';
+                }
+            }
+
+            if (tabAndroidBtn && tabIosBtn) {
+                tabAndroidBtn.addEventListener('click', function() { setTab('android'); });
+                tabIosBtn.addEventListener('click', function() { setTab('ios'); });
+                setTab(isIos ? 'ios' : 'android');
+            }
+
+            function openModal() {
+                if (guideModal) guideModal.style.display = 'flex';
+            }
+            function closeModal() {
+                if (guideModal) guideModal.style.display = 'none';
+            }
+
+            if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeModal);
+            if (modalGotItBtn) modalGotItBtn.addEventListener('click', closeModal);
+            if (guideModal) {
+                guideModal.addEventListener('click', function(e) {
+                    if (e.target === guideModal) closeModal();
+                });
+            }
+
+            // Capturar evento de instalação nativa do Chrome/Edge
+            window.addEventListener('beforeinstallprompt', function(e) {
+                e.preventDefault();
+                deferredPrompt = e;
+
+                // Mostrar botão no desktop se for desktop
+                if (!isMobile && desktopInstallBtn) {
+                    desktopInstallBtn.style.display = 'inline-flex';
+                }
+
+                // Mostrar floating prompt no mobile se não tiver sido fechado recentemente
+                const dismissedAt = localStorage.getItem('pwa_prompt_dismissed');
+                const now = Date.now();
+                if (isMobile && (!dismissedAt || now - parseInt(dismissedAt, 10) > 3 * 24 * 60 * 60 * 1000)) {
+                    if (floatingPrompt) floatingPrompt.style.display = 'flex';
+                }
+            });
+
+            // Quando o app é instalado com sucesso
+            window.addEventListener('appinstalled', function() {
+                deferredPrompt = null;
+                if (floatingPrompt) floatingPrompt.style.display = 'none';
+                document.querySelectorAll('.pwa-install-trigger').forEach(function(el) {
+                    el.style.display = 'none';
+                });
+            });
+
+            // Exibir banner flutuante em mobile após 2s
+            const dismissedAt = localStorage.getItem('pwa_prompt_dismissed');
+            const now = Date.now();
+            if (isMobile && (!dismissedAt || now - parseInt(dismissedAt, 10) > 3 * 24 * 60 * 60 * 1000)) {
+                setTimeout(function() {
+                    if (floatingPrompt && !isStandalone) {
+                        floatingPrompt.style.display = 'flex';
+                    }
+                }, 2000);
+            }
+
+            if (promptCloseBtn && floatingPrompt) {
+                promptCloseBtn.addEventListener('click', function() {
+                    floatingPrompt.style.display = 'none';
+                    localStorage.setItem('pwa_prompt_dismissed', Date.now().toString());
+                });
+            }
+
+            // Ouvinte para todos os botões que disparam a instalação
+            document.querySelectorAll('.pwa-install-trigger').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        deferredPrompt.userChoice.then(function(choiceResult) {
+                            if (choiceResult.outcome === 'accepted') {
+                                if (floatingPrompt) floatingPrompt.style.display = 'none';
+                            }
+                            deferredPrompt = null;
+                        });
+                    } else {
+                        openModal();
+                    }
+                });
+            });
+        })();
     </script>
 </body>
 </html>
