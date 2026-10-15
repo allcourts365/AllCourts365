@@ -34,14 +34,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="AllCourts365">
     <link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
-    <script>
-        (function() {
-            var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-            if (isStandalone || localStorage.getItem('pwa_installed') === 'true') {
-                document.documentElement.classList.add('pwa-is-installed');
-            }
-        })();
-    </script>
     
     <style>
         :root {
@@ -647,10 +639,8 @@
             color: #fff;
         }
 
-        /* Hide when already installed or standalone */
-        html.pwa-is-installed .pwa-install-guest,
+        /* Hide when already standalone */
         body.is-pwa-standalone .pwa-install-trigger,
-        body.is-pwa-standalone .pwa-install-guest,
         body.is-pwa-standalone #pwaFloatingPrompt {
             display: none !important;
         }
@@ -814,7 +804,7 @@
                     {% else %}
                     <a href="{% url 'account_login' %}?club=all"><i class="fas fa-sign-in-alt"></i> Entre AQUI.</a>
                     {% endif %}
-                    <a href="{% url 'pwa_install_guide' %}" class="pwa-install-trigger pwa-install-guest" style="color: var(--global-highlight-color);"><i class="fas fa-download"></i> Instalar Aplicativo</a>
+                    <a href="{% url 'pwa_install_guide' %}"><i class="fas fa-mobile-alt"></i> Aplicativo</a>
                 {% else %}
                     <div class="user-name-label" style="padding-left: 20px; font-size: 0.75rem; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-bottom: 5px;">{{ user.first_name|default:user.username }}</div>
                     {% block mobile_menu_extra %}{% endblock %}
@@ -1383,15 +1373,10 @@
             }
 
             function updateInstalledUi() {
-                document.documentElement.classList.add('pwa-is-installed');
                 document.querySelectorAll('.pwa-install-trigger').forEach(function(el) {
-                    if (el.classList.contains('pwa-install-guest')) {
-                        el.style.display = 'none';
-                    } else {
-                        el.innerHTML = '<i class="fas fa-check-circle" style="color: #10b981;"></i> App Instalado';
-                        el.style.color = '#10b981';
-                        el.setAttribute('title', 'O AllCourts365 já está instalado neste aparelho');
-                    }
+                    el.innerHTML = '<i class="fas fa-check-circle" style="color: #10b981;"></i> App Instalado';
+                    el.style.color = '#10b981';
+                    el.setAttribute('title', 'O AllCourts365 já está instalado neste aparelho');
                 });
                 const dashCard = document.getElementById('pwaDashboardCard');
                 if (dashCard) dashCard.style.display = 'none';
