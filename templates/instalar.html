@@ -175,13 +175,26 @@
     <!-- Mensagem para quem já tem o app instalado -->
     <div id="alreadyInstalledNotice" class="already-installed-box" style="display: none;">
         <i class="fas fa-check-circle" style="font-size: 2.2rem; margin-bottom: 8px; display: block; color: #10b981;"></i>
-        <strong style="font-size: 1.25rem; display: block; margin-bottom: 6px; color: #ffffff;">Aplicativo Instalado com Sucesso!</strong>
-        <p style="margin: 0 0 16px; color: #a7f3d0; font-size: 0.95rem;">
-            O AllCourts365 já está instalado neste aparelho. Você pode abri-lo pelo ícone na tela inicial, área de trabalho ou barra de tarefas.
-        </p>
+        <strong style="font-size: 1.25rem; display: block; margin-bottom: 8px; color: #ffffff;">Aplicativo Instalado com Sucesso!</strong>
+        
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 14px; margin: 12px auto 18px; max-width: 480px; text-align: left;">
+            <div style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px;">
+                <i class="fas fa-mobile-alt" style="color: #38bdf8; font-size: 1.1rem; margin-top: 2px;"></i>
+                <div style="color: #e2e8f0; font-size: 0.9rem; line-height: 1.45;">
+                    <strong>No celular:</strong> Para usar o app em tela cheia (sem a barra de endereços do navegador), toque no ícone <strong>AllCourts365</strong> adicionado à <strong>Tela Inicial</strong> do seu celular.
+                </div>
+            </div>
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <i class="fas fa-desktop" style="color: #ffb347; font-size: 1.1rem; margin-top: 2px;"></i>
+                <div style="color: #e2e8f0; font-size: 0.9rem; line-height: 1.45;">
+                    <strong>No computador:</strong> Abra pelo atalho criado na sua <strong>Área de Trabalho</strong> ou clique no ícone de aplicativo na barra de endereços do navegador.
+                </div>
+            </div>
+        </div>
+
         <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
             <a href="{% url 'pwa_start' %}" class="btn-share" style="background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; border: none; font-weight: 700; text-decoration: none;">
-                <i class="fas fa-external-link-alt"></i> Abrir Aplicativo
+                <i class="fas fa-arrow-right"></i> Acessar pelo Navegador
             </a>
             <button type="button" id="btnReinstallApp" style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: #ffffff; border-radius: 10px; padding: 10px 18px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background 0.2s;">
                 <i class="fas fa-redo"></i> Reinstalar

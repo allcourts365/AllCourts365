@@ -1711,6 +1711,10 @@ def manifest_json(request):
             "id": "/pwa/start/",
             "scope": "/",
             "display": "standalone",
+            "handle_links": "preferred",
+            "launch_handler": {
+                "client_mode": "auto"
+            },
             "background_color": "#0f172a",
             "theme_color": "#0f172a",
             "related_applications": [
