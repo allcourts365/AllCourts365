@@ -379,6 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const uninstallIos = document.getElementById('uninstallStepsIos');
 
     function applyInstalledState(isInstalled) {
+        document.documentElement.classList.toggle('pwa-is-installed', isInstalled);
         if (isInstalled) {
             if (alreadyInstalledNotice) alreadyInstalledNotice.style.display = 'block';
             if (manualConfirmWrap) manualConfirmWrap.style.display = 'none';
@@ -386,8 +387,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (toggleGuideWrap) toggleGuideWrap.style.display = 'block';
             if (nativeBlock) nativeBlock.style.display = 'none';
             document.querySelectorAll('.pwa-install-trigger').forEach(function(el) {
-                el.innerHTML = '<i class="fas fa-check-circle" style="color: #10b981;"></i> App Instalado';
-                el.style.color = '#10b981';
+                if (el.classList.contains('pwa-install-guest')) {
+                    el.style.display = 'none';
+                } else {
+                    el.innerHTML = '<i class="fas fa-check-circle" style="color: #10b981;"></i> App Instalado';
+                    el.style.color = '#10b981';
+                }
             });
         } else {
             if (alreadyInstalledNotice) alreadyInstalledNotice.style.display = 'none';
@@ -398,8 +403,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 nativeBlock.style.display = 'block';
             }
             document.querySelectorAll('.pwa-install-trigger').forEach(function(el) {
-                el.innerHTML = '<i class="fas fa-download"></i> Instalar Aplicativo';
-                el.style.color = '';
+                if (el.classList.contains('pwa-install-guest')) {
+                    el.style.display = 'flex';
+                } else {
+                    el.innerHTML = '<i class="fas fa-download"></i> Instalar Aplicativo';
+                    el.style.color = '';
+                }
             });
         }
     }
