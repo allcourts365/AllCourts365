@@ -201,6 +201,40 @@
             color: var(--global-highlight-color);
         }
 
+        .submenu-caret {
+            display: inline-block !important;
+            transition: transform 0.2s ease-in-out !important;
+            transform: rotate(-90deg) !important;
+        }
+        .submenu-caret.is-open {
+            transform: rotate(0deg) !important;
+        }
+
+        .pwa-desktop-back-btn {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            padding: 0;
+            line-height: 1;
+        }
+        .pwa-desktop-back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--global-highlight-color);
+            transform: translateX(-2px);
+        }
+        body.is-pwa-standalone .glass-nav {
+            padding: 10px 0;
+        }
+
         .user-dropdown .dropdown-divider {
             height: 1px;
             background: rgba(255,255,255,0.08);
@@ -694,6 +728,9 @@
         }
     </style>
 
+    <!-- Barra de Retorno Standalone (PWA iOS/Android) -->
+    {% include "includes/pwa_back.html" %}
+
     <!-- Menu Lateral (Global) -->
     <div class="sidebar-menu" id="globalSidebar">
         <div class="sidebar-header">
@@ -775,8 +812,8 @@
                     {% block default_mobile_menu %}
                     <!-- 2- Painel do Atleta -->
                     {% with url_name=request.resolver_match.url_name tab=request.GET.tab %}
-                    <a href="#" onclick="var el=document.getElementById('mobileAthleteSubmenu'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; return false;" style="{% if url_name in 'athlete_dashboard,athlete_calendar,athlete_stats' %}color: var(--global-highlight-color);{% endif %}">
-                        <i class="fas fa-table-tennis"></i> Painel do Atleta <i class="fas fa-caret-down" style="float: right; margin-top: 4px; margin-right: 15px;"></i>
+                    <a href="#" onclick="toggleSubmenu('mobileAthleteSubmenu', this); return false;" style="{% if url_name in 'athlete_dashboard,athlete_calendar,athlete_stats' %}color: var(--global-highlight-color);{% endif %}">
+                        <i class="fas fa-table-tennis"></i> Painel do Atleta <i class="fas fa-caret-down submenu-caret {% if url_name in 'athlete_dashboard,athlete_calendar,athlete_stats' %}is-open{% endif %}" style="float: right; margin-top: 4px; margin-right: 15px;"></i>
                     </a>
                     <div id="mobileAthleteSubmenu" style="display: {% if url_name in 'athlete_dashboard,athlete_calendar,athlete_stats' %}block{% else %}none{% endif %}; background: rgba(0,0,0,0.2);">
                         <a href="{% url 'athlete_dashboard' %}?tab=meu-clube" style="padding-left: 45px; font-size: 0.9rem; {% if url_name == 'athlete_dashboard' and tab == 'meu-clube' %}color: var(--global-highlight-color);{% endif %}"><i class="fas fa-users"></i> Meu(s) Clube(s)/Liga(s)</a>
@@ -791,19 +828,19 @@
                     </div>
 
                     <!-- 3- Meus Clubes -->
-                    <a href="#" onclick="var el=document.getElementById('mobileClubsSubmenu'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; return false;" style="{% if url_name not in 'athlete_dashboard,athlete_calendar,athlete_stats' and club_context or url_name == 'my_clubs' %}color: var(--global-highlight-color);{% endif %}">
-                        <i class="fas fa-home"></i> Meus Clubes <i class="fas fa-caret-down" style="float: right; margin-top: 4px; margin-right: 15px;"></i>
+                    <a href="#" onclick="toggleSubmenu('mobileClubsSubmenu', this); return false;" style="{% if url_name not in 'athlete_dashboard,athlete_calendar,athlete_stats' and club_context or url_name == 'my_clubs' %}color: var(--global-highlight-color);{% endif %}">
+                        <i class="fas fa-home"></i> Meus Clubes <i class="fas fa-caret-down submenu-caret {% if url_name not in 'athlete_dashboard,athlete_calendar,athlete_stats' and club_context or url_name == 'my_clubs' %}is-open{% endif %}" style="float: right; margin-top: 4px; margin-right: 15px;"></i>
                     </a>
                     <div id="mobileClubsSubmenu" style="display: {% if url_name not in 'athlete_dashboard,athlete_calendar,athlete_stats' and club_context %}block{% elif url_name == 'my_clubs' %}block{% else %}none{% endif %}; background: rgba(0,0,0,0.2);">
                         {% for c in user_clubs %}
-                        <a href="#" onclick="var el=document.getElementById('mobileClubSubmenu_{{ c.id }}'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; return false;" style="padding-left: 45px; font-size: 0.9rem; {% if club_context and club_context.id == c.id %}color: var(--global-highlight-color);{% endif %}">
-                            {{ c.name }} <i class="fas fa-caret-down" style="float: right; margin-top: 4px; margin-right: 15px;"></i>
+                        <a href="#" onclick="toggleSubmenu('mobileClubSubmenu_{{ c.id }}', this); return false;" style="padding-left: 45px; font-size: 0.9rem; {% if club_context and club_context.id == c.id %}color: var(--global-highlight-color);{% endif %}">
+                            {{ c.name }} <i class="fas fa-caret-down submenu-caret {% if url_name not in 'athlete_dashboard,athlete_calendar,athlete_stats' and club_context and club_context.id == c.id %}is-open{% endif %}" style="float: right; margin-top: 4px; margin-right: 15px;"></i>
                         </a>
                         <div id="mobileClubSubmenu_{{ c.id }}" style="display: {% if url_name not in 'athlete_dashboard,athlete_calendar,athlete_stats' and club_context and club_context.id == c.id %}block{% else %}none{% endif %}; background: rgba(0,0,0,0.15);">
                             <a href="{% url 'clubs:detail' c.id %}" style="padding-left: 65px; font-size: 0.85rem; {% if url_name == 'detail' and club_context.id == c.id %}color: var(--global-highlight-color);{% endif %}"><i class="fas fa-home"></i> Clube</a>
                             {% if c.has_departments %}
-                            <a href="#" onclick="var el=document.getElementById('mobileDeptSubmenu_{{ c.id }}'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; return false;" style="padding-left: 65px; font-size: 0.85rem; {% if url_name == 'department_detail' and club_context.id == c.id %}color: var(--global-highlight-color);{% endif %}">
-                                <i class="fas fa-sitemap"></i> Departamentos <i class="fas fa-caret-down" style="float: right; margin-top: 4px; margin-right: 15px;"></i>
+                            <a href="#" onclick="toggleSubmenu('mobileDeptSubmenu_{{ c.id }}', this); return false;" style="padding-left: 65px; font-size: 0.85rem; {% if url_name == 'department_detail' and club_context.id == c.id %}color: var(--global-highlight-color);{% endif %}">
+                                <i class="fas fa-sitemap"></i> Departamentos <i class="fas fa-caret-down submenu-caret {% if url_name == 'department_detail' and club_context.id == c.id %}is-open{% endif %}" style="float: right; margin-top: 4px; margin-right: 15px;"></i>
                             </a>
                             <div id="mobileDeptSubmenu_{{ c.id }}" style="display: {% if url_name == 'department_detail' and club_context.id == c.id %}block{% else %}none{% endif %}; background: rgba(0,0,0,0.2);">
                                 {% for dept in c.departments.all %}
@@ -820,6 +857,9 @@
                         {% endfor %}
                     </div>
 
+                    <!-- PWA Instalar App -->
+                    <a href="{% url 'pwa_install_guide' %}" class="pwa-install-trigger" style="color: var(--global-highlight-color);"><i class="fas fa-download"></i> Instalar Aplicativo</a>
+
                     <!-- 4- Sair -->
                     <a href="{% url 'account_logout' %}"><i class="fas fa-sign-out-alt"></i> Sair</a>
                     {% endwith %}
@@ -830,6 +870,21 @@
     </div>
 
     <script>
+        window.toggleSubmenu = function(id, trigger) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const isClosed = (el.style.display === 'none' || window.getComputedStyle(el).display === 'none');
+            el.style.display = isClosed ? 'block' : 'none';
+            const caret = trigger ? trigger.querySelector('.submenu-caret') : null;
+            if (caret) {
+                if (isClosed) {
+                    caret.classList.add('is-open');
+                } else {
+                    caret.classList.remove('is-open');
+                }
+            }
+        };
+
         document.addEventListener('DOMContentLoaded', function() {
             const openBtn = document.getElementById('openSidebarBtn');
             const closeBtn = document.getElementById('closeSidebarBtn');
@@ -861,7 +916,12 @@
     <!-- Navegação -->
     <nav class="glass-nav">
         <div class="container nav-content">
-            <a href="/" class="brand">AllCourts<span style="background: linear-gradient(to bottom, #ffb347, #c43a00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">365</span>&reg; <span style="font-size: 0.35em; color: #a0aec0; letter-spacing: 1px; vertical-align: baseline; margin-left: 5px; font-weight: 500;">by EVO<span style="background: linear-gradient(to bottom, #ffb347, #c43a00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">2</span>WIN</span></a>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button type="button" class="pwa-desktop-back-btn" id="pwaDesktopBackBtn" title="Voltar" onclick="if(window.history.length > 1) { window.history.back(); } else { window.location.href='/'; }">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <a href="/" class="brand">AllCourts<span style="background: linear-gradient(to bottom, #ffb347, #c43a00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">365</span>&reg; <span style="font-size: 0.35em; color: #a0aec0; letter-spacing: 1px; vertical-align: baseline; margin-left: 5px; font-weight: 500;">by EVO<span style="background: linear-gradient(to bottom, #ffb347, #c43a00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">2</span>WIN</span></a>
+            </div>
             
             <div class="nav-links" id="nav-links">
                 <a href="/">Home</a>
@@ -888,8 +948,8 @@
                             
                             {% with url_name=request.resolver_match.url_name tab=request.GET.tab %}
                             <!-- 2- Painel do Atleta -->
-                            <a href="#" onclick="var el=document.getElementById('desktopAthleteSubmenu'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; return false;" style="{% if url_name in 'athlete_dashboard,athlete_calendar,athlete_stats' %}color: var(--global-highlight-color) !important;{% endif %}">
-                                <i class="fas fa-table-tennis"></i> Painel do Atleta <i class="fas fa-caret-down" style="margin-left: auto;"></i>
+                            <a href="#" onclick="toggleSubmenu('desktopAthleteSubmenu', this); return false;" style="{% if url_name in 'athlete_dashboard,athlete_calendar,athlete_stats' %}color: var(--global-highlight-color) !important;{% endif %}">
+                                <i class="fas fa-table-tennis"></i> Painel do Atleta <i class="fas fa-caret-down submenu-caret {% if url_name in 'athlete_dashboard,athlete_calendar,athlete_stats' %}is-open{% endif %}" style="margin-left: auto;"></i>
                             </a>
                             <div id="desktopAthleteSubmenu" style="display: {% if url_name in 'athlete_dashboard,athlete_calendar,athlete_stats' %}block{% else %}none{% endif %}; background: rgba(0,0,0,0.2); border-radius: 8px; margin: 4px 0;">
                                 <a href="{% url 'athlete_dashboard' %}?tab=meu-clube" style="padding-left: 35px; font-size: 0.85rem; {% if url_name == 'athlete_dashboard' and tab == 'meu-clube' %}color: var(--global-highlight-color) !important;{% endif %}">- Meu(s) Clube(s)/Liga(s)</a>
@@ -904,19 +964,19 @@
                             </div>
 
                             <!-- 3- Meus Clubes -->
-                            <a href="#" onclick="var el=document.getElementById('desktopClubsSubmenu'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; return false;" style="{% if url_name not in 'athlete_dashboard,athlete_calendar,athlete_stats' and club_context or url_name == 'my_clubs' %}color: var(--global-highlight-color) !important;{% endif %}">
-                                <i class="fas fa-home"></i> Meus Clubes <i class="fas fa-caret-down" style="margin-left: auto;"></i>
+                            <a href="#" onclick="toggleSubmenu('desktopClubsSubmenu', this); return false;" style="{% if url_name not in 'athlete_dashboard,athlete_calendar,athlete_stats' and club_context or url_name == 'my_clubs' %}color: var(--global-highlight-color) !important;{% endif %}">
+                                <i class="fas fa-home"></i> Meus Clubes <i class="fas fa-caret-down submenu-caret {% if url_name not in 'athlete_dashboard,athlete_calendar,athlete_stats' and club_context or url_name == 'my_clubs' %}is-open{% endif %}" style="margin-left: auto;"></i>
                             </a>
                             <div id="desktopClubsSubmenu" style="display: {% if url_name not in 'athlete_dashboard,athlete_calendar,athlete_stats' and club_context %}block{% elif url_name == 'my_clubs' %}block{% else %}none{% endif %}; background: rgba(0,0,0,0.2); border-radius: 8px; margin: 4px 0;">
                                 {% for c in user_clubs %}
-                                <a href="#" onclick="var el=document.getElementById('desktopClubSubmenu_{{ c.id }}'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; return false;" style="padding-left: 35px; font-size: 0.85rem; {% if club_context and club_context.id == c.id %}color: var(--global-highlight-color) !important;{% endif %}">
-                                    {{ c.name }} <i class="fas fa-caret-down" style="margin-left: auto;"></i>
+                                <a href="#" onclick="toggleSubmenu('desktopClubSubmenu_{{ c.id }}', this); return false;" style="padding-left: 35px; font-size: 0.85rem; {% if club_context and club_context.id == c.id %}color: var(--global-highlight-color) !important;{% endif %}">
+                                    {{ c.name }} <i class="fas fa-caret-down submenu-caret {% if url_name not in 'athlete_dashboard,athlete_calendar,athlete_stats' and club_context and club_context.id == c.id %}is-open{% endif %}" style="margin-left: auto;"></i>
                                 </a>
                                 <div id="desktopClubSubmenu_{{ c.id }}" style="display: {% if url_name not in 'athlete_dashboard,athlete_calendar,athlete_stats' and club_context and club_context.id == c.id %}block{% else %}none{% endif %}; background: rgba(0,0,0,0.15); border-radius: 6px; margin: 2px 4px;">
                                     <a href="{% url 'clubs:detail' c.id %}" style="padding-left: 45px; font-size: 0.8rem; {% if url_name == 'detail' and club_context.id == c.id %}color: var(--global-highlight-color) !important;{% endif %}"><i class="fas fa-home"></i> Clube</a>
                                     {% if c.has_departments %}
-                                    <a href="#" onclick="var el=document.getElementById('desktopDeptSubmenu_{{ c.id }}'); el.style.display = el.style.display === 'none' ? 'block' : 'none'; return false;" style="padding-left: 45px; font-size: 0.8rem; {% if url_name == 'department_detail' and club_context.id == c.id %}color: var(--global-highlight-color) !important;{% endif %}">
-                                        <i class="fas fa-sitemap"></i> Departamentos <i class="fas fa-caret-down" style="margin-left: auto;"></i>
+                                    <a href="#" onclick="toggleSubmenu('desktopDeptSubmenu_{{ c.id }}', this); return false;" style="padding-left: 45px; font-size: 0.8rem; {% if url_name == 'department_detail' and club_context.id == c.id %}color: var(--global-highlight-color) !important;{% endif %}">
+                                        <i class="fas fa-sitemap"></i> Departamentos <i class="fas fa-caret-down submenu-caret {% if url_name == 'department_detail' and club_context.id == c.id %}is-open{% endif %}" style="margin-left: auto;"></i>
                                     </a>
                                     <div id="desktopDeptSubmenu_{{ c.id }}" style="display: {% if url_name == 'department_detail' and club_context.id == c.id %}block{% else %}none{% endif %}; background: rgba(0,0,0,0.2); border-radius: 6px; margin: 2px 4px;">
                                         {% for dept in c.departments.all %}
@@ -934,6 +994,10 @@
                             </div>
 
                             <div class="dropdown-divider"></div>
+                            <!-- PWA Instalar App -->
+                            <a href="{% url 'pwa_install_guide' %}" class="pwa-install-trigger" style="color: var(--global-highlight-color) !important;">
+                                <i class="fas fa-download"></i> Instalar Aplicativo
+                            </a>
                             <!-- 4- Sair -->
                             <a href="{% url 'account_logout' %}">
                                 <i class="fas fa-sign-out-alt"></i> Sair
@@ -1230,6 +1294,7 @@
 
             if (isStandalone) {
                 // Já está rodando no modo standalone instalado
+                localStorage.setItem('pwa_installed', 'true');
                 document.body.classList.add('is-pwa-standalone');
                 return;
             }
@@ -1299,32 +1364,59 @@
             }
 
             function showFloatingPrompt() {
-                if (!floatingPrompt || isStandalone) return;
+                if (!floatingPrompt || isStandalone || localStorage.getItem('pwa_installed') === 'true') return;
                 const dismissedAt = localStorage.getItem('pwa_prompt_dismissed');
                 const now = Date.now();
-                if (!dismissedAt || now - parseInt(dismissedAt, 10) > 3 * 24 * 60 * 60 * 1000) {
+                if (!dismissedAt || now - parseInt(dismissedAt, 10) > 14 * 24 * 60 * 60 * 1000) {
                     floatingPrompt.style.display = 'flex';
                 }
+            }
+
+            function updateInstalledUi() {
+                document.querySelectorAll('.pwa-install-trigger').forEach(function(el) {
+                    el.innerHTML = '<i class="fas fa-check-circle" style="color: #10b981;"></i> App Instalado';
+                    el.style.color = '#10b981';
+                    el.setAttribute('title', 'O AllCourts365 já está instalado neste aparelho');
+                });
+                const dashCard = document.getElementById('pwaDashboardCard');
+                if (dashCard) dashCard.style.display = 'none';
+                if (floatingPrompt) floatingPrompt.style.display = 'none';
+            }
+
+            if (localStorage.getItem('pwa_installed') === 'true') {
+                updateInstalledUi();
             }
 
             // Capturar evento de instalação nativa do Chrome/Edge (Desktop e Android)
             window.addEventListener('beforeinstallprompt', function(e) {
                 e.preventDefault();
                 deferredPrompt = e;
-                showFloatingPrompt();
+                const dashCard = document.getElementById('pwaDashboardCard');
+                if (dashCard && !isStandalone && localStorage.getItem('pwa_installed') !== 'true') {
+                    const dismissedAt = localStorage.getItem('pwa_dash_card_dismissed');
+                    const now = Date.now();
+                    if (!dismissedAt || now - parseInt(dismissedAt, 10) > 14 * 24 * 60 * 60 * 1000) {
+                        dashCard.style.display = 'block';
+                    }
+                }
             });
+
+            // Verificar suporte nativo a getInstalledRelatedApps
+            if ('getInstalledRelatedApps' in navigator) {
+                navigator.getInstalledRelatedApps().then(function(apps) {
+                    if (apps && apps.length > 0) {
+                        localStorage.setItem('pwa_installed', 'true');
+                        updateInstalledUi();
+                    }
+                }).catch(function() {});
+            }
 
             // Quando o app é instalado com sucesso
             window.addEventListener('appinstalled', function() {
                 deferredPrompt = null;
-                if (floatingPrompt) floatingPrompt.style.display = 'none';
-                document.querySelectorAll('.pwa-install-trigger').forEach(function(el) {
-                    el.style.display = 'none';
-                });
+                localStorage.setItem('pwa_installed', 'true');
+                updateInstalledUi();
             });
-
-            // Exibir banner flutuante após 2s (Desktop e Mobile)
-            setTimeout(showFloatingPrompt, 2000);
 
             if (promptCloseBtn && floatingPrompt) {
                 promptCloseBtn.addEventListener('click', function() {
@@ -1336,17 +1428,26 @@
             // Ouvinte para todos os botões que disparam a instalação
             document.querySelectorAll('.pwa-install-trigger').forEach(function(btn) {
                 btn.addEventListener('click', function(e) {
+                    if (isStandalone) {
+                        return;
+                    }
+                    if (localStorage.getItem('pwa_installed') === 'true') {
+                        // Se já consta como instalado, deixa navegar até a página /instalar/ para ver status/reinstalar
+                        return;
+                    }
                     e.preventDefault();
                     if (deferredPrompt) {
                         deferredPrompt.prompt();
                         deferredPrompt.userChoice.then(function(choiceResult) {
                             if (choiceResult.outcome === 'accepted') {
-                                if (floatingPrompt) floatingPrompt.style.display = 'none';
+                                localStorage.setItem('pwa_installed', 'true');
+                                updateInstalledUi();
                             }
                             deferredPrompt = null;
                         });
                     } else {
-                        openModal();
+                        // Se não há prompt pronto ou o usuário quer reinstalar/ver instruções
+                        window.location.href = "{% url 'pwa_install_guide' %}";
                     }
                 });
             });

@@ -1,0 +1,562 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Instalar Aplicativo — AllCourts365{% endblock %}
+
+{% block extra_head %}
+<style>
+    .install-hero {
+        text-align: center;
+        padding: 40px 20px 20px;
+        max-width: 680px;
+        margin: 0 auto;
+    }
+    .install-app-icon {
+        width: 88px;
+        height: 88px;
+        border-radius: 22px;
+        margin-bottom: 20px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+        border: 2px solid rgba(255, 255, 255, 0.15);
+    }
+    .install-title {
+        font-size: clamp(1.8rem, 4vw, 2.4rem);
+        font-weight: 800;
+        color: #ffffff;
+        margin-bottom: 12px;
+        line-height: 1.2;
+    }
+    .install-subtitle {
+        font-size: 1.05rem;
+        color: #94a3b8;
+        line-height: 1.6;
+        margin-bottom: 25px;
+    }
+    .install-card {
+        background: rgba(30, 41, 59, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-radius: 20px;
+        padding: 30px 24px;
+        margin: 20px auto 30px;
+        max-width: 620px;
+        text-align: left;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    }
+    .install-step-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+    .install-step-item:last-child {
+        margin-bottom: 0;
+    }
+    .install-step-num {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ffb347, #c43a00);
+        color: #fff;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(196, 58, 0, 0.35);
+    }
+    .install-step-text {
+        font-size: 0.98rem;
+        color: #e2e8f0;
+        line-height: 1.5;
+        padding-top: 5px;
+    }
+    .install-step-text strong {
+        color: #ffffff;
+    }
+    .btn-main-install {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+        padding: 16px 24px;
+        background: linear-gradient(135deg, #ffb347, #c43a00);
+        color: #ffffff;
+        font-size: 1.1rem;
+        font-weight: 800;
+        border: none;
+        border-radius: 14px;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(196, 58, 0, 0.35);
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-bottom: 20px;
+        text-decoration: none;
+    }
+    .btn-main-install:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(196, 58, 0, 0.5);
+        color: #ffffff;
+    }
+    .share-section {
+        margin-top: 35px;
+        text-align: center;
+        padding-top: 25px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .share-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 15px;
+    }
+    .btn-share {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-decoration: none;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .btn-share:hover {
+        background: rgba(255, 255, 255, 0.12);
+        color: #ffffff;
+    }
+    .btn-whatsapp {
+        background: rgba(37, 211, 102, 0.15);
+        border-color: rgba(37, 211, 102, 0.4);
+        color: #25d366;
+    }
+    .btn-whatsapp:hover {
+        background: rgba(37, 211, 102, 0.25);
+        color: #25d366;
+    }
+    .already-installed-box {
+        display: none;
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.4);
+        border-radius: 16px;
+        padding: 20px;
+        text-align: center;
+        color: #34d399;
+        margin-bottom: 25px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="install-hero">
+    <img src="{% static 'icons/icon-192x192.png' %}" alt="AllCourts365 Logo" class="install-app-icon">
+    <h1 class="install-title">Instale o AllCourts365</h1>
+    <p class="install-subtitle">
+        Acesse seus próximos jogos, chaves de torneio, rankings da barragem e avisos com <strong>1 toque</strong>, sem precisar digitar URL ou abrir o navegador.
+    </p>
+
+    <!-- Detecção de In-App Browser (WhatsApp, Instagram) -->
+    {% include "includes/pwa_inapp.html" %}
+
+    <!-- Confirmação rápida caso já tenha instalado -->
+    <div id="manualConfirmWrap" style="text-align: center; margin-bottom: 20px;">
+        <button type="button" id="btnManualConfirm" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.18); color: #cbd5e1; border-radius: 20px; padding: 7px 18px; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s;">
+            <i class="fas fa-check" style="color: #10b981; margin-right: 6px;"></i> Já instalei o aplicativo neste aparelho
+        </button>
+    </div>
+
+    <!-- Mensagem para quem já tem o app instalado -->
+    <div id="alreadyInstalledNotice" class="already-installed-box" style="display: none;">
+        <i class="fas fa-check-circle" style="font-size: 2.2rem; margin-bottom: 8px; display: block; color: #10b981;"></i>
+        <strong style="font-size: 1.25rem; display: block; margin-bottom: 6px; color: #ffffff;">Aplicativo Instalado com Sucesso!</strong>
+        <p style="margin: 0 0 16px; color: #a7f3d0; font-size: 0.95rem;">
+            O AllCourts365 já está instalado neste aparelho. Você pode abri-lo pelo ícone na tela inicial, área de trabalho ou barra de tarefas.
+        </p>
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <a href="{% url 'pwa_start' %}" class="btn-share" style="background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; border: none; font-weight: 700; text-decoration: none;">
+                <i class="fas fa-external-link-alt"></i> Abrir Aplicativo
+            </a>
+            <button type="button" id="btnReinstallApp" style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: #ffffff; border-radius: 10px; padding: 10px 18px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background 0.2s;">
+                <i class="fas fa-redo"></i> Reinstalar
+            </button>
+            <button type="button" id="btnOpenUninstallModal" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); color: #fca5a5; border-radius: 10px; padding: 10px 18px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                <i class="fas fa-trash-alt"></i> Desinstalar
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal de Instruções de Desinstalação -->
+    <div id="uninstallModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 99999; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: #1e293b; border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; max-width: 500px; width: 100%; padding: 28px; box-shadow: 0 25px 50px rgba(0,0,0,0.6); position: relative; color: #ffffff; text-align: left;">
+            <button type="button" id="closeUninstallModalBtn" style="position: absolute; top: 18px; right: 20px; background: transparent; border: none; color: #94a3b8; font-size: 1.2rem; cursor: pointer;">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 1.2rem; flex-shrink: 0;">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: #ffffff;">Desinstalar AllCourts365</h3>
+                    <p style="margin: 0; font-size: 0.85rem; color: #94a3b8;">Instruções rápidas para remover do seu aparelho</p>
+                </div>
+            </div>
+
+            <p style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.5; margin-bottom: 16px;">
+                Por segurança dos navegadores, a desinstalação de qualquer aplicativo web é realizada diretamente pelo próprio sistema em poucos segundos:
+            </p>
+
+            <!-- Passos Desktop -->
+            <div id="uninstallStepsDesktop" style="display: none; background: rgba(15, 23, 42, 0.6); border-radius: 12px; padding: 14px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="font-weight: 600; font-size: 0.9rem; color: #ffb347; margin-bottom: 8px;">No Computador (Chrome / Edge / Windows):</div>
+                <ol style="margin: 0; padding-left: 20px; font-size: 0.88rem; color: #e2e8f0; line-height: 1.7;">
+                    <li>Na janela do aplicativo <strong>AllCourts365</strong>, clique nos <strong>três pontos (•••)</strong> no canto superior direito.</li>
+                    <li>Clique em <strong>"Desinstalar AllCourts365..."</strong>.</li>
+                    <li>Confirme em <strong>"Remover"</strong>.</li>
+                </ol>
+            </div>
+
+            <!-- Passos Android -->
+            <div id="uninstallStepsAndroid" style="display: none; background: rgba(15, 23, 42, 0.6); border-radius: 12px; padding: 14px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="font-weight: 600; font-size: 0.9rem; color: #38bdf8; margin-bottom: 8px;">No celular Android:</div>
+                <ol style="margin: 0; padding-left: 20px; font-size: 0.88rem; color: #e2e8f0; line-height: 1.7;">
+                    <li>Na tela inicial do celular, <strong>pressione e segure</strong> o ícone do AllCourts365.</li>
+                    <li>Toque em <strong>"Desinstalar"</strong> (ou no ícone de lixeira).</li>
+                </ol>
+            </div>
+
+            <!-- Passos iOS -->
+            <div id="uninstallStepsIos" style="display: none; background: rgba(15, 23, 42, 0.6); border-radius: 12px; padding: 14px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="font-weight: 600; font-size: 0.9rem; color: #ffb347; margin-bottom: 8px;">No iPhone / iPad:</div>
+                <ol style="margin: 0; padding-left: 20px; font-size: 0.88rem; color: #e2e8f0; line-height: 1.7;">
+                    <li>Na tela inicial, <strong>pressione e segure</strong> o ícone do AllCourts365.</li>
+                    <li>Toque em <strong>"Remover App"</strong> e depois em <strong>"Apagar App"</strong>.</li>
+                </ol>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
+                <button type="button" id="confirmUninstalledBtn" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; padding: 9px 16px; border-radius: 10px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;">
+                    <i class="fas fa-check"></i> Já desinstalei do aparelho (redefinir navegador)
+                </button>
+                <button type="button" id="cancelUninstallModalBtn" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #ffffff; padding: 9px 16px; border-radius: 10px; font-weight: 600; font-size: 0.85rem; cursor: pointer;">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toggleGuideWrap" style="text-align: center; margin-top: -10px; margin-bottom: 25px; display: none;">
+        <a href="#" id="toggleGuideBtn" style="color: #94a3b8; font-size: 0.85rem; text-decoration: underline;">
+            Precisa reinstalar ou ver as instruções de instalação novamente?
+        </a>
+    </div>
+
+    <!-- Guia Dinâmico por Dispositivo -->
+    <div class="install-card" id="installGuideCard">
+        <!-- Botão Nativo de 1 Toque (quando suportado pelo navegador) -->
+        <div id="nativeInstallPromptBlock" style="display: none;">
+            <button type="button" id="triggerNativeInstallBtn" class="btn-main-install">
+                <i class="fas fa-download"></i> Instalar Aplicativo Agora
+            </button>
+            <p style="color: #94a3b8; font-size: 0.88rem; text-align: center; margin-top: -10px; margin-bottom: 20px;">
+                Instalação rápida e 100% gratuita no seu dispositivo.
+            </p>
+        </div>
+
+        <!-- Seção Android -->
+        <div id="guideAndroid" style="display: none;">
+            <h3 style="color: #ffffff; font-size: 1.15rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                <i class="fab fa-android" style="color: #38bdf8;"></i> Como instalar no Android:
+            </h3>
+            <div class="install-step-item">
+                <div class="install-step-num">1</div>
+                <div class="install-step-text">No Google Chrome ou Samsung Internet, toque no menu de <strong>três pontos</strong> (<i class="fas fa-ellipsis-vertical" style="color: #38bdf8;"></i>) no canto superior direito.</div>
+            </div>
+            <div class="install-step-item">
+                <div class="install-step-num">2</div>
+                <div class="install-step-text">Selecione <strong>"Instalar aplicativo"</strong> ou <strong>"Adicionar à tela inicial"</strong>.</div>
+            </div>
+            <div class="install-step-item">
+                <div class="install-step-num">3</div>
+                <div class="install-step-text">Confirme tocando em <strong>"Instalar"</strong>. O ícone oficial será adicionado à sua tela inicial!</div>
+            </div>
+        </div>
+
+        <!-- Seção iPhone / iOS -->
+        <div id="guideIos" style="display: none;">
+            <h3 style="color: #ffffff; font-size: 1.15rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                <i class="fab fa-apple" style="color: #ffb347;"></i> Como instalar no iPhone ou iPad:
+            </h3>
+            <div class="install-step-item">
+                <div class="install-step-num">1</div>
+                <div class="install-step-text">Abra esta página no navegador <strong>Safari</strong> e toque no botão de <strong>Compartilhar</strong> (<i class="fas fa-arrow-up-from-bracket" style="color: #38bdf8;"></i>) na barra inferior.</div>
+            </div>
+            <div class="install-step-item">
+                <div class="install-step-num">2</div>
+                <div class="install-step-text">Role a lista de opções para baixo e toque em <strong>"Adicionar à Tela de Início"</strong> (<i class="far fa-plus-square" style="color: #ffb347;"></i>).</div>
+            </div>
+            <div class="install-step-item">
+                <div class="install-step-num">3</div>
+                <div class="install-step-text">No canto superior direito, confirme tocando em <strong>"Adicionar"</strong>. O app abrirá em tela cheia como um aplicativo nativo!</div>
+            </div>
+        </div>
+
+        <!-- Seção Computador / Desktop -->
+        <div id="guideDesktop" style="display: none;">
+            <h3 style="color: #ffffff; font-size: 1.15rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-desktop" style="color: #ffb347;"></i> Como instalar no Computador (Chrome / Edge):
+            </h3>
+            <div class="install-step-item">
+                <div class="install-step-num">1</div>
+                <div class="install-step-text">Na barra de endereços (ao lado da estrela de favoritos), clique no ícone de <strong>Instalar</strong> (<i class="fas fa-arrow-down-to-bracket" style="color: #ffb347;"></i> ou ícone de monitor).</div>
+            </div>
+            <div class="install-step-item">
+                <div class="install-step-num">2</div>
+                <div class="install-step-text">Ou clique no menu de <strong>três pontos</strong> do navegador e selecione <strong>"Instalar AllCourts365"</strong>.</div>
+            </div>
+            <div class="install-step-item">
+                <div class="install-step-num">3</div>
+                <div class="install-step-text">Confirme clicando em <strong>"Instalar"</strong>. Um atalho exclusivo será criado no seu computador!</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção Compartilhar Link com Tenistas -->
+    <div class="share-section">
+        <h4 style="color: #ffffff; margin-bottom: 8px; font-weight: 700;">Compartilhe com os outros atletas do seu clube</h4>
+        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 16px;">
+            Envie este link no grupo do WhatsApp da sua turma, barragem ou torneio:
+        </p>
+        <div class="share-buttons">
+            <a id="whatsappShareBtn" href="#" target="_blank" class="btn-share btn-whatsapp">
+                <i class="fab fa-whatsapp"></i> Enviar no WhatsApp
+            </a>
+            <button type="button" id="copyShareLinkBtn" class="btn-share">
+                <i class="fas fa-copy"></i> Copiar mensagem com link
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let deferredPrompt = null;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    const isIos = /iPhone|iPad|iPod/i.test(ua);
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+
+    const alreadyInstalledNotice = document.getElementById('alreadyInstalledNotice');
+    const manualConfirmWrap = document.getElementById('manualConfirmWrap');
+    const btnManualConfirm = document.getElementById('btnManualConfirm');
+    const installGuideCard = document.getElementById('installGuideCard');
+    const toggleGuideWrap = document.getElementById('toggleGuideWrap');
+    const toggleGuideBtn = document.getElementById('toggleGuideBtn');
+
+    const nativeBlock = document.getElementById('nativeInstallPromptBlock');
+    const triggerBtn = document.getElementById('triggerNativeInstallBtn');
+    const guideAndroid = document.getElementById('guideAndroid');
+    const guideIos = document.getElementById('guideIos');
+    const guideDesktop = document.getElementById('guideDesktop');
+    const copyBtn = document.getElementById('copyShareLinkBtn');
+    const btnReinstall = document.getElementById('btnReinstallApp');
+
+    // Elementos do Modal de Desinstalação
+    const uninstallModal = document.getElementById('uninstallModal');
+    const btnOpenUninstall = document.getElementById('btnOpenUninstallModal');
+    const closeUninstallModalBtn = document.getElementById('closeUninstallModalBtn');
+    const cancelUninstallModalBtn = document.getElementById('cancelUninstallModalBtn');
+    const confirmUninstalledBtn = document.getElementById('confirmUninstalledBtn');
+    const uninstallDesktop = document.getElementById('uninstallStepsDesktop');
+    const uninstallAndroid = document.getElementById('uninstallStepsAndroid');
+    const uninstallIos = document.getElementById('uninstallStepsIos');
+
+    function applyInstalledState(isInstalled) {
+        if (isInstalled) {
+            if (alreadyInstalledNotice) alreadyInstalledNotice.style.display = 'block';
+            if (manualConfirmWrap) manualConfirmWrap.style.display = 'none';
+            if (installGuideCard) installGuideCard.style.display = 'none';
+            if (toggleGuideWrap) toggleGuideWrap.style.display = 'block';
+            if (nativeBlock) nativeBlock.style.display = 'none';
+            document.querySelectorAll('.pwa-install-trigger').forEach(function(el) {
+                el.innerHTML = '<i class="fas fa-check-circle" style="color: #10b981;"></i> App Instalado';
+                el.style.color = '#10b981';
+            });
+        } else {
+            if (alreadyInstalledNotice) alreadyInstalledNotice.style.display = 'none';
+            if (manualConfirmWrap) manualConfirmWrap.style.display = 'block';
+            if (installGuideCard) installGuideCard.style.display = 'block';
+            if (toggleGuideWrap) toggleGuideWrap.style.display = 'none';
+            if (nativeBlock && deferredPrompt && !isStandalone) {
+                nativeBlock.style.display = 'block';
+            }
+            document.querySelectorAll('.pwa-install-trigger').forEach(function(el) {
+                el.innerHTML = '<i class="fas fa-download"></i> Instalar Aplicativo';
+                el.style.color = '';
+            });
+        }
+    }
+
+    if (isStandalone) {
+        localStorage.setItem('pwa_installed', 'true');
+        applyInstalledState(true);
+    } else if (localStorage.getItem('pwa_installed') === 'true') {
+        applyInstalledState(true);
+    } else {
+        applyInstalledState(false);
+    }
+
+    // Exibir o guia correto para a plataforma
+    if (isIos) {
+        if (guideIos) guideIos.style.display = 'block';
+    } else if (isMobile) {
+        if (guideAndroid) guideAndroid.style.display = 'block';
+    } else {
+        if (guideDesktop) guideDesktop.style.display = 'block';
+    }
+
+    // Capturar o evento de prompt nativo
+    window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (!isStandalone && localStorage.getItem('pwa_installed') !== 'true') {
+            if (nativeBlock) nativeBlock.style.display = 'block';
+        }
+    });
+
+    // Se a API nativa reportar o app instalado, atualizar o estado
+    if ('getInstalledRelatedApps' in navigator) {
+        navigator.getInstalledRelatedApps().then(function(apps) {
+            if (apps && apps.length > 0) {
+                localStorage.setItem('pwa_installed', 'true');
+                applyInstalledState(true);
+            }
+        }).catch(function() {});
+    }
+
+    // Botão de confirmação rápida "Já instalei o aplicativo neste aparelho"
+    if (btnManualConfirm) {
+        btnManualConfirm.addEventListener('click', function() {
+            localStorage.setItem('pwa_installed', 'true');
+            applyInstalledState(true);
+        });
+    }
+
+    // Controle do Modal de Desinstalação
+    function openUninstallModal() {
+        if (!uninstallModal) return;
+        if (isIos) {
+            if (uninstallIos) uninstallIos.style.display = 'block';
+            if (uninstallAndroid) uninstallAndroid.style.display = 'none';
+            if (uninstallDesktop) uninstallDesktop.style.display = 'none';
+        } else if (isMobile) {
+            if (uninstallAndroid) uninstallAndroid.style.display = 'block';
+            if (uninstallIos) uninstallIos.style.display = 'none';
+            if (uninstallDesktop) uninstallDesktop.style.display = 'none';
+        } else {
+            if (uninstallDesktop) uninstallDesktop.style.display = 'block';
+            if (uninstallAndroid) uninstallAndroid.style.display = 'none';
+            if (uninstallIos) uninstallIos.style.display = 'none';
+        }
+        uninstallModal.style.display = 'flex';
+    }
+
+    function closeUninstallModal() {
+        if (uninstallModal) uninstallModal.style.display = 'none';
+    }
+
+    if (btnOpenUninstall) btnOpenUninstall.addEventListener('click', openUninstallModal);
+    if (closeUninstallModalBtn) closeUninstallModalBtn.addEventListener('click', closeUninstallModal);
+    if (cancelUninstallModalBtn) cancelUninstallModalBtn.addEventListener('click', closeUninstallModal);
+    if (uninstallModal) {
+        uninstallModal.addEventListener('click', function(e) {
+            if (e.target === uninstallModal) closeUninstallModal();
+        });
+    }
+
+    if (confirmUninstalledBtn) {
+        confirmUninstalledBtn.addEventListener('click', function() {
+            localStorage.removeItem('pwa_installed');
+            applyInstalledState(false);
+            closeUninstallModal();
+        });
+    }
+
+    // Botão Reinstalar
+    if (btnReinstall) {
+        btnReinstall.addEventListener('click', function() {
+            localStorage.removeItem('pwa_installed');
+            applyInstalledState(false);
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+            }
+        });
+    }
+
+    // Link para ver as instruções mesmo após instalado
+    if (toggleGuideBtn && installGuideCard) {
+        toggleGuideBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const isHidden = (installGuideCard.style.display === 'none');
+            installGuideCard.style.display = isHidden ? 'block' : 'none';
+            toggleGuideBtn.textContent = isHidden ? 'Ocultar instruções de instalação' : 'Precisa reinstalar ou ver as instruções de instalação novamente?';
+        });
+    }
+
+    if (triggerBtn) {
+        triggerBtn.addEventListener('click', function() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function(choice) {
+                    if (choice.outcome === 'accepted') {
+                        localStorage.setItem('pwa_installed', 'true');
+                        applyInstalledState(true);
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        });
+    }
+
+    window.addEventListener('appinstalled', function() {
+        localStorage.setItem('pwa_installed', 'true');
+        applyInstalledState(true);
+    });
+
+    const shareUrl = window.location.origin + '/instalar/';
+    const shareMessage = '🎾 *AllCourts365 no seu celular!* 📲\n\nInstale o aplicativo oficial para acompanhar seus torneios, chaves de jogos, agendamentos e rankings com 1 toque na tela inicial:\n\n👉 *Toque no link para instalar:*\n\n' + shareUrl;
+
+    const whatsappBtn = document.getElementById('whatsappShareBtn');
+    if (whatsappBtn) {
+        whatsappBtn.href = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(shareMessage);
+    }
+
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function() {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(shareMessage).then(function() {
+                    copyBtn.innerHTML = '<i class="fas fa-check"></i> Mensagem copiada!';
+                    setTimeout(function() { copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copiar mensagem com link'; }, 2500);
+                });
+            } else {
+                const textarea = document.createElement('textarea');
+                textarea.value = shareMessage;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Mensagem copiada!';
+                setTimeout(function() { copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copiar mensagem com link'; }, 2500);
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

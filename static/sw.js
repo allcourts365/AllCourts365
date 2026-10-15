@@ -1,7 +1,8 @@
 // Service Worker for AllCourts365 PWA
-const CACHE_NAME = 'allcourts365-v1';
+const CACHE_NAME = 'allcourts365-v2';
 const PRECACHE_ASSETS = [
   '/',
+  '/offline/',
   '/manifest.json',
   '/static/css/style.css?v=1.2',
   '/static/icons/icon-192x192.png',
@@ -40,7 +41,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Network-first strategy for GET requests; bypass non-GET and Django admin
+// Network-first strategy for GET requests; bypass non-GET and sensitive endpoints
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') {
     return;
@@ -48,19 +49,24 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Skip Django admin or API endpoints that require always live data
-  if (url.pathname.startsWith('/admin/') || url.pathname.startsWith('/ckeditor/')) {
+  // Skip Django admin, ckeditor, authentication or API endpoints that require always live data
+  if (
+    url.pathname.startsWith('/admin/') ||
+    url.pathname.startsWith('/ckeditor/') ||
+    url.pathname.startsWith('/accounts/') ||
+    url.pathname.startsWith('/api/')
+  ) {
     return;
   }
 
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
-        // Cache static files and manifest
+        // Cache static files, manifest and offline template
         if (
           networkResponse &&
           networkResponse.status === 200 &&
-          (url.pathname.startsWith('/static/') || url.pathname === '/manifest.json')
+          (url.pathname.startsWith('/static/') || url.pathname === '/manifest.json' || url.pathname === '/offline/')
         ) {
           const responseClone = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -76,7 +82,7 @@ self.addEventListener('fetch', (event) => {
             return cachedResponse;
           }
           if (event.request.headers.get('accept')?.includes('text/html')) {
-            return caches.match('/');
+            return caches.match('/offline/');
           }
         });
       })

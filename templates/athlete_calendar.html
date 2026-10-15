@@ -687,7 +687,7 @@
                     <input type="checkbox" id="filter-meus-jogos" style="accent-color: #0f6cbd; cursor: pointer;" onchange="renderMainCalendar()">
                 </div>
                 
-                <div class="ol-filter-item" style="padding: 8px 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: white;" onclick="toggleSubmenu('submenu-clubes')">
+                <div class="ol-filter-item" style="padding: 8px 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: white;" onclick="toggleCalendarFilterSubmenu('submenu-clubes')">
                     <span style="font-size: 0.9rem;">Clubes / Ligas</span>
                     <i class="fas fa-chevron-right" style="font-size: 0.7rem; color: #888;"></i>
                 </div>
@@ -704,7 +704,7 @@
                     {% endfor %}
                 </div>
                 
-                <div class="ol-filter-item" style="padding: 8px 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: white;" onclick="toggleSubmenu('submenu-quadras')">
+                <div class="ol-filter-item" style="padding: 8px 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: white;" onclick="toggleCalendarFilterSubmenu('submenu-quadras')">
                     <span style="font-size: 0.9rem;">Quadras</span>
                     <i class="fas fa-chevron-right" style="font-size: 0.7rem; color: #888;"></i>
                 </div>
@@ -719,7 +719,7 @@
                     {% endfor %}
                 </div>
                 
-                <div class="ol-filter-item" style="padding: 8px 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: white;" onclick="toggleSubmenu('submenu-status')">
+                <div class="ol-filter-item" style="padding: 8px 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; color: white;" onclick="toggleCalendarFilterSubmenu('submenu-status')">
                     <span style="font-size: 0.9rem;">Status</span>
                     <i class="fas fa-chevron-right" style="font-size: 0.7rem; color: #888;"></i>
                 </div>
@@ -2067,7 +2067,7 @@
         dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
     }
     
-    function toggleSubmenu(id) {
+    function toggleCalendarFilterSubmenu(id) {
         const el = document.getElementById(id);
         const allSubmenus = ['submenu-clubes', 'submenu-quadras', 'submenu-status'];
         allSubmenus.forEach(s => {

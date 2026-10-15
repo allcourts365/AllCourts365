@@ -157,6 +157,12 @@ LOGIN_URL = 'account_login'
 LOGIN_REDIRECT_URL = 'login_redirect'
 LOGOUT_REDIRECT_URL = 'home'
 
+# Session & PWA Persistence
+ACCOUNT_SESSION_REMEMBER = True
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 90  # 90 dias
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_SAVE_EVERY_REQUEST = True
+
 # Crispy Forms
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"

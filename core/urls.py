@@ -22,4 +22,7 @@ urlpatterns = [
     path('api/admin/leads-count/', views.api_uncontacted_leads_count, name='api_uncontacted_leads_count'),
     path('manifest.json', views.manifest_json, name='manifest_json'),
     path('sw.js', views.service_worker_js, name='service_worker_js'),
+    path('pwa/start/', views.pwa_start, name='pwa_start'),
+    path('offline/', views.pwa_offline, name='pwa_offline'),
+    path('instalar/', views.pwa_install_guide, name='pwa_install_guide'),
 ]

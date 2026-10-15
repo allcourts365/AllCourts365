@@ -1707,13 +1707,18 @@ def manifest_json(request):
         content = json.dumps({
             "name": "AllCourts365",
             "short_name": "AllCourts365",
-            "start_url": "/",
-            "id": "/",
+            "start_url": "/pwa/start/",
+            "id": "/pwa/start/",
             "scope": "/",
             "display": "standalone",
             "background_color": "#0f172a",
             "theme_color": "#0f172a",
-            "orientation": "portrait-primary",
+            "related_applications": [
+                {
+                    "platform": "webapp",
+                    "url": "/manifest.json"
+                }
+            ],
             "icons": [
                 {
                     "src": "/static/icons/icon-192x192.png",
@@ -1742,3 +1747,25 @@ def service_worker_js(request):
     response = HttpResponse(content, content_type='application/javascript')
     response['Service-Worker-Allowed'] = '/'
     return response
+
+
+def pwa_start(request):
+    """
+    Ponto de entrada do PWA instalado.
+    Se o usuário já estiver logado, redireciona para a tela correta (painel do atleta, clube ou admin).
+    Se deslogado, vai para a tela de login mantendo o next=/pwa/start/.
+    """
+    if request.user.is_authenticated:
+        return redirect('login_redirect')
+    return redirect(f"{reverse('account_login')}?next=/pwa/start/")
+
+
+def pwa_offline(request):
+    """Renderiza a página de aviso offline amigável quando o usuário perde a conexão."""
+    return render(request, 'offline.html')
+
+
+def pwa_install_guide(request):
+    """Página de guia /instalar compartilhável com detecção automática de dispositivo."""
+    return render(request, 'instalar.html')
+

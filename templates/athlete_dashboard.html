@@ -473,6 +473,48 @@
         {% endif %}
     </div>
     
+    <!-- Card Contextual de Instalação do App (PWA) no Painel do Atleta -->
+    <div id="pwaDashboardCard" class="glass-card" style="display: none; padding: 18px 24px; border-radius: 16px; margin-bottom: 25px; border: 1px solid rgba(255, 179, 71, 0.3); background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 16px; flex: 1; min-width: 260px;">
+                <img src="{% static 'icons/icon-192x192.png' %}" alt="App" style="width: 48px; height: 48px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); flex-shrink: 0;">
+                <div>
+                    <h4 style="margin: 0 0 4px; color: #fff; font-size: 1.05rem; font-weight: 700;">Instale o AllCourts365 no seu celular</h4>
+                    <p style="margin: 0; color: #94a3b8; font-size: 0.88rem; line-height: 1.4;">Acesse seus jogos, chaves e avisos com 1 toque na tela inicial, em tela cheia.</p>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <a href="{% url 'pwa_install_guide' %}" class="btn-highlight pwa-install-trigger" style="text-decoration: none; padding: 10px 20px; border-radius: 20px; font-weight: 700; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-download"></i> Instalar App
+                </a>
+                <button type="button" id="pwaDismissDashboardCardBtn" style="background: transparent; border: none; color: #64748b; font-size: 0.85rem; padding: 8px 12px; cursor: pointer; text-decoration: underline;">
+                    Agora não
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function() {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        const card = document.getElementById('pwaDashboardCard');
+        const dismissBtn = document.getElementById('pwaDismissDashboardCardBtn');
+        if (!card || isStandalone || localStorage.getItem('pwa_installed') === 'true') return;
+
+        const dismissedAt = localStorage.getItem('pwa_dash_card_dismissed');
+        const now = Date.now();
+        if (!dismissedAt || now - parseInt(dismissedAt, 10) > 14 * 24 * 60 * 60 * 1000) {
+            card.style.display = 'block';
+        }
+
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', function() {
+                card.style.display = 'none';
+                localStorage.setItem('pwa_dash_card_dismissed', Date.now().toString());
+            });
+        }
+    })();
+    </script>
+
     <!-- Menu Horizontal de Abas -->
     <div class="tabs-container hide-on-mobile">
         <button class="tab-btn {% if not linked_club %}active{% endif %}" onclick="openTab('meu-clube', this)"><i class="fas fa-link"></i> Meu(s) Clube(s) / Liga(s)</button>

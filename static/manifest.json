@@ -2,13 +2,18 @@
   "name": "AllCourts365",
   "short_name": "AllCourts365",
   "description": "A central definitiva para gestão de Clubes, Rankings e Torneios.",
-  "start_url": "/",
-  "id": "/",
+  "start_url": "/pwa/start/",
+  "id": "/pwa/start/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
-  "orientation": "portrait-primary",
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "/manifest.json"
+    }
+  ],
   "icons": [
     {
       "src": "/static/icons/icon-192x192.png",
